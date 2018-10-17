@@ -1,0 +1,57 @@
+.conmen-overlay {
+  position: fixed;
+  z-index: 999999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.conmen-overlay .conmen-menu {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.conmen-overlay .conmen-menu .conmen-menu-list {
+  margin: 0;
+  padding: 0;
+}
+
+.conmen-overlay .conmen-menu .conmen-menu-list .conmen-menu-list-item {
+  position: relative;
+}
+
+.conmen-overlay .conmen-menu .conmen-menu-list .conmen-menu-list-item .conmen-menu-list-item-icon {
+  position: absolute;
+  text-align: center;
+}
+
+.conmen-overlay .conmen-menu .conmen-menu-list .conmen-menu-list-item .conmen-menu-list-item-text {
+  position: relative;
+}
+
+.conmen-overlay .conmen-menu .conmen-menu-list .conmen-menu-list-item .conmen-menu-list-item-text .conmen-helper {
+  float: right;
+}
+
+.conmen-overlay .conmen-menu .conmen-menu-list .conmen-menu-list-item .conmen-menu-list-item-sub {
+  float: right;
+  position: absolute;
+}
+
+.conmen-overlay .conmen-menu .conmen-menu-list .conmen-menu-list-item:not(.conmen-disabled):hover > .conmen-sub-menu {
+  display: block;
+}
+
+.conmen-overlay .conmen-sub-menu {
+  z-index: 1;
+  display: none;
+}

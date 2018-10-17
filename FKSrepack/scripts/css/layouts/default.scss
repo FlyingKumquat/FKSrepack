@@ -1,0 +1,137 @@
+/***********************************************
+	Updated: 11/24/2017
+***********************************************/
+
+body {
+	margin: 0 auto;
+	background-color: #fff;
+    background: url(../../../img/bg.png);
+	overflow-x: hidden;
+	overflow-y: auto;
+	&.collapsed {
+		#top_nav > .actions {
+			left: 0;
+		}
+		#crumbs > .bar {
+			padding-left: 10px;
+		}
+	}
+	&.fullscreen {
+		.top-nav-background {
+			display: none;
+		}
+		#content {
+			border: 1px solid #cbcbcb;
+		}
+	}
+	&.modal-open {
+		padding-right: 0px !important;
+	}
+}
+
+#top_nav {
+	padding-right: 0px;
+	> .actions {
+		position: relative;
+		float: left;
+		left: 0;
+		margin-left: 10px;
+		margin-right: -10px;
+	}
+	> [fks-menu] > .nav-list > .nav-item > a > span.title > span.text {
+		display: none;
+	}
+	> [fks-menu],
+	> .notifiers {
+		> .nav-list > .nav-item > .sub-menu {
+			@media (max-width: 575px) {
+				position: fixed;
+				left: 0 !important;
+				right: 0 !important;
+				width: 100% !important;
+				> .nav-item {
+					line-height: 40px;
+					> a {
+						font-size: 14px;
+					}
+				}
+			}
+		}
+	}
+}
+
+#footer {
+	position: relative;
+	bottom: unset;
+	height: 40px;
+	line-height: 17px;
+	width: 100%;
+	border: none;
+	.footer-left {
+		top: 1px;
+	}
+	.footer-center {
+		text-align: center;
+		line-height: 40px;
+	}
+	.footer-right {
+		top: 1px;
+		text-align: right;
+	}
+}
+
+.top-nav-background {
+	height: 40px;
+	position: fixed;
+	top: 0;
+	left: 0;
+	background: #1f1f1f;
+	width: 100%;
+}
+
+#content {
+	border-left: 1px solid #cbcbcb;
+	border-right: 1px solid #cbcbcb;
+	overflow: unset;
+	min-height: 40px;
+}
+
+#crumbs {
+	margin-bottom: 10px;
+	> .bar {
+		position: relative;
+		padding-left: 10px;
+		left: unset;
+		top: unset;
+		right: unset;
+		margin-left: -10px;
+		margin-top: -10px;
+		width: calc(100% + 20px);
+	}
+}
+
+#toast-container {
+	&.toast-top-right {
+		top: 50px;
+	}
+}
+
+.error-page {
+	padding-top: 40px;
+	padding-bottom: 50px;
+}
+
+@media (min-width: 768px) {
+	body, #top_nav { width: 750px; }
+}
+
+@media (min-width: 992px) {
+	body, #top_nav { width: 970px; }
+	#top_nav > [fks-menu] > .nav-list > .nav-item > a > span.title > span.text {
+		display: inline;
+	}
+}
+
+@media (min-width: 1200px) {
+	body, #top_nav { width: 1170px; }
+}

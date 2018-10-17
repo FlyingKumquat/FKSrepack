@@ -1,0 +1,18 @@
+@import url('font-awesome.min.css');
+
+@import url('../js/plugins/bootstrap/css/bootstrap.min.css');
+@import url('../js/plugins/iCheck/skins/minimal/_all.css');
+@import url('../js/plugins/pace/themes/silver/pace-theme-minimal.css');
+@import url('../js/plugins/datatables/datatables.min.css');
+@import url('../js/plugins/toastr/toastr.min.css');
+@import url('../js/plugins/select2/css/select2.min.css');
+@import url('../js/plugins/multiselect/css/multi-select.css');
+@import url('../js/plugins/jstree/themes/default/style.min.css');
+@import url('../js/plugins/summernote/summernote-bs4.css');
+@import url('../js/plugins/codemirror/lib/codemirror.css');
+@import url('../js/plugins/codemirror/theme/dracula.css');
+@import url('../js/plugins/bootstrap-daterangepicker/daterangepicker.css');
+@import url('../js/plugins/conmen/conmen.css');
+@import url('../js/plugins/conmen/themes/default.css');
+
+@import url('../js/plugins/fks/fks.css');

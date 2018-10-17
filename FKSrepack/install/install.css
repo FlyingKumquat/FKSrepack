@@ -1,0 +1,18 @@
+pre {
+	border: 1px solid gray;
+	padding: 5px;
+	background-color: floralwhite;
+}
+
+.tab-pane .footer {
+	border-top:1px solid rgba(0, 0, 0, 0.05);
+	padding-top:10px;
+}
+
+.icheckbox_minimal {
+	background-color:white;
+}
+
+.card-body {
+	padding:10px 10px 0px 10px;
+}

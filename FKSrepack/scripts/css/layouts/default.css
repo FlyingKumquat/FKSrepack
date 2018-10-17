@@ -1,0 +1,135 @@
+/***********************************************
+	Updated: 11/24/2017
+***********************************************/
+body {
+  margin: 0 auto;
+  background-color: #fff;
+  background: url(../../../img/bg.png);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+body.collapsed #top_nav > .actions {
+  left: 0;
+}
+body.collapsed #crumbs > .bar {
+  padding-left: 10px;
+}
+body.fullscreen .top-nav-background {
+  display: none;
+}
+body.fullscreen #content {
+  border: 1px solid #cbcbcb;
+}
+body.modal-open {
+  padding-right: 0px !important;
+}
+
+#top_nav {
+  padding-right: 0px;
+}
+#top_nav > .actions {
+  position: relative;
+  float: left;
+  left: 0;
+  margin-left: 10px;
+  margin-right: -10px;
+}
+#top_nav > [fks-menu] > .nav-list > .nav-item > a > span.title > span.text {
+  display: none;
+}
+@media (max-width: 575px) {
+  #top_nav > [fks-menu] > .nav-list > .nav-item > .sub-menu,
+  #top_nav > .notifiers > .nav-list > .nav-item > .sub-menu {
+    position: fixed;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+  }
+  #top_nav > [fks-menu] > .nav-list > .nav-item > .sub-menu > .nav-item,
+  #top_nav > .notifiers > .nav-list > .nav-item > .sub-menu > .nav-item {
+    line-height: 40px;
+  }
+  #top_nav > [fks-menu] > .nav-list > .nav-item > .sub-menu > .nav-item > a,
+  #top_nav > .notifiers > .nav-list > .nav-item > .sub-menu > .nav-item > a {
+    font-size: 14px;
+  }
+}
+
+#footer {
+  position: relative;
+  bottom: unset;
+  height: 40px;
+  line-height: 17px;
+  width: 100%;
+  border: none;
+}
+#footer .footer-left {
+  top: 1px;
+}
+#footer .footer-center {
+  text-align: center;
+  line-height: 40px;
+}
+#footer .footer-right {
+  top: 1px;
+  text-align: right;
+}
+
+.top-nav-background {
+  height: 40px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #1f1f1f;
+  width: 100%;
+}
+
+#content {
+  border-left: 1px solid #cbcbcb;
+  border-right: 1px solid #cbcbcb;
+  overflow: unset;
+  min-height: 40px;
+}
+
+#crumbs {
+  margin-bottom: 10px;
+}
+#crumbs > .bar {
+  position: relative;
+  padding-left: 10px;
+  left: unset;
+  top: unset;
+  right: unset;
+  margin-left: -10px;
+  margin-top: -10px;
+  width: calc(100% + 20px);
+}
+
+#toast-container.toast-top-right {
+  top: 50px;
+}
+
+.error-page {
+  padding-top: 40px;
+  padding-bottom: 50px;
+}
+
+@media (min-width: 768px) {
+  body, #top_nav {
+    width: 750px;
+  }
+}
+@media (min-width: 992px) {
+  body, #top_nav {
+    width: 970px;
+  }
+
+  #top_nav > [fks-menu] > .nav-list > .nav-item > a > span.title > span.text {
+    display: inline;
+  }
+}
+@media (min-width: 1200px) {
+  body, #top_nav {
+    width: 1170px;
+  }
+}
