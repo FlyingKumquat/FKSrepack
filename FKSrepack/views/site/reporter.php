@@ -11,7 +11,7 @@
 		<div class="trail">
 			<a href="#"><?=$Manager->siteSettings('SITE_TITLE')?></a>
 			<i class="fa fa-angle-right fa-fw"></i>
-			Site Name
+			<?=$Manager->siteSettings('SITE_TITLE')?>
 			<i class="fa fa-angle-right fa-fw"></i>
 			Tracker
 		</div>

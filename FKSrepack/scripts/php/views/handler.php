@@ -56,7 +56,8 @@ class Handler extends CoreFunctions {
 			// Function (passed through action) does not exist
 				$this->response = array(
 					'result' => 'failure',
-					'message' => 'No such function found.'
+					'message' => 'No such function found.',
+					'action' => $this->_POST['action']
 				);
 				return false;
 			}
@@ -68,7 +69,8 @@ class Handler extends CoreFunctions {
 		// Function (passed through action) does not exist
 			$this->response = array(
 				'result' => 'failure',
-				'message' => 'No such function found.'
+				'message' => 'No such function found.',
+				'action' => $this->_POST['action']
 			);
 			return false;
 		}

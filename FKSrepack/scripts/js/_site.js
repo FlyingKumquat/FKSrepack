@@ -23,8 +23,17 @@
 		}
 		if(site.debug) { console.log('Site -> Initialization Started'); }
 		
-		// Add timed jobs
-		//fks.addJob({name: 'site.SOMETHING', when: 60, last: 0, pages: false});
+		// Add timed job
+		/*
+		fks.addJob({
+			name: 'site.function',		// Name of the function to run						(required)
+			when: 60,					// Interval to run the job in seconds				(required)
+			last: 0,					// Last time the job was run						(optional, default: 0)
+			debug: true,				// Enable debugging									(optional, default: true)
+			pages: ['page'],			// Pages required for the job to run				(optional, default: false)
+			function: false				// Provided function to run	instead of job name		(optional, default: false)
+		});
+		*/
 
 		site.ready = true;
 		if(site.debug) { console.log('Site -> Initialization Completed'); }

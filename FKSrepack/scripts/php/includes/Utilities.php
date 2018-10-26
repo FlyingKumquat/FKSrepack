@@ -914,4 +914,27 @@ class Utilities {
 
 		array_multisort($sort_col, $dir, $arr);
 	}
+	
+	/*----------------------------------------------
+		Seconds to Time (00d 00h 00m 00s)
+	----------------------------------------------*/
+	public function sec2time($s) {
+		if(!is_numeric($s)) { return $s; }
+		
+		$out = '';
+		
+		$day = intval($s / 86400);
+		$hour = intval($s / 3600) % 24;
+		$min = intval($s / 60) % 60;
+		$sec = $s % 60;
+
+		if($day > 0) { $out .= $day . 'd '; }
+		if($hour > 0 || $day > 0) { $out .= ($hour < 10 && ($day > 0) ? '0' : '') . $hour . 'h '; }
+		if($min > 0 || $hour > 0 || $day > 0) { $out .= ($min < 10 && ($hour > 0 || $day > 0) ? '0' : '') . $min . 'm '; }
+		if($sec <= 0) { $sec = 0; }
+		
+		$out .= ($sec < 10 && ($min > 0 || $hour > 0 || $day > 0) ? '0' : '') . $sec . 's';
+		
+		return $out;
+	}
 }

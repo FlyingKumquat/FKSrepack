@@ -1,5 +1,5 @@
 /***********************************************
-	Updated: 08/08/2018
+	Updated: 10/05/2018
 ***********************************************/
 $top_nav_height: 40px;
 $side_nav_width: 200px;
@@ -933,18 +933,20 @@ body.collapsed {
 }
 
 body.fullscreen {
-	#top_nav[style*="display: none;"] ~ #exit_fullscreen {
-		display: block;
-		position: fixed;
-		right: 15px;
-		top: 0px;
-		z-index: 1;
-		font-size: 40px;
-		text-align: center;
-		color: rgba(0,0,0,0.2);
-		cursor: pointer;
-		&:hover {
-			color: rgba(0,0,0,0.5);
+	@media screen and (max-width: 767px) {
+		#top_nav[style*="display: none;"] ~ #exit_fullscreen {
+			display: block;
+			position: fixed;
+			right: 15px;
+			top: 0px;
+			z-index: 1;
+			font-size: 40px;
+			text-align: center;
+			color: rgba(0,0,0,0.2);
+			cursor: pointer;
+			&:hover {
+				color: rgba(0,0,0,0.5);
+			}
 		}
 	}
 	#top_nav {
@@ -966,6 +968,15 @@ body.fullscreen {
 	}
 	#footer {
 		height: 0px;
+		display: none;
+	}
+	.fs-hide {
+		display: none;
+	}
+}
+
+body:not(.fullscreen) {
+	.fs-show {
 		display: none;
 	}
 }
@@ -2446,6 +2457,8 @@ table.table {
 					margin-top: -1px;
 					border: 1px solid $universal_grey;
 					z-index: 2000;
+					padding: 5px 0px;
+					font-size: 12px;
 					&:before {
 						position: absolute;
 						top: -8px;
@@ -2477,6 +2490,23 @@ table.table {
 							left: auto;
 							right: 6px;
 						}
+					}
+					.dropdown-item {
+						padding: 0px 5px;
+						cursor: default;
+						&:active,
+						&:hover {
+							background: rgba(0, 0, 0, 0.05);
+							color: initial;
+						}
+						> a {
+							display: block;
+							margin: 0px -5px;
+							padding-left: 5px;
+						}
+					}
+					.dropdown-divider {
+						margin: 5px 0px;
 					}
 				}
 			}

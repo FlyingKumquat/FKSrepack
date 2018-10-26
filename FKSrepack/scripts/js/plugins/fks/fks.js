@@ -1,5 +1,5 @@
 /***********************************************
-	Updated: 07/02/2018
+	Updated: 10/25/2018
 ***********************************************/
 (function(fks, $, undefined) {
 /*----------------------------------------------
@@ -88,9 +88,15 @@
 			if(now - v.last >= v.when) {
 				if(k != '') {
 					jobs[k].last = now;
-					fks.executeFunctionByName(k, window);
+					
+					if($.type(v.function) === 'function') {
+						v.function();
+					} else {
+						fks.executeFunctionByName(k, window);
+					}
+					
 					jobs[k].count++;
-					if(fks.debug.jobs && jobs[k].debug) { console.log('Running Job -> ' + k + ' (' + jobs[k].count + ')'); }
+					if(fks.debug.jobs && v.debug) { console.log('Running Job -> ' + k + ' (' + jobs[k].count + ')'); }
 				}
 			}
 		});
@@ -318,6 +324,40 @@
 			notifier.body.append(div);
 		});
 	}
+	
+	// Add Modal Reset
+	function addModalReset() {
+		$('.modal').each(function() {
+			var ele = $(this),
+				id = '#' + ele.attr('id');
+				
+			$(this).on('hidden.bs.modal', function(e) {
+				ele.find('.modal-title').html('');
+				ele.find('.modal-body').html('');
+				ele.find('.modal-footer').html('');
+				ele.find('.modal-dialog').removeClass('modal-xs');
+				ele.find('.modal-dialog').removeClass('modal-sm');
+				ele.find('.modal-dialog').removeClass('modal-md');
+				ele.find('.modal-dialog').removeClass('modal-lg');
+				ele.find('.modal-dialog').removeClass('modal-xl');
+				ele.find('.modal-dialog').removeClass('modal-full');
+				ele.find('.modal').removeClass('modal-primary');
+				ele.find('.modal').removeClass('modal-info');
+				ele.find('.modal').removeClass('modal-success');
+				ele.find('.modal').removeClass('modal-warning');
+				ele.find('.modal').removeClass('modal-danger');
+				ele.find('.modal-body').removeClass('no-padding');
+				ele.find('.modal-dialog').hide();
+				ele.find('.modal-loader').show();
+				
+				if($.type(modalOnClose[id]) === 'function') {
+					modalOnCloseData[id] ? modalOnClose[id](modalOnCloseData[id]) : modalOnClose[id]();
+					modalOnClose[id] = undefined;
+					modalOnCloseData[id] = undefined;
+				}
+			});
+		});
+	}
 
 /*----------------------------------------------
 	Public Functions
@@ -327,6 +367,8 @@
 		
 		fks.siteTitle = document.title;
 		fks.buildMenus();
+		
+		addModalReset();
 		
 		$(document).on('mousedown', function(e) {
 			fks.session.actions += 1;
@@ -369,40 +411,6 @@
 		
 		$(document).keypress(function(e) {
 			fks.session.actions += 1;
-		});
-		
-		/*----------------------------------------------
-			Modal Reset
-		----------------------------------------------*/
-		$('.modal').each(function() {
-			var ele = $(this),
-				id = '#' + ele.attr('id');
-				
-			$(this).on('hidden.bs.modal', function(e) {
-				ele.find('.modal-title').html('');
-				ele.find('.modal-body').html('');
-				ele.find('.modal-footer').html('');
-				ele.find('.modal-dialog').removeClass('modal-xs');
-				ele.find('.modal-dialog').removeClass('modal-sm');
-				ele.find('.modal-dialog').removeClass('modal-md');
-				ele.find('.modal-dialog').removeClass('modal-lg');
-				ele.find('.modal-dialog').removeClass('modal-xl');
-				ele.find('.modal-dialog').removeClass('modal-full');
-				ele.find('.modal').removeClass('modal-primary');
-				ele.find('.modal').removeClass('modal-info');
-				ele.find('.modal').removeClass('modal-success');
-				ele.find('.modal').removeClass('modal-warning');
-				ele.find('.modal').removeClass('modal-danger');
-				ele.find('.modal-body').removeClass('no-padding');
-				ele.find('.modal-dialog').hide();
-				ele.find('.modal-loader').show();
-				
-				if($.type(modalOnClose[id]) === 'function') {
-					modalOnCloseData[id] ? modalOnClose[id](modalOnCloseData[id]) : modalOnClose[id]();
-					modalOnClose[id] = undefined;
-					modalOnCloseData[id] = undefined;
-				}
-			});
 		});
 		
 		$.fn.putCursorAtEnd = function() {
@@ -516,7 +524,7 @@
 		}
 		
 		// Add timed jobs
-		fks.addJob({name: 'fks.keepAlive', when: 60, last: 0, pages: false});
+		fks.addJob({name: 'fks.keepAlive', when: 60});
 		
 		// Start job thread
 		thread();
@@ -724,7 +732,24 @@
 	}
 	
 	fks.addJob = function(job) {
-		jobs[job.name] = { when: job.when, last: job.last, page: job.pages, count: 0 };
+	/* EXAMPLE:
+		fks.addJob({
+			name: 'fks.jobName',		// Name of the function to run						(required)
+			when: 60,					// Interval to run the job in seconds				(required)
+			last: 0,					// Last time the job was run						(optional, default: 0)
+			debug: true,				// Enable debugging									(optional, default: true)
+			pages: ['home'],			// Pages required for the job to run				(optional, default: false)
+			function: false				// Provided function to run	instead of job name		(optional, default: false)
+		});
+	*/
+		jobs[job.name] = {
+			when: job.when,
+			last: (job.last !== undefined ? job.last : 0),
+			debug: (job.debug !== undefined ? job.debug : true),
+			page: (job.pages !== undefined ? job.pages : false),
+			function: (job.function !== undefined ? job.function : false),
+			count: 0
+		};
 	}
 	
 	fks.restartJob = function(job) {
@@ -859,14 +884,16 @@
 		fks.toast(options);
 	}
 	
-	fks.superSerialize = function(form) {
+	fks.superSerialize = function(form, attr = false) {
 		var out = {};
 		
 		$.each($(form).serializeArray(), function() {
-			if(out[this.name]) {
-				out[this.name] += ',' + this.value;
+			var find = (attr ? $('[name="' + this.name + '"]', form).attr(attr) : this.name);
+			if(find === undefined) { return; }
+			if(out[find]) {
+				out[find] += ',' + this.value;
 			} else {
-				out[this.name] = this.value;
+				out[find] = this.value;
 			}
 		});
 		
@@ -952,7 +979,7 @@
 		}
 	}
 	
-	fks.editModal = function(args, auth_code){
+	fks.editModal = function(args, auth_code) {
 		var send = {};
 		// Check for args
 		if(!args.handler){
@@ -972,11 +999,21 @@
 		
 		send.action = args.action;
 		
-		if(args.data){ send.data = args.data; }
+		if(args.data) {
+			// deprecated - 10/23/2018
+			console.warn('[Deprecation] fks.editModal: args.data deprecated, use args.action_data instead');
+			send.data = args.data;
+		}
+		
+		if(args.action_data){ send.data = args.action_data; }
+		
 		if(auth_code != undefined){
-			if(args.data == undefined){ send.data = {}; }
+			if(args.data == undefined && args.action_data == undefined){ send.data = {}; }
 			send.data.form_auth = auth_code;
 		}
+		
+		// Check for debug and set default if not defined
+		if(args.debug == undefined) { args.debug = true; }
 		
 		// Open modal loading bar
 		$(args.modal + ' .modal-loader').css('margin', ($(args.modal).outerHeight() / 2) - 10 + 'px auto');
@@ -985,9 +1022,9 @@
 		// Load data
 		$.post(args.handler, send)
 		.done(function(data){
-			if(fks.debug.ajax) { console.log(data); }
+			if(fks.debug.ajax && args.debug) { console.log(data); }
 			try { var response = JSON.parse(data); } catch(e) { fks.toast({type: 'error', msg: 'Server Error!'}); $(args.modal).modal('hide'); return; }
-			if(fks.debug.ajax) { console.log(response); }
+			if(fks.debug.ajax && args.debug) { console.log(response); }
 			switch(response.result){
 				case 'success':
 					var parts = response.parts;
@@ -1031,6 +1068,47 @@
 							}
 							modalOnClose[args.modal] = args.callbacks.onClose;
 						}
+					}
+					
+					/*
+					args.focus = false;			// Do not focus anything
+					args.focus = true;			// Focus first VISIBLE ENABLED EDITABLE input	(default if undefined)
+					
+					args.focus = {
+						container: null,		// The container element inside the modal		(optional, default: args.modal)
+						hidden: true,			// Allow hidden									(optional, default: false)
+						disabled: true,			// Allow disabled								(optional, default: false)
+						readonly: true			// Allow readonly								(optional, default: false)
+					};
+					*/
+					
+					// Set focus to first input on modal
+					if(args.focus != false) {
+						// Default container to modal
+						var container = args.modal;
+						
+						// Set default if undefined
+						if(args.focus == undefined) { args.focus = true; }
+						
+						// Set container if not undefined and has a value
+						if(args.focus.container != undefined && args.focus.container) {
+							container = $(args.focus.container, args.modal);
+						}
+						
+						// Get all inputs on the modal
+						var inputs = $('input, select, textarea', args.modal);
+						
+						// Filter out hidden inputs
+						if(args.focus.hidden == undefined || args.focus.hidden == false) { inputs = inputs.not(':hidden'); }
+						
+						// Filter out disabled inputs
+						if(args.focus.disabled == undefined || args.focus.disabled == false) { inputs = inputs.not('[disabled]'); }
+						
+						// Filter out readonly inputs
+						if(args.focus.readonly == undefined || args.focus.readonly == false) { inputs = inputs.not('[readonly]'); }
+						
+						// Focus the input
+						inputs.first().focus();
 					}
 					break;
 					
@@ -1499,7 +1577,10 @@
 				if(f.name == func) {
 					$.each(t.attributes, function() {
 						if(this.specified) {
-							if(this.name.indexOf('fks-value-') >= 0) {
+							if(this.name.indexOf('fks-values') >= 0) {
+								values = this.value.toString().split(',');
+								return false;
+							} else if(this.name.indexOf('fks-value-') >= 0) {
 								values[this.name.replace('fks-value-', '')] = this.value;
 							} else if(this.name.indexOf('fks-value') >= 0) {
 								values = this.value;
@@ -1725,6 +1806,9 @@
 	}
 	
 	fks.sec2time = function(s) {
+	/* EXAMPLE:
+		fks.sec2time(90061); // outputs: '1d 01h 01m 01s'
+	*/
 		if(!$.isNumeric(s)) { return s; }
 		
 		var out = '',
@@ -1739,7 +1823,25 @@
 		if(sec <= 0) { sec = 0; }
 		
 		out += (sec < 10 && (min > 0 || hour > 0 || day > 0) ? '0' : '') + sec + 's';
+		
 		return out;
+	}
+	
+	fks.time2sec = function(t) {
+	/* EXAMPLE:
+		fks.time2sec('1d 01h 01m 01s'); // outputs: 90061
+	*/
+		var parts = t.split(' '),
+			s = 0;
+			
+		$.each(parts, function(k, v) {
+			if(v.indexOf('d') > -1) { s += parseInt(v) * 60 * 60 * 24; }
+			if(v.indexOf('h') > -1) { s += parseInt(v) * 60 * 60; }
+			if(v.indexOf('m') > -1) { s += parseInt(v) * 60; }
+			if(v.indexOf('s') > -1) { s += parseInt(v); }
+		});
+		
+		return s;
 	}
 	
 	fks.tabdrop = function(options) {
@@ -2380,6 +2482,12 @@
 		// Create callbacks variable to extend table callbacks
 		var callbacks = (table.callbacks ? $.extend(true, {}, table.callbacks) : {});
 		
+		// Check for debug and set default if not defined
+		if(table.debug == undefined) { table.debug = true; }
+		
+		// Check for wait and set default if not defined
+		if(table.wait == undefined) { table.wait = true; }
+		
 		// Bind add if set
 		if(!table.loaded && table.ele.add && table.functions) { table.ele.add.click(function() { table.functions.add(); }); }
 		
@@ -2419,7 +2527,9 @@
 		
 		// fks.ajax request
 		fks.ajax({
+			debug: table.debug,
 			src: page_src,
+			wait: table.wait,
 			action: table.action,
 			action_data: (action_data ? action_data : ''),
 			block: (table.ele.block ? table.ele.block : undefined),
@@ -2645,6 +2755,7 @@
 	fks.ajax = function(options) {
 	/* EXAMPLE:
 		fks.ajax({
+			debug: true,					// console.log ajax return data		(optional, default: true)
 			handler: fks.handler,			// the URL to request				(optional, default: fks.handler)
 			type: 'POST',					// the type of request to make		(optional, default: 'POST')
 			async: true,					// make request asynchronous		(optional, default: true)
@@ -2749,6 +2860,9 @@
 			// Default toast
 			fks.toast({type: type, header: header, msg: msg});
 		};
+		
+		// Check for debug and set default if not defined
+		if(options.debug == undefined) { options.debug = true; }
 
 		// Check for handler and set default if not defined
 		if(options.handler == undefined) { options.handler = fks.handler; }
@@ -2787,7 +2901,7 @@
 			data: send_data,
 			async: options.async
 		}).done(function(data) {
-			if(fks.debug.ajax) { console.log(data); }
+			if(fks.debug.ajax && options.debug) { console.log(data); }
 			// Catch server errors
 			try {
 				var response = JSON.parse(data);
@@ -3112,7 +3226,6 @@
 		// Bind DOMNodeInserted
 		options.container.bind('DOMNodeInserted', function(e) {
 			var $target = $(e.target);
-			console.log($target);
 			// Target is nav-item but is not fks-tabdrop
 			if($target.is('.nav-item') && !$target.is('.fks-tabdrop')) {
 				// Bind on_shown
@@ -3351,6 +3464,23 @@
 		
 		// Create sortable
 		return fks.Sortable.create(options.container.get(0), merge_options);
+	}
+	
+	// Add DataTables Sorting
+	fks.addDataTablesSorting = function() {
+		// FKS Time Sorting
+		$.fn.dataTable.ext.order['fks-time'] = function(settings, col) {
+			return this.api().column(col, {order: 'index'}).nodes().map(function(td, i) {
+				return fks.time2sec($(td).text());
+			});
+		}
+		
+		// FKS Progress Bar Sorting
+		$.fn.dataTable.ext.order['fks-progress'] = function(settings, col) {
+			return this.api().column(col, {order: 'index'}).nodes().map(function(td, i) {
+				return parseInt($('.progress-bar', td).attr('aria-valuenow'));
+			});
+		}
 	}
 
 }(window.fks = window.fks || {}, $));

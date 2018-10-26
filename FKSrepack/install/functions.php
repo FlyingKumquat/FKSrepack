@@ -17,7 +17,7 @@ class Functions {
 /*----------------------------------------------
 	Global Variables
 ----------------------------------------------*/
-	public $fks_version = '0.0.180808';
+	public $fks_version = '0.0.181025';
 	public $Database;
 	public $versions = array(
 		'fks_versions' 				=> 1710220423,

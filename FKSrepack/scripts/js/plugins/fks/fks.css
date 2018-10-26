@@ -1,6 +1,6 @@
 @charset "UTF-8";
 /***********************************************
-	Updated: 08/08/2018
+	Updated: 10/05/2018
 ***********************************************/
 @import url(https://fonts.googleapis.com/css?family=Roboto);
 /*-------------------------------------------------------------------
@@ -1272,19 +1272,21 @@ body.collapsed #crumbs > .bar {
   display: none;
 }
 
-body.fullscreen #top_nav[style*="display: none;"] ~ #exit_fullscreen {
-  display: block;
-  position: fixed;
-  right: 15px;
-  top: 0px;
-  z-index: 1;
-  font-size: 40px;
-  text-align: center;
-  color: rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-}
-body.fullscreen #top_nav[style*="display: none;"] ~ #exit_fullscreen:hover {
-  color: rgba(0, 0, 0, 0.5);
+@media screen and (max-width: 767px) {
+  body.fullscreen #top_nav[style*="display: none;"] ~ #exit_fullscreen {
+    display: block;
+    position: fixed;
+    right: 15px;
+    top: 0px;
+    z-index: 1;
+    font-size: 40px;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+  }
+  body.fullscreen #top_nav[style*="display: none;"] ~ #exit_fullscreen:hover {
+    color: rgba(0, 0, 0, 0.5);
+  }
 }
 body.fullscreen #top_nav > .actions .action.toggle-fullscreen:before {
   color: white !important;
@@ -1299,6 +1301,13 @@ body.fullscreen #crumbs {
 }
 body.fullscreen #footer {
   height: 0px;
+  display: none;
+}
+body.fullscreen .fs-hide {
+  display: none;
+}
+
+body:not(.fullscreen) .fs-show {
   display: none;
 }
 
@@ -2649,6 +2658,8 @@ table.table td div.progress > div.progress-bar:not([aria-valuenow="0"]):not([ari
   margin-top: -1px;
   border: 1px solid #cbcbcb;
   z-index: 2000;
+  padding: 5px 0px;
+  font-size: 12px;
 }
 .fks-panel > .header > .actions > .btn-group > .dropdown-menu:before {
   position: absolute;
@@ -2679,6 +2690,22 @@ table.table td div.progress > div.progress-bar:not([aria-valuenow="0"]):not([ari
 .fks-panel > .header > .actions > .btn-group > .dropdown-menu.dropdown-menu-right:after {
   left: auto;
   right: 6px;
+}
+.fks-panel > .header > .actions > .btn-group > .dropdown-menu .dropdown-item {
+  padding: 0px 5px;
+  cursor: default;
+}
+.fks-panel > .header > .actions > .btn-group > .dropdown-menu .dropdown-item:active, .fks-panel > .header > .actions > .btn-group > .dropdown-menu .dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: initial;
+}
+.fks-panel > .header > .actions > .btn-group > .dropdown-menu .dropdown-item > a {
+  display: block;
+  margin: 0px -5px;
+  padding-left: 5px;
+}
+.fks-panel > .header > .actions > .btn-group > .dropdown-menu .dropdown-divider {
+  margin: 5px 0px;
 }
 .fks-panel > .body {
   padding: 10px 0px;

@@ -21,3 +21,22 @@ $RECYCLE.BIN/
 # =========================
 # Operating System Files
 # =========================
+
+# =========================
+# FKS Specific Files
+# =========================
+
+# Renamed install directory
+FKSrepack/_install
+
+# Remove favicon
+FKSrepack/img/favicon.ico
+
+# Clear all errors
+FKSrepack/errors/**
+
+# Keep .htaccess file
+!FKSrepack/errors/.htaccess
+
+# Remove database connections
+FKSrepack/scripts/php/config/connections.php
