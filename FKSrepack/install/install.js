@@ -65,7 +65,7 @@ function testDatabase(){
 // Create Tables (Tab2)
 function createTables(){
 	// Update the PRE
-	$('#tab2 .pre pre').html('Creating Tables...<br/><br/>');
+	$('#tab2 .pre pre').html('Creating Tables...<br/>');
 	
 	// Get all checked checkboxes
 	var tables = [];

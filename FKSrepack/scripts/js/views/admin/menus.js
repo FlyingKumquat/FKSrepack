@@ -130,12 +130,12 @@ define([
 	function editMenu(id) {
 		if(!id) { var id = '+'; }
 		fks.editModal({
-			'src': page.src,
-			'wait': true,
-			'action': 'editMenu', 
-			'data': id,
-			'callbacks': {
-				'onOpen': function() {
+			src: page.src,
+			wait: true,
+			action: 'editMenu', 
+			action_data: id,
+			callbacks: {
+				onOpen: function() {
 					$('#editMenuForm').submit(function() {
 						saveMenu(this);
 					});
@@ -247,12 +247,12 @@ define([
 	function editMenuItem(id) {
 		if(!id) { var id = '+'; }
 		fks.editModal({
-			'src': page.src,
-			'wait': true,
-			'action': 'editMenuItem', 
-			'data': id,
-			'callbacks': {
-				'onOpen': function(data) {
+			src: page.src,
+			wait: true,
+			action: 'editMenuItem', 
+			action_data: id,
+			callbacks: {
+				onOpen: function(data) {
 					$('#editMenuItemForm').submit(function() {
 						saveMenuItem(this);
 					});
@@ -275,7 +275,7 @@ define([
 						$('#icon_preview').html('<i class="fa fa-' + $(this).val() + ' fa-fw"></i>');
 					});
 					
-					data.parents[0] = {id: 0, title: 'None'};
+					data.parents[0] = {id: 0, parent_title: 'None'};
 					
 					$('[name="menu_id"].select2').select2({
 						containerCssClass: 'fks-sm',
@@ -290,7 +290,7 @@ define([
 								if(parent.id != 0 && parent.menu_id != $('[name="menu_id"].select2').val()) { return; }
 								return {
 									id: parent.id,
-									text: parent.title
+									text: parent.parent_title
 								};
 							})
 						});

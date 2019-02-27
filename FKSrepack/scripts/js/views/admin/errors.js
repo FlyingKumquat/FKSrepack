@@ -67,10 +67,10 @@ define([
 				columns: $('#panel_id_2 .actions .column-toggler')		// The column toggler button (Optional)
 			},
 			dt: null,							// DataTable variable (do not touch)
-			empty: 'No entries found',			// Empty message
+			empty: 'No errors found',			// Empty message
 			message: {
-				load: '<i class="fa fa-spinner fa-spin fa-fw"></i> Loading Entries...',		// fks.block loading message
-				reload: '<i class="fa fa-refresh fa-spin fa-fw"></i> Reloading Entries...'	// fks.block reloading message
+				load: '<i class="fa fa-spinner fa-spin fa-fw"></i> Loading Errors...',		// fks.block loading message
+				reload: '<i class="fa fa-refresh fa-spin fa-fw"></i> Reloading Errors...'	// fks.block reloading message
 			},
 			count: 0,							// Column counter (do not touch)
 			action: 'loadErrorsTable',			// PHP function for loading data
@@ -127,12 +127,12 @@ define([
 	
 	function viewFunction(error_code) {
 		fks.editModal({
-			'src': page.src,
-			'wait': true,
-			'data': error_code,
-			'action': 'loadErrorModal',
-			'callbacks': {
-				'onOpen': function() {
+			src: page.src,
+			wait: true,
+			action: 'loadErrorModal',
+			action_data: error_code,
+			callbacks: {
+				onOpen: function() {
 					$('#modalForm').submit(function(){
 						deleteError(this);
 					});

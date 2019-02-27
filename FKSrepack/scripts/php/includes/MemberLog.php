@@ -903,60 +903,20 @@ class MemberLog extends MemberLogX {
 		foreach($access_groups as $k => $v) { $access_groups[$k] = $v['title']; }
 		$access_groups[0] = '<i>none</i>';
 		
-		$friendly_title = array(
-			'ACTIVE_DIRECTORY'						=>		'Active Directory',
-			'AD_ACCOUNT_CREATION'					=>		'Active Directory Account Creation',
-			'AD_BASE_DN'							=>		'Active Directory Base_DN',
-			'AD_FAILOVER'							=>		'Active Directory Allow Failover',
-			'AD_LOGIN_SELECTOR'						=>		'Active Directory Login Selector',
-			'AD_PREFERRED'							=>		'Active Directory Preferred Login',
-			'AD_RDN'								=>		'Active Directory Server RDN',
-			'AD_SERVER'								=>		'Active Directory Server Address',
-			'CAPTCHA'								=>		'Captcha',
-			'CAPTCHA_PRIVATE'						=>		'Captcha Private Key',
-			'CAPTCHA_PUBLIC'						=>		'Captcha Public Key',
-			'DATE_FORMAT'							=>		'Date Format',
-			'DEFAULT_ACCESS_GUEST'					=>		'Guest Default Access Group',
-			'DEFAULT_ACCESS_LDAP'					=>		'LDAP Default Access Group',
-			'DEFAULT_ACCESS_LOCAL'					=>		'Local Default Access Group',
-			'EMAIL_AUTH'							=>		'Email Authentication',
-			'EMAIL_FROM_ADDRESS'					=>		'Email From Address',
-			'EMAIL_HOSTNAME'						=>		'Email SMTP Hostname',
-			'EMAIL_PASSWORD'						=>		'Email Auth Password',
-			'EMAIL_PORT'							=>		'Email Port Number',
-			'EMAIL_REPLY_TO_ADDRESS'				=>		'Email Reply-To Address',
-			'EMAIL_SECURE'							=>		'Email Security',
-			'EMAIL_USERNAME'						=>		'Email Username',
-			'EMAIL_VERIFICATION'					=>		'Email Verification',
-			'EMAIL_VERIFICATION_FROM_ADDRESS'		=>		'Email Verification From Address',
-			'EMAIL_VERIFICATION_REPLY_TO_ADDRESS'	=>		'Email Verification Reply-To Address',
-			'EMAIL_VERIFICATION_SUBJECT'			=>		'Email Verification Subject',
-			'EMAIL_VERIFICATION_TEMPLATE'			=>		'Email Verification Template',
-			'ERROR_EMAIL'							=>		'Send Error Email',
-			'ERROR_EMAIL_ADDRESS'					=>		'Error Email Address',
-			'ERROR_MESSAGE'							=>		'Error Message',
-			'ERROR_TO_DB'							=>		'Save Error Database',
-			'ERROR_TO_DISK'							=>		'Save Error Disk',
-			'FKS_VERSION'							=>		'FKS Version',
-			'FORGOT_PASSWORD'						=>		'Forgot Password',
-			'FORGOT_PASSWORD_FROM_ADDRESS'			=>		'Forgot Password From Address',
-			'FORGOT_PASSWORD_REPLY_TO_ADDRESS'		=>		'Forgot Password Reply-To Address',
-			'FORGOT_PASSWORD_SUBJECT'				=>		'Forgot Password Subject',
-			'FORGOT_PASSWORD_TEMPLATE'				=>		'Forgot Password Template',
-			'MEMBER_REGISTRATION'					=>		'Member Registration',
-			'REQUIRE_LOGIN'							=>		'Require Login',
-			'SITE_LAYOUT'							=>		'Site Layout',
-			'SITE_TITLE'							=>		'Site Title',
-			'SITE_USERNAME'							=>		'Site Username',
-			'TIMEZONE'								=>		'Timezone'
-		);
+		$site_settings = array();
+		$get = 'SELECT id, title, type FROM fks_site_settings';
+		if(!$this->cacheKeeper($get)) { return __FUNCTION__ . ' - error 2'; }
+		$_ss = $this->logCache['queries'][$get];
+		foreach($_ss as $v) {
+			$site_settings[$v['id']] = $v;
+		}
 		
 		$build = array();
 		
 		// Make simple
 		if($simple) {
 			foreach($misc as $k => $v) {
-				if(isset($friendly_title[$k])){ array_push($build, $friendly_title[$k]); }
+				if(isset($site_settings[$k])) { array_push($build, $site_settings[$k]['title']); }
 				else { array_push($build, 'UKNOWN: ' . $k); }
 			}
 			
@@ -965,63 +925,60 @@ class MemberLog extends MemberLogX {
 		}
 		
 		foreach($misc as $k => $v) {
-			switch($k) {				
-				case 'ACTIVE_DIRECTORY':
-				case 'AD_ACCOUNT_CREATION':
-				case 'AD_FAILOVER':
-				case 'AD_LOGIN_SELECTOR':
-				case 'CAPTCHA':
-				case 'EMAIL_AUTH':
-				case 'EMAIL_VERIFICATION':
-				case 'ERROR_EMAIL':
-				case 'ERROR_TO_DB':
-				case 'FORGOT_PASSWORD':
-				case 'MEMBER_REGISTRATION':
-				case 'REQUIRE_LOGIN':
-					array_push($build, $this->formatType(array(
-						'title' => $friendly_title[$k],
-						'type' => 'bool',
-						'values' => array(
-							0 => 'Disabled',
-							1 => 'Enabled'
-						)
-					), $v));
+			if(!isset($site_settings[$k])) {
+				array_push($build, $this->formatType(array(
+					'title' => $k,
+					'type' => 'string'
+				), $v));
+				continue;
+			}
+			
+			$_skip = false;
+			$_setting = $site_settings[$k];
+			$_part = array(
+				'title' => $_setting['title'],
+				'type' => 'string'
+			);
+			
+			switch($_setting['type']) {
+				case 'bool':
+					$_part['type'] = 'bool';
+					$_part['values'] = array(
+						0 => 'Disabled',
+						1 => 'Enabled'
+					);
 					break;
 					
-				case 'DEFAULT_ACCESS_GUEST':
-				case 'DEFAULT_ACCESS_LDAP':
-				case 'DEFAULT_ACCESS_LOCAL':
-					array_push($build, $this->formatType(array(
-						'title' => $friendly_title[$k],
-						'type' => 'csv',
-						'values' => $access_groups
-					), $v));
+				case 'number':
+					if(in_array($k, array(
+						'DEFAULT_ACCESS_GUEST',
+						'DEFAULT_ACCESS_LDAP',
+						'DEFAULT_ACCESS_LOCAL'
+					))) {
+						$_part['type'] = 'csv';
+						$_part['values'] = $access_groups;
+					}
 					break;
 					
-				case 'EMAIL_VERIFICATION_TEMPLATE':
-				case 'FORGOT_PASSWORD_TEMPLATE':
-					array_push($build, $this->formatType(array(
-						'title' => $friendly_title[$k],
-						'type' => 'code'
-					), $v));
+				case 'div':
+					$_part['type'] = 'code';
 					break;
 					
-				case 'CAPTCHA_PRIVATE':
-				case 'EMAIL_PASSWORD':
+				case 'password':
 					array_push($build, '
-						<div class="history-title">' . $friendly_title[$k] . '</div>
+						<div class="history-title">' . $_setting['title'] . '</div>
 						<div class="fks-blockquote">' . (is_array($v) ? 'Changed' : 'Set') . '.</div>
 					');
-					break;
-					
-				default:
-					array_push($build, $this->formatType(array(
-						'title' => $friendly_title[$k],
-						'type' => 'string'
-					), $v));
+					$_skip = true;
 					break;
 			}
+			
+			// Add _part to build
+			if(!$_skip) {
+				array_push($build, $this->formatType($_part, $v));
+			}
 		}
+		
 		$out .= implode('', $build);
 		
 		return $out;

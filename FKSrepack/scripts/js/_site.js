@@ -34,6 +34,21 @@
 			function: false				// Provided function to run	instead of job name		(optional, default: false)
 		});
 		*/
+		
+		// Add Notifier
+		/*
+		fks.addNotifier({
+			title: '<i class="fa fa-cube fa-fw"></i> <span class="badge fks-badge-secondary">99+</span>',
+			id: 'cube_id',
+			class: 'cube-class',
+			width: 400,
+			height: 400,
+			header: 'Header',
+			actions: '<a href="javascript:void(0);" onclick="site.function()" data-toggle="tooltip" title="Function"><i class="fa fa-plus"></i></a>',
+			body: 'Body',
+			footer: 'Footer'
+		});
+		*/
 
 		site.ready = true;
 		if(site.debug) { console.log('Site -> Initialization Completed'); }

@@ -7,7 +7,9 @@ define([
 		hash: '#%FULL_URL%',
 		title: fks.siteTitle + '%WINDOW_TITLE%',
 		access: fks.checkAccess('%LABEL%'),
-		params: fks.getParams()
+		params: fks.getParams(),
+		keep_alive: false,
+		debug: true
 	},
 	self,
 	View = Backbone.View.extend({
@@ -47,6 +49,9 @@ define([
 			'panelClose',
 			'panelFullscreen'
 		]);
+		
+		// Bind fks panel actions
+		$('#panel_id_3 .actions .tab-modal').on('click', function(){ editModalTabs(); });
 		
 		// Run functions when page loads
 		loadExampleTable();
@@ -145,7 +150,27 @@ define([
 	
 	// -------------------- Example Add Function -------------------- //
 	function addFunction() {
-		console.log('Add Button Clicked!');
+		fks.editModal({
+			debug: page.debug,				// Optional - Whether to spit out returned text in the console. Default: true
+			src: page.src,					// Required - Where to look for the functions.php page.
+			wait: true,						// Optional - Gives the function a minimum of 2 seconds to run. Default: false
+			focus: false,					// Optional - Auto focuses the first VISIBLE ENABLED EDITABLE input. Default: true
+			action: 'addFunction',			// Required - What function to call in PHP.
+			action_data: 'passed_data',		// Optional - What data to pass to the PHP function
+			callbacks: {
+				onOpen: function(data) {
+					// Optional - Runs when the modal opens
+					
+					// Example binding the form for saving
+					$('#modalForm').submit(function() {
+						saveFunction(this);
+					});
+				},
+				onClose: function(data) {
+					// Optional - Runs when the modal closes
+				}
+			}
+		});
 	}
 	
 	// -------------------- Example Edit Function -------------------- //
@@ -170,6 +195,14 @@ define([
 					$('#panel_id_1 .body').html(response.data);
 				}
 			}
+		});
+	}
+	
+	// -------------------- Tabbed Modal Example (Only Required Options) -------------------- //
+	function editModalTabs() {
+		fks.editModal({
+			src: page.src,					// Required - Where to look for the functions.php page.
+			action: 'editModalTabs'			// Required - What function to call in PHP.
 		});
 	}
 	

@@ -151,10 +151,10 @@ define([
 					// Bind Test Email Button
 					$('.test-email-btn').on('click', function(){
                         fks.editModal({
-                            'src': page.src,
-                            'action': 'sendEmailForm',
-                            'callbacks': {
-                                'onOpen': sendEmailFormCallback
+                            src: page.src,
+                            action: 'sendEmailForm',
+                            callbacks: {
+                                onOpen: sendEmailFormCallback
                             }
                         })
 					});

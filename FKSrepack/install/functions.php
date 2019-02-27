@@ -17,7 +17,7 @@ class Functions {
 /*----------------------------------------------
 	Global Variables
 ----------------------------------------------*/
-	public $fks_version = '0.0.181025';
+	public $fks_version = '0.0.190227';
 	public $Database;
 	public $versions = array(
 		'fks_versions' 				=> 1710220423,
@@ -33,7 +33,7 @@ class Functions {
 		'fks_menu_items' 			=> 1711160210,
 		'fks_menus' 				=> 1710260656,
 		'fks_site_errors' 			=> 1711160153,
-		'fks_site_settings' 		=> 1711160703
+		'fks_site_settings' 		=> 1902220027
 	);
 	public $current_versions = array();
 	
@@ -377,7 +377,7 @@ class Functions {
 						`id` VARCHAR(50) NOT NULL,
 						`title` VARCHAR(50) NOT NULL,
 						`type` VARCHAR(10) NOT NULL,
-						`data` TINYTEXT DEFAULT NULL,
+						`data` TEXT DEFAULT NULL,
 						`misc` VARCHAR(100) DEFAULT '{}',
 						`help_text` TINYTEXT DEFAULT NULL,
 						`description` TEXT DEFAULT NULL,
@@ -470,7 +470,7 @@ class Functions {
 					("AD_PREFERRED","Preferred Login","dropdown","Local","{\"options\":[\"Local\",\"LDAP\"]}","Where the server should attempt to validate members first.","This option will tell the site where to attempt to validate members when they try to log in. If Active Directory is disabled this has to be set to Local!"),
 					("AD_RDN","Server RDN","text",NULL,"{}","The domain name the AD server uses.","The Relative Distinguished Name that the active directory users must use to attempt a login."),
 					("AD_SERVER","Server Address","text",NULL,"{}","IP address or hostname of the AD server.","This is the IP address or the hostname of the Active Directory server."),
-					("CAPTCHA","Captcha","bool","0","{}","Whether or not users have to pass a Captcha to register.","If this is enabled then when a user attempts to register a new account they will be forced to include an email address. They will then be sent an email with a link that they will need to click before the account is activated."),
+					("CAPTCHA","Captcha","bool","0","{}","Whether or not users have to pass a Captcha to register.","When enabled it requires users to pass a reCaptcha when attempting to register for an account."),
 					("CAPTCHA_PRIVATE","Captcha Private Key","password",NULL,"{}","Get a key from <a href=\"https://www.google.com/recaptcha/\" target=\"_blank\">Google</a>.","This is a secret key that you don\'t give out to anyone."),
 					("CAPTCHA_PUBLIC","Captcha Public Key","text",NULL,"{}","Get a key from <a href=\"https://www.google.com/recaptcha/\" target=\"_blank\">Google</a>.","This is a public key..."),
 					("DATE_FORMAT","Date Format","text","Y-m-d H:i:s","{\"required\":\"true\"}","Members will use this date format unless they set their own. <a href=\"http://php.net/manual/en/function.date.php\" target=\"_blank\">PHP Date</a>","This is the default format for all dates and times on the server. Members can set their own format to overide this."),
@@ -501,6 +501,7 @@ class Functions {
 					("FORGOT_PASSWORD_SUBJECT","Email Subject","text","%SITE_TITLE% - Forgot Password","{}","What the subject for forgot passwords will say.","What the subject for forgot passwords will say."),
 					("FORGOT_PASSWORD_TEMPLATE","Email Template","div",NULL,"{}","What emails will look like when sending forgot password codes.","What emails will look like when sending forgot password codes."),
 					("MEMBER_REGISTRATION","Member Registration","bool","0","{\"required\":\"true\"}","Whether or not the registration form is enabled on the log in page.","Enabling this allows members to create accounts to log in with. You can enable reCaptcha and Email Verification for extra checks. Once created they will be assigned the Default Local Access Group, which can be changed in the Access tab."),
+					("PROTECTED_USERNAMES","Protected Usernames","textarea","admin,administrator,fksrepack,snaggybore,flyingkumquat","{\"attributes\":\"rows=\'3\'\"}","Usernames that are not allowed during registration.","A comma seperated list of usernames that will not be allowed to be used during user registration. Capitalization does not matter."),
 					("REQUIRE_LOGIN","Require Login","bool","0","{\"required\":\"true\"}","Whether or not users have to log in to view the site.","This option forces that members log in to access this site. With this off members who are not logged in will be assigned the Default Guest Access Group, which can be changed in the Access tab."),
 					("SITE_LAYOUT","Site Layout","dropdown","Default","{\"options\":[\"Default\",\"Admin\"]}","This changes the layout of the whole site.","<u>Default</u> - This is a fixed width site.<br/><u>Admin</u> - This takes up the full width of the window."),
 					("SITE_TITLE","Site Title","text","FKSrepack","{\"required\":\"true\"}","This is shown in the breadcrumbs and brower title.","This is shown in the browser window or tab as well as the breadcrumbs."),
@@ -531,7 +532,9 @@ class Functions {
 				break;
 				
 			default:
-				$success = false;
+				// If the table doesn't have a case then we don't want to return false (nothing to fill)
+				// However, if the table passed doesn't exist we do want to fail
+				if(isset($this->fks_versions[$table_name])){$success = false;}
 				break;
 		}
 		
@@ -614,17 +617,17 @@ class Functions {
 		{
 			case 'connect';
 				$title = '<small>Database Connection</small>';
-				$body = '<p>Something will go here eventually</p>';
+				$body = '<p>This will use the settings stored in the connections.php file which is found in the scripts > php > config folder.</p><p>Make sure this is up to date before attempting a connection.</p>';
 				break;
 				
 			case 'tables';
 				$title = '<small>Create Database Tables</small>';
-				$body = '<p>Something will go here eventually</p>';
+				$body = '<p>This tab will attempt to locate any tables that are out of date and check them so you know.</p><p>You can check any of the tables if you want to wipe them and start over. Keep in mind that you will lose all data in the table.</p><p>Not updating tables when there is an update may cause issues with the site.</p>';
 				break;
 				
 			case 'account';
 				$title = '<small>Create Admin Account</small>';
-				$body = '<p>Something will go here eventually</p>';
+				$body = '<p>Make sure you create an admin account if this is a new installation OR if you are re-creating the members table</p><p>If you do not have an admin account created you will not be able to access this site!</p><p>If you forget you can always come back to this install to create the account while skipping the database creation tab.</p><p>If you are only updating an existing site without updating the members table you should skip this step as to not overwrite an existing admin account</p>';
 				break;
 				
 			default:
@@ -723,10 +726,10 @@ class Functions {
 		// Check to make sure tables are legit
 		foreach( $tables as $k => $t ) {
 			if( isset( $this->versions[$t] ) ) {
-				$actions[$t] = '-- ' . $t . ' --';
+				$actions[$t] = '<br/>-- ' . $t . ' --';
 			} else {
 				unset( $tables[$k] );
-				$actions[$t] = '-- ' . $t . ' --' . '<br/>&#9;Unkown Table!';
+				$actions[$t] = '<br/>-- ' . $t . ' --' . '<br/>&#9;Unkown Table!';
 			}
 		}
 		
@@ -767,7 +770,8 @@ class Functions {
 			if( $status['result'] == 'success' ) {
 				$actions[$t] .= '<br/>&#9;Filled table';
 			} else {
-				$actions[$t] .= ( !empty($status['message']) ? '<br/>&#9;Failed to fill table - ' . $status['message'] : '');
+				$actions[$t] .= '<br/>&#9;Failed to fill table - ' . $status['message'];
+				$result = 'failure';
 			}
 		}
 		/*

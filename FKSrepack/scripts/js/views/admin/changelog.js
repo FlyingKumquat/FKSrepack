@@ -275,11 +275,11 @@ define([
 	// -------------------- Add Changelog Modal -------------------- //
 	function addChangelog() {
 		fks.editModal({
-			'src': page.src,
-			'wait': true,
-			'action': 'addChangelog',
-			'callbacks': {
-				'onOpen': function() {
+			src: page.src,
+			wait: true,
+			action: 'addChangelog',
+			callbacks: {
+				onOpen: function() {
 					$('#modalForm').submit(function(){
 						createChangelog(this);
 					});
@@ -313,10 +313,10 @@ define([
 	// -------------------- View Changelog Modal -------------------- //
 	function viewChangelog(changelog_id) {
 		fks.editModal({
-			'src': page.src,
-			'wait': true,
-			'data': changelog_id,
-			'action': 'viewChangelog'
+			src: page.src,
+			wait: true,
+			action: 'viewChangelog',
+			action_data: changelog_id
 		});
 	}
 	
@@ -432,12 +432,12 @@ define([
 	// -------------------- Edit Changelog Note -------------------- //
 	function editChangelogNote(data) {
 		fks.editModal({
-			'src': page.src,
-			'wait': true,
-			'data': data,
-			'action': 'addChangelogNote',
-			'callbacks': {
-				'onOpen': function() {
+			src: page.src,
+			wait: true,
+			action: 'addChangelogNote',
+			action_data: data,
+			callbacks: {
+				onOpen: function() {
 					// Create the pages multiselect
 					fks.multiSelect('#modal_pages', {
 						selectableHeader: {text: 'Selectable Pages', style: true},

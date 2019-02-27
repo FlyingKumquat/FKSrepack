@@ -135,7 +135,7 @@ define([
 			src: page.src,
 			wait: true,
 			action: 'editAnnouncement', 
-			data: id,
+			action_data: id,
 			callbacks: {
 				onOpen: function() {
 					fks.multiSelect('#pages', {

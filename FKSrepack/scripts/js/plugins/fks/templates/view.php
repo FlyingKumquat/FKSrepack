@@ -23,21 +23,36 @@
 	<span class="subtitle d-none d-md-inline">small text for this page</span>
 </div>
 <div class="row">
-	<div class="col-lg-2">
+	<div class="col-lg-3">
 		<div id="panel_id_1" class="fks-panel">
 			<div class="header">
 				<span class="title">
-					Panel Title
+					AJAX
 				</span>
 			</div>
 			<div class="body"></div>
 		</div>
+		
+		<div id="panel_id_3" class="fks-panel">
+			<div class="header">
+				<span class="title">
+					Edit Modal
+				</span>
+				<span class="actions">
+					<a class="btn tab-modal"><i class="fa fa-plus" fks-access="2"></i><span class="d-none d-lg-inline"> Tabbed</span></a>
+				</span>
+			</div>
+			<div class="body">
+				<p>Click on "Add Button" on the Datatable Panel to see a default Modal</p>
+				<p>Click on "Tabbed" on this panel to see a tabbed Modal</p>
+			</div>
+		</div>
 	</div>
-	<div class="col-lg-10">
+	<div class="col-lg-9">
 		<div id="panel_id_2" class="fks-panel">
 			<div class="header">
 				<span class="title">
-					Panel Title
+					Datatable
 				</span>
 				<span class="actions">
 					<a class="btn add-table"><i class="fa fa-plus" fks-access="2"></i><span class="d-none d-lg-inline"> Add Button</span></a>

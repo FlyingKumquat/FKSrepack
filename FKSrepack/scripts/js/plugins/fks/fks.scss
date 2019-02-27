@@ -1,5 +1,5 @@
 /***********************************************
-	Updated: 10/05/2018
+	Updated: 02/22/2019
 ***********************************************/
 $top_nav_height: 40px;
 $side_nav_width: 200px;
@@ -1284,39 +1284,14 @@ fieldset {
 }
 
 /*-------------------------------------------------------------------
-	Summernote Fixes
--------------------------------------------------------------------*/
-/*
-.note-btn-group {
-    .dropdown-menu {
-        > li {
-            > a {
-                display: block;
-                padding: 3px 20px;
-                clear: both;
-                font-weight: normal;
-                line-height: 1.42857143;
-                color: #333;
-                white-space: nowrap;
-            }
-        }
-    }    
-}
-
-.note-popover .popover-content .note-color .dropdown-toggle, 
-.note-editor .panel-heading.note-toolbar .note-color .dropdown-toggle {
-    width: 20px;
-    padding-left: 1px;
-}
-*/
-
-/*-------------------------------------------------------------------
-	Bootstrap Changes
+	Bootstrap From Control Changes
 -------------------------------------------------------------------*/
 .form-control {
 	display: block;
 	width: 100%;
 	font-size: 1rem;
+	padding: .5rem .75rem;
+	min-height: 38px;
 	line-height: 1.25;
 	color: $universal_text_rgba;
 	background-color: #fff;
@@ -1337,11 +1312,9 @@ fieldset {
 	&[disabled] {
 		background-color: $universal_grey_light;
 	}
-	&:not([multiple]) {
-		padding: .5rem .75rem;
-	}
-	&[multiple] {
-		padding: .25rem;
+	&:not([multiple]):not(textarea)	{
+		height: 38px !important;
+		max-height: 38px;
 	}
 }
 
@@ -1350,11 +1323,24 @@ fieldset {
 .input-group-sm > .input-group-addon,
 .input-group-sm > .input-group-btn > .btn {
 	font-size: .875rem;
-	&:not([multiple]) {
-		padding: .25rem .5rem;
+	padding: .25rem .5rem;
+	min-height: 27px;
+	&:not([multiple]):not(textarea)	{
 		height: 27px !important;
-		min-height: 27px;
 		max-height: 27px;
+	}
+}
+
+.form-control-md,
+.input-group-md > .form-control,
+.input-group-md > .input-group-addon,
+.input-group-md > .input-group-btn > .btn {
+	font-size: 1rem;
+	padding: .5rem .75rem;
+	min-height: 38px;
+	&:not([multiple]):not(textarea) {
+		height: 38px !important;
+		max-height: 38px;
 	}
 }
 
@@ -1363,11 +1349,59 @@ fieldset {
 .input-group-lg > .input-group-addon,
 .input-group-lg > .input-group-btn > .btn {
 	font-size: 1.25rem;
-	&:not([multiple]) {
-		padding: .75rem 1.5rem;
+	padding: .75rem 1.5rem;
+	min-height: 51px;
+	&:not([multiple]):not(textarea) {
 		height: 51px !important;
-		min-height: 51px;
 		max-height: 51px;
+	}
+}
+
+/*-------------------------------------------------------------------
+	FKS Custom Form Class
+-------------------------------------------------------------------*/
+form.fks-form {
+	.form-control:not(.form-control-md):not(.form-control-lg),
+	.input-group:not(.input-group-md):not(.input-group-lg) > .form-control,
+	.input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon,
+	.input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn {
+		font-size: 1rem;
+		padding: .5rem .75rem;
+		min-height: 38px;
+		&:not([multiple]):not(textarea) {
+			height: 38px !important;
+			max-height: 38px;
+		}
+	}
+
+	&.fks-form-sm {
+		.form-control:not(.form-control-md):not(.form-control-lg),
+		.input-group:not(.input-group-md):not(.input-group-lg) > .form-control,
+		.input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon,
+		.input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn {
+			font-size: .875rem;
+			padding: .25rem .5rem;
+			min-height: 27px;
+			&:not([multiple]):not(textarea)	{
+				height: 27px !important;
+				max-height: 27px;
+			}
+		}
+	}
+	
+	&.fks-form-lg {
+		.form-control:not(.form-control-sm):not(.form-control-md),
+		.input-group:not(.input-group-sm):not(.input-group-md) > .form-control,
+		.input-group:not(.input-group-sm):not(.input-group-md) > .input-group-addon,
+		.input-group:not(.input-group-sm):not(.input-group-md) > .input-group-btn > .btn {
+			font-size: 1.25rem;
+			padding: .75rem 1.5rem;
+			min-height: 51px;
+			&:not([multiple]):not(textarea) {
+				height: 51px !important;
+				max-height: 51px;
+			}
+		}
 	}
 }
 

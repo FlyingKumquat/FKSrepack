@@ -1,8 +1,8 @@
 <?PHP
 /*##############################################
 	Utilities
-	Version: 1.1.20171103
-	Updated: 11/03/2017
+	Version: 1.3.02252019
+	Updated: 02/25/2019
 ##############################################*/
 
 /*----------------------------------------------
@@ -237,16 +237,27 @@ class Utilities {
 	public function sendEmail($mail_settings) {
 		
 		/*
-		array(
+		// Example mail settings
+		$mail_settings = array(
 			'to_address' => '',
 			'subject' => '',
-			'body' => ''
-			'from_address' => '',	// optional (if set in site settings)
-			'from_name' => '',		// optional
-			'reply_address' => '',	// optional
-			'to_name' => '',		// optional
-			'cc_address' => '',		// optional
-			'bcc_address' => '',	// optional
+			'body' => '',
+			'attachment' => array(),	// optional
+			'from_address' => '',		// optional (if set in site settings)
+			'from_name' => '',			// optional
+			'reply_address' => '',		// optional
+			'to_name' => '',			// optional
+			'cc_address' => '',			// optional
+			'bcc_address' => '',		// optional
+		);
+		
+		// Example attachments
+		$attachments = array(
+			'/path/to/file.txt',			// filepath
+			array(
+				'/path/to/other/file.txt',	// filepath
+				'Rename.txt'				// optional name
+			)
 		);
 		*/
 		
@@ -295,6 +306,16 @@ class Utilities {
 
 			$mail->Subject = $mail_settings['subject'];
 			$mail->Body = $mail_settings['body'];
+			
+			if(isset($mail_settings['attachment']) && !empty($mail_settings['attachment'])) {
+				foreach($mail_settings['attachment'] as $attachment) {
+					if(is_array($attachment)) {
+						$mail->addAttachment($attachment[0], $attachment[1]);
+					} else {
+						$mail->addAttachment($attachment);
+					}
+				}
+			}
 			
 			$mail->send();
 		} catch (phpmailerException $e) {
@@ -937,4 +958,154 @@ class Utilities {
 		
 		return $out;
 	}
+	
+	/*----------------------------------------------
+		Form Input
+	----------------------------------------------*/
+	public function formInput($params) {
+		// Set variables
+		$out = '';
+		$parts = array();
+		$content = array();
+		$classes = array();
+		$name_set = false;
+		$attributes = array();
+		
+		// Add
+		array_push($classes, 'form-control');
+		
+		// Add id to attributes array
+		array_push($attributes, 'id="' . $params['id'] . '"');
+		
+		// Add all attributes
+		if(isset($params['attributes'])) {
+			foreach($params['attributes'] as $k => $v) {
+				if($k == 'name') { $name_set = true; }
+				if($k == 'class') { 
+					array_push($classes, $v);
+					continue;
+				}
+				array_push($attributes, $k . '="' . $v . '"');
+			}
+		}
+		
+		// See if name was set
+		if(!$name_set) {
+			// Add name to attributes array using id value
+			array_push($attributes, 'name="' . $params['id'] . '"');
+		}
+		
+		// Add all properties
+		if(isset($params['properties'])) {
+			foreach($params['properties'] as $v) {
+				array_push($attributes, $v);
+			}
+		}
+		
+		// Add aria-describedby
+		array_push($attributes, 'aria-describedby="' . $params['id'] . '_help"');
+		
+		// See if input is hidden
+		if($params['type'] == 'hidden') {
+			$out = '<input type="hidden" ' . implode(' ', $attributes) . (isset($params['value']) ? ' value="' . $params['value'] . '"' : '') . '>';
+			return $out;
+		}
+		
+		// Add label to parts
+		array_push($parts, '<label for="' . $params['id'] . '" class="form-control-label">' . $params['title'] . '</label>');
+
+		// Attributes / Classes / Properties
+		$_acp = 'class="' . implode(' ', $classes) . '" ' . implode(' ', $attributes);
+		
+		switch($params['type']) {
+			case 'text':
+			case 'number':
+				array_push($content, '<input type="' . $params['type'] . '" ' . $_acp . (isset($params['value']) ? ' value="' . $params['value'] . '"' : '') . ' />');
+				break;
+				
+			case 'textarea':
+				array_push($content, '<textarea ' . $_acp . '>' . (isset($params['value']) ? $params['value'] : '') . '</textarea>');
+				break;
+				
+			case 'select':
+				$_options = array();
+				if(isset($params['options'])) {
+					foreach($params['options'] as $o) {
+						$_a = (isset($o['value']) ? ' value="' . $o['value'] . '"' : '')
+							. ((isset($o['selected']) && $o['selected']) || (isset($o['value']) && isset($params['value']) && $o['value'] == $params['value']) ? ' selected' : '')
+							. (isset($o['disabled']) && $o['disabled'] ? ' disabled' : '');
+						array_push($_options, '<option' . $_a . '>' . $o['title'] . '</option>');
+					}
+				}
+				array_push($content, '<select ' . $_acp . '>' . implode('', $_options) . '</select>');
+				break;
+		}
+		
+		// Check for input grouping
+		if(
+			isset($params['group'])
+				&&
+			(
+				(
+					isset($params['group']['before'])
+						&&
+					!empty($params['group']['before'])
+				) 
+					||
+				(
+					isset($params['group']['after'])
+						&&
+					!empty($params['group']['after'])
+				)
+			)
+		) {
+			// Grouping
+			array_push($parts, '<div class="input-group">');
+			if(isset($params['group']['before'])) { array_push($parts, $params['group']['before']); }
+			array_push($parts, implode('', $content));
+			if(isset($params['group']['after'])) { array_push($parts, $params['group']['after']); }
+			array_push($parts, '</div>');
+		} else {
+			// No grouping
+			array_push($parts, implode('', $content));
+		}
+		
+		// Add form-control-feedback to parts
+		array_push($parts, '<div class="form-control-feedback"></div>');
+		
+		// Add help to parts
+		array_push($parts, '<small id="' . $params['id'] . '_help" class="form-text text-muted">' . (isset($params['help']) ? $params['help'] : '&nbsp;') . '</small>');
+		
+		// Return the form group
+		return '<div class="form-group">' . implode('', $parts) . '</div>';
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

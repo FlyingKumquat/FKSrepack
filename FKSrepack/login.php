@@ -315,7 +315,7 @@
 								togglePanels('login');
 								$('#login_form .alert').html('');
 								$('#login_form .fks-alert-success').html(response.message);
-								if( response.verify ) {
+								if( response.verify == '1' ) {
 									$('#login_form .verify-code').show();
 								}
 								break;

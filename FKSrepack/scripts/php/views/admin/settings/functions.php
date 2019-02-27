@@ -28,7 +28,7 @@ class PageFunctions extends CoreFunctions {
 		$json = json_decode($formData['misc'], true);
 		
 		// Start the form group
-		$return = '<div class="form-group"><label for="' . $formData['id'] . '" class="form-control-label">' . $formData['title'] . (isset($json['required']) && $json['required'] == true ? ' <span style="color:red;">*</span>' : '') .'</label>';
+		$return = '<div class="form-group"><label for="' . $formData['id'] . '" class="form-control-label">' . $formData['title'] . (isset($json['required']) && $json['required'] == true ? ' <span style="color:red;">*</span>' : '') . '</label>';
 		
 		switch($formData['type'])
 		{
@@ -100,6 +100,10 @@ class PageFunctions extends CoreFunctions {
 				$return .= '<div id="' . $formData['id'] . '" name="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP" ' . ($this->access == 3 ? '' : ' disabled') . '>' . (isset($formData['data']) ? $formData['data'] : '') . '</div>';
 				break;
 				
+			case 'textarea':
+				$return .= '<textarea class="form-control form-control-sm" id="' . $formData['id'] . '" name="' . $formData['id'] . '" ' . (isset($json['attributes']) ? $json['attributes'] : '') . ' aria-describedby="' . $formData['id'] . '_HELP" ' . ($this->access == 3 ? '' : ' disabled') . '>' . (isset($formData['data']) ? $formData['data'] : '') . '</textarea>';
+				break;
+				
             default:
 				$return .= '<input type="text" class="form-control form-control-sm" id="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP" value="There was an issue with this form (' . $formData['type'] . ')" disabled>';
 				break;
@@ -135,6 +139,9 @@ class PageFunctions extends CoreFunctions {
 					<div class="col-xl-6">' . $this->formGroup($site_settings['SITE_LAYOUT']) . '</div>
 					<div class="col-xl-6"></div>
 				</div>
+				<div class="row">
+					<div class="col-xl-12">' . $this->formGroup($site_settings['PROTECTED_USERNAMES']) . '</div>
+				</div>
 			</div>
 			<div class="col-xl-5">
 				<h6>' . $site_settings['SITE_TITLE']['title'] . '</h6>
@@ -151,6 +158,8 @@ class PageFunctions extends CoreFunctions {
 				<p>' . $site_settings['DATE_FORMAT']['description'] . '</p>
 				<h6>' . $site_settings['SITE_LAYOUT']['title'] . '</h6>
 				<p>' . $site_settings['SITE_LAYOUT']['description'] . '</p>
+				<h6>' . $site_settings['PROTECTED_USERNAMES']['title'] . '</h6>
+				<p>' . $site_settings['PROTECTED_USERNAMES']['description'] . '</p>
 			</div>
 		</div>';
 		
@@ -620,6 +629,7 @@ class PageFunctions extends CoreFunctions {
 		$Validator->validate('TIMEZONE', array('timezone' => true));
 		$Validator->validate('DATE_FORMAT', array('required' => true));
 		$Validator->validate('SITE_USERNAME', array('required' => true));
+		$Validator->validate('PROTECTED_USERNAMES', array('max_length' => 255));
 		
 		$Validator->validate('CAPTCHA', array('required' => true, 'bool' => true));
 		$Validator->validate('CAPTCHA_PRIVATE', array('required' => ($data['CAPTCHA'] == 1), 'max_length' => 100));

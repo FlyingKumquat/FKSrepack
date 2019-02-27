@@ -40,3 +40,7 @@ FKSrepack/errors/**
 
 # Remove database connections
 FKSrepack/scripts/php/config/connections.php
+
+# Remove java scripts
+FKSrepack/scripts/js/autoloader.js
+FKSrepack/scripts/js/site.js

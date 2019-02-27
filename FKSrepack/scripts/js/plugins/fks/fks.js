@@ -1,5 +1,5 @@
 /***********************************************
-	Updated: 10/25/2018
+	Updated: 02/22/2019
 ***********************************************/
 (function(fks, $, undefined) {
 /*----------------------------------------------
@@ -10,7 +10,8 @@
 		modalOnClose = {},
 		modalOnCloseData = {},
 		jobs = {},
-		templates = {};
+		templates = {},
+		keepAlivePages = [];
 	
 	// Public
 	fks.handler = '/scripts/php/views/handler.php';
@@ -21,12 +22,12 @@
 	fks.container = '#content';
 	fks.ready = false;
 	fks.debug = {
-		general: true,
-		ajax: true,
-		jobs: true,
-		page: true,
-		webSocks: true,
-		keepAlive: true
+		general: false,
+		ajax: false,
+		jobs: false,
+		page: false,
+		webSocks: false,
+		keepAlive: false
 	};
 	fks.session = {
 		actions: 1,
@@ -756,6 +757,15 @@
 		jobs[job].last = 0;
 	}
 	
+	fks.jobExists = function(job) {
+		return jobs[job] != undefined;
+	}
+	
+	fks.jobs = function(job = false) {
+		if(job) { return jobs[job]; }
+		return jobs;
+	}
+	
 	fks.wsServer = function(url) {
 		var callbacks = {},
 			ws_url = url,
@@ -1031,25 +1041,47 @@
 						parts.no_padding = parts.no_padding ? true : (args.no_padding ? true : false);
 						parts.size = parts.size ? parts.size : (args.size ? args.size : 'md');
 						parts.title = parts.title ? parts.title : (args.title ? args.title : 'No Title');
+						parts.body_before = parts.body_before ? parts.body_before : (args.body_before ? args.body_before : '');
 						parts.body = parts.body ? parts.body : (args.body ? args.body : 'No Body');
+						parts.body_after = parts.body_after ? parts.body_after : (args.body_after ? args.body_after : '');
 						parts.footer = parts.footer ? parts.footer : (args.footer ? args.footer : '');
 						if(parts.footer == ''){
 							parts.footer = ''
 								+ '<button class="btn fks-btn-danger btn-sm" data-dismiss="modal">Cancel</button>'
 								+ '<button class="btn fks-btn-primary btn-sm" onclick="$(\'' + args.modal + ' .modal-body form\').submit();">Save Changes</button>';
 						}
-
+						
 					// Adjust modal visuals
 					if(parts.no_padding){ $(args.modal + ' .modal-body').addClass('no-padding'); }
-					$(args.modal + ' .modal-dialog').addClass('modal-' + parts.size);
+					$('.modal-dialog', args.modal).addClass('modal-' + parts.size);
 					
 					// Populate modal parts
-					$(args.modal + ' .modal-title').html(parts.title);
-					$(args.modal + ' .modal-body').html(parts.body);
-					$(args.modal + ' .modal-footer').html(parts.footer);
+					if($.isArray(parts.title)) {
+						var _title = '',
+							_active = (parts.active_tab ? parts.active_tab : 0);
+						$.each(parts.title, function(k, v) {
+							_title += '<li class="nav-item"><a class="nav-link' + (k == _active ? ' active' : '') + '" data-toggle="tab" href="#fks_modal_tab_' + k + '" role="tab" draggable="false">' + v + '</a></li>';
+						});
+						$('.modal-title', args.modal).html('<ul class="nav nav-tabs">' + _title + '</ul>');
+					} else {
+						$('.modal-title', args.modal).html(parts.title);
+					}
 					
-					$(args.modal + ' .modal-loader').hide();
-					$(args.modal + ' .modal-dialog').show();
+					if($.isArray(parts.body)) {
+						var _body = '',
+							_active = (parts.active_tab ? parts.active_tab : 0);
+						$.each(parts.body, function(k, v) {
+							_body += '<div class="tab-pane' + (k == _active ? ' active' : '') + '" role="tabpanel" id="fks_modal_tab_' + k +'">' + v + '</div>';
+						});
+						$('.modal-body', args.modal).html(parts.body_before + '<div class="tab-content">' + _body + '</div>' + parts.body_after);
+					} else {
+						$('.modal-body', args.modal).html(parts.body_before + parts.body + parts.body_after);
+					}
+
+					$('.modal-footer', args.modal).html(parts.footer);
+					
+					$('.modal-loader', args.modal).hide();
+					$('.modal-dialog', args.modal).show();
 					
 					fks.submitForm();
 					fks.resetForm();
@@ -1213,7 +1245,14 @@
 	}
 	
 	fks.keepAlive = function() {
-		if(fks.debug.keepAlive) { console.log('Keep Alive (' + fks.session.actions + ' action' + (fks.session.actions == 1 ? '' : 's') + ')'); }
+		// Check for keep alive pages
+		if(keepAlivePages.indexOf(fks.location()) > -1) {
+			// Add 1 action to keep the session alive
+			fks.session.actions += 1;
+			if(fks.debug.keepAlive) { console.log('Keep Alive (' + fks.location() + ')'); }
+		} else {
+			if(fks.debug.keepAlive) { console.log('Keep Alive (' + fks.session.actions + ' action' + (fks.session.actions == 1 ? '' : 's') + ')'); }
+		}
 		Pace.ignore(function() {
 			$.ajax({
 				type: 'POST',
@@ -1779,6 +1818,13 @@
 			// Set tooltip
 			//fks.tooltip({ele: $t, title: 'View Changelog', pos: 'bottom'});
 		});
+		
+		// Check for keep_alive option
+		if(page.keep_alive && keepAlivePages.indexOf(page.hash.substring(1)) < 0) {
+			// Add page to keep alive pages array
+			keepAlivePages.push(page.hash.substring(1));
+			if(fks.debug.keepAlive) { console.log('Keep Alive -> Page Added (' + page.hash.substring(1) + ')'); }
+		}
 
 		return true;
 	}
@@ -2478,6 +2524,31 @@
 		return t;
 	}
 	
+	fks.bindTable = function(table, page_src) {
+		// Bind add if set
+		if(!table.loaded && table.ele.add && table.functions && table.functions.add) {
+			table.ele.add.click(function() {
+				table.functions.add();
+			});
+		}
+		
+		// Bind reload if set
+		if(!table.loaded && table.ele.reload && table.functions && table.functions.reload) {
+			table.ele.reload.click(function() {
+				table.functions.reload();
+			});
+		} else if(!table.loaded && table.ele.reload) {
+			table.ele.reload.click(function() {
+				fks.loadTable(table, page_src);
+			});
+		}
+		
+		// Bind column dropdown if set
+		if(!table.loaded && table.ele.columns) {
+			fks.columnDropdown(table.dt, table.ele.columns);
+		}
+	}
+	
 	fks.loadTable = function(table, page_src, action_data) {
 		// Create callbacks variable to extend table callbacks
 		var callbacks = (table.callbacks ? $.extend(true, {}, table.callbacks) : {});
@@ -2488,14 +2559,8 @@
 		// Check for wait and set default if not defined
 		if(table.wait == undefined) { table.wait = true; }
 		
-		// Bind add if set
-		if(!table.loaded && table.ele.add && table.functions) { table.ele.add.click(function() { table.functions.add(); }); }
-		
-		// Bind reload if set
-		if(!table.loaded && table.ele.reload) { table.ele.reload.click(function() { fks.loadTable(table, page_src); }); }
-		
-		// Bind column dropdown if set
-		if(!table.loaded && table.ele.columns) { fks.columnDropdown(table.dt, table.ele.columns); }
+		// Bind the table
+		fks.bindTable(table, page_src);
 		
 		// Modify/set success callback
 		if($.type(callbacks.success) === 'function') {

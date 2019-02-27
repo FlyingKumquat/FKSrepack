@@ -670,7 +670,7 @@ class CoreFunctions extends \Utilities {
 	// -------------------- ACCOUNT REGISTER -------------------- \\
 	public function accountRegister($data) {
 		// Check access
-		if($this->siteSettings('MEMBER_REGISTRATION') == 0) { return false; }
+		if($this->siteSettings('MEMBER_REGISTRATION') == 0) { return array('result' => 'failure', 'message' => 'Member registration is not enabled!'); }
 		
 		// Custom function to run before register validation
 		if(isset($this->Extenders['Register'])) {
@@ -682,22 +682,9 @@ class CoreFunctions extends \Utilities {
 		
 		// Validate form
 		$Validator = new \Validator($data);
-		$Validator->validate('username_register', array(
-			'required' => true,
-			'min_length' => 3,
-			'max_length' => 40
-		));
-		$Validator->validate('email_register', array(
-			'required' => ($this->siteSettings('EMAIL_VERIFICATION')),
-			'email' => true,
-			'max_length' => 255
-		));
-		$Validator->validate('password_register', array(
-			'required' => true,
-			'match' => 'repeat_password_register',
-			'min_length' => 3,
-			'max_length' => 255
-		));
+		$Validator->validate('username_register', array('required' => true, 'no_spaces' => true, 'min_length' => 3, 'max_length' => 40, 'not_values_i' => explode(',', $this->siteSettings('PROTECTED_USERNAMES'))));
+		$Validator->validate('email_register', array('required' => ($this->siteSettings('EMAIL_VERIFICATION')), 'email' => true, 'max_length' => 255));
+		$Validator->validate('password_register', array('required' => true, 'match' => 'repeat_password_register', 'min_length' => 3, 'max_length' => 255));
 		
 		// Custom function to run during register validation
 		if(isset($this->Extenders['Register'])) {
@@ -707,9 +694,11 @@ class CoreFunctions extends \Utilities {
 			}
 		}
 		
+		// Get validation variables
 		$result = $Validator->getResult();
 		$output = $Validator->getOutput();
 		
+		// If Captcha is enabled, check for correct response
 		if($this->siteSettings('CAPTCHA') == 1) {
 			require_once(__DIR__ . '/../includes/ReCaptcha_autoloader.php');
 			$recaptcha = new \ReCaptcha\ReCaptcha($this->siteSettings('CAPTCHA_PRIVATE'));
@@ -720,8 +709,10 @@ class CoreFunctions extends \Utilities {
 			}
 		}
 		
-		// Check to see if username is already taken
+		// Create the database connection
 		$Database = new \Database;
+		
+		// Check to see if username is already taken
 		if($Database->Q(array(
 			'params' => array(
 				':username' => $data['username_register']

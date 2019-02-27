@@ -1,8 +1,8 @@
 <?PHP
 /*##############################################
 	Validator Form Validation
-	Version: 1.2.03282017
-	Updated: 03/28/2017
+	Version: 1.3.02222019
+	Updated: 02/22/2019
 ##############################################*/
 
 /*----------------------------------------------
@@ -59,10 +59,20 @@ error_reporting(-1);
 		If true, the validator checks that the passed value is a valid url or magnet link format
 		
 	values - (array of acceptable values)
+	values_i - (array of acceptable values)[case-insensitive]
 		If set, the validator checks that the passed value is in the array of acceptable values
 		
 	values_csv - (array of acceptable values - comma separated)
+	values_csv_i - (array of acceptable values - comma separated)[case-insensitive]
 		If set, the validator checks that the passed value is in the array of acceptable values
+		
+	not_values - (array of unacceptable values)
+	not_values_i - (array of unacceptable values) [case-insensitive]
+		If set, the validator checks that the passed value is not in the array of unacceptable values
+		
+	not_values_csv - (array of unacceptable values - comma separated)
+	not_values_csv_i - (array of unacceptable values - comma separated)[case-insensitive]
+		If set, the validator checks that the passed value is not in the array of unacceptable values
 		
 	match - (title)
 		If set, the validator checks that the passed value matches the value of $data[title]
@@ -244,11 +254,65 @@ class Validator {
 		}
 	}
 	
+	private function _values_i($data, $value, $title) {
+		if($value && !empty($data) && !$this->in_arrayi($data, $value)) {
+			$this->output[$title] = 'Invalid value.';
+			$this->result = false;
+		}
+	}
+	
 	private function _values_csv($data, $value, $title) {
 		if($value && !empty($data)) {
 			foreach(explode(',', $data) as $v) {
 				if(!in_array($v, $value)) {
 					$this->output[$title] = 'Invalid value.';
+					$this->result = false;
+				}
+			}
+		}
+	}
+	
+	private function _values_csv_i($data, $value, $title) {
+		if($value && !empty($data)) {
+			foreach(explode(',', $data) as $v) {
+				if(!$this->in_arrayi($v, $value)) {
+					$this->output[$title] = 'Invalid value.';
+					$this->result = false;
+				}
+			}
+		}
+	}
+	
+	private function _not_values($data, $value, $title) {
+		if($value && !empty($data) && in_array($data, $value)) {
+			$this->output[$title] = 'Unacceptable value.';
+			$this->result = false;
+		}
+	}
+	
+	private function _not_values_i($data, $value, $title) {
+		if($value && !empty($data) && $this->in_arrayi($data, $value)) {
+			$this->output[$title] = 'Unacceptable value.';
+			$this->result = false;
+		}
+	}
+	
+	private function _not_values_csv($data, $value, $title) {
+		if($value && !empty($data)) {
+			foreach(explode(',', $data) as $v) {
+				if(in_array($v, $value)) {
+					$this->output[$title] = 'Unacceptable value.';
+					$this->result = false;
+				}
+			}
+		}
+	}
+	
+	private function _not_values_csv_i($data, $value, $title) {
+		if($value && !empty($data)) {
+			foreach(explode(',', $data) as $v) {
+				if($this->in_arrayi($v, $value)) {
+					$this->output[$title] = 'Unacceptable value.';
 					$this->result = false;
 				}
 			}
@@ -312,13 +376,19 @@ class Validator {
 		}
 	}
 	
-	// Utility Functions
+/*----------------------------------------------
+	Utility Functions
+----------------------------------------------*/
 	private function formatBytes($size, $precision = 2) {
 		if(!is_numeric($size)) { $size = 0; }
 		$base = log($size, 1024);
 		$suffixes = array('B', 'KB', 'MB', 'GB', 'TB', 'PB');
 		$newSize = round(pow(1024, $base - floor($base)), $precision);
 		return (is_nan($newSize) ? '-' : $newSize . ' ' . $suffixes[floor($base)]);
+	}
+	
+	private function in_arrayi($needle, $haystack) {
+		return in_array(strtolower($needle), array_map('strtolower', $haystack));
 	}
 	
 /*----------------------------------------------
@@ -414,8 +484,32 @@ class Validator {
 					$this->_values($data, $v, $title);
 					break;
 					
+				case 'values_i':
+					$this->_values_i($data, $v, $title);
+					break;
+					
 				case 'values_csv':
 					$this->_values_csv($data, $v, $title);
+					break;
+					
+				case 'values_csv_i':
+					$this->_values_csv_i($data, $v, $title);
+					break;
+					
+				case 'not_values':
+					$this->_not_values($data, $v, $title);
+					break;
+					
+				case 'not_values_i':
+					$this->_not_values_i($data, $v, $title);
+					break;
+					
+				case 'not_values_csv':
+					$this->_not_values_csv($data, $v, $title);
+					break;
+					
+				case 'not_values_csv_i':
+					$this->_not_values_csv_i($data, $v, $title);
 					break;
 					
 				case 'match':

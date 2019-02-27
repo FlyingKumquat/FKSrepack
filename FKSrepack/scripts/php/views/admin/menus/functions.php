@@ -397,12 +397,36 @@ class PageFunctions extends CoreFunctions {
 		// Grab all menu items from the database that can have children
 		if($Database->Q(array(
 			'assoc' => 'id',
-			'query' => 'SELECT id,menu_id,title FROM fks_menu_items WHERE is_parent = 1 AND deleted = 0 ORDER BY title'
+			'query' => 'SELECT id,menu_id,parent_id,title FROM fks_menu_items WHERE is_parent = 1 AND deleted = 0 ORDER BY title'
 		))) {
 			$menu_items = $Database->r['rows'];
 		} else {
 			// Return error message with error code
 			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+		}
+		
+		// Loop through menu items and format parent names
+		foreach($menu_items as $k => &$v) {
+			// Set parents array
+			$_parents = array();
+			
+			// Set _item to self
+			$_item = $v;
+			
+			// While loop
+			while(
+				key_exists($_item['parent_id'], $menu_items)	// Parent exists
+				&& $_item['parent_id'] != $k					// Parent is not self
+			) {
+				// Set _item to parent
+				$_item = $menu_items[$_item['parent_id']];
+				
+				// Prepend _item title to _parents
+				array_unshift($_parents, $_item['title']);
+			}
+			
+			// Build parent_title
+			$v['parent_title'] = (empty($_parents) ? '' : implode('/', $_parents) . '/') . $v['title'];
 		}
 		
 		$current_icon = (isset($menu_item['icon']) ? $menu_item['icon'] : '');

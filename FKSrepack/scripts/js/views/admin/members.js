@@ -138,12 +138,12 @@ define([
 	function editMember( id ) {
 		if(!id){ var id = '+'; }
 		fks.editModal({
-			'src': page.src,
-			'wait': true,
-			'action': 'editMember', 
-			'data': id,
-			'callbacks': {
-				'onOpen': editMemberCallback
+			src: page.src,
+			wait: true,
+			action: 'editMember', 
+			action_data: id,
+			callbacks: {
+				onOpen: editMemberCallback
 			}
 		})
 	}

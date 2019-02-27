@@ -148,7 +148,7 @@ define([
 			src: page.src,
 			wait: true,
 			action: 'editGroup', 
-			data: id,
+			action_data: id,
 			callbacks: {
 				onOpen: editGroupCallback
 			}
