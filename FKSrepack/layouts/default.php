@@ -46,7 +46,7 @@
 		
 		<div class="top-nav-background"></div>
 		<div id="top_nav" fks-nav="top">
-			<a class="site-logo" href="#home">
+			<a class="site-logo" href="#<?=$Manager->getHomePage()?>">
 				<img src="img/favicon.ico" /><span class="d-none d-sm-inline"><b>FKS</b><span style="color: #36e3fd;">repack</span></span>
 			</a>
 			<!--

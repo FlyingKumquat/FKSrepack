@@ -1,5 +1,5 @@
 /***********************************************
-	Updated: 02/22/2019
+	Updated: 03/01/2019
 ***********************************************/
 (function(fks, $, undefined) {
 /*----------------------------------------------
@@ -16,11 +16,13 @@
 	// Public
 	fks.handler = '/scripts/php/views/handler.php';
 	fks.siteTitle = '';
+	fks.homePage = '';
 	fks.currentPage = '';
 	fks.currentPageLabel = '';
 	fks.layout = null;
 	fks.container = '#content';
 	fks.ready = false;
+	fks.readyCallback = null;
 	fks.debug = {
 		general: false,
 		ajax: false,
@@ -363,9 +365,10 @@
 /*----------------------------------------------
 	Public Functions
 ----------------------------------------------*/
-	fks.initialize = function() {
+	fks.initialize = function(callback) {
 		if(fks.debug.general) { console.log('FKS -> Initialization Started'); }
 		
+		fks.readyCallback = callback;
 		fks.siteTitle = document.title;
 		fks.buildMenus();
 		
@@ -709,7 +712,7 @@
 			hash = hash.substring(0, hash.indexOf('?'));
 		}
 		if(hash == '') {
-			hash = 'home'
+			hash = fks.homePage;
 			window.history.replaceState(null , null, '/#' + hash);
 		};
 		return hash;
@@ -1290,6 +1293,8 @@
 						if(!fks.ready) {
 							fks.ready = true;
 							if(fks.debug.general) { console.log('FKS -> Initialization Completed'); }
+							fks.homePage = (response.site_home_page ? response.site_home_page : 'home');
+							fks.readyCallback();
 						}
 						break;
 						

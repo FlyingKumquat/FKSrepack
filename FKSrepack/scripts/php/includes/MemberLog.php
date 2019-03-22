@@ -911,6 +911,24 @@ class MemberLog extends MemberLogX {
 			$site_settings[$v['id']] = $v;
 		}
 		
+		$menu_items = array();
+		$get = 'SELECT id, parent_id, url FROM fks_menu_items';
+		if(!$this->cacheKeeper($get)) { return __FUNCTION__ . ' - error 3'; }
+		$_mi = $this->logCache['queries'][$get];
+		$menu_items[0] = '<i>none</i>';
+		
+		foreach($_mi as $k => $v) {			
+			$url = array();
+			array_unshift($url, $v['url']);
+			if($v['parent_id'] > 0) {
+				array_unshift($url, $_mi[$v['parent_id']]['url']);
+				if($_mi[$v['parent_id']]['parent_id'] > 0) {
+					array_unshift($url, $_mi[$_mi[$v['parent_id']]['parent_id']]['url']);
+				}
+			}
+			$menu_items[$k] = implode('/', $url);
+		}
+		
 		$build = array();
 		
 		// Make simple
@@ -970,6 +988,11 @@ class MemberLog extends MemberLogX {
 						<div class="fks-blockquote">' . (is_array($v) ? 'Changed' : 'Set') . '.</div>
 					');
 					$_skip = true;
+					break;
+					
+				case 'web_page':
+					$_part['type'] = 'values';
+					$_part['values'] = $menu_items;
 					break;
 			}
 			

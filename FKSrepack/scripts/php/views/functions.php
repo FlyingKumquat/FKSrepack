@@ -11,11 +11,13 @@ require_once(__DIR__ . '/../includes/Enums.php');
 require_once(__DIR__ . '/../includes/Bitmask.php');
 require_once(__DIR__ . '/../includes/MemberLog.php');
 require_once(__DIR__ . '/../includes/Database.php');
+require_once(__DIR__ . '/../includes/DataHandler.php');
 require_once(__DIR__ . '/../includes/DataTypes.php');
 require_once(__DIR__ . '/../includes/Validator.php');
 require_once(__DIR__ . '/../includes/Crypter.php');
 require_once(__DIR__ . '/../includes/Session.php');
 require_once(__DIR__ . '/../includes/Utilities.php');
+require_once(__DIR__ . '/../includes/Curl.php');
 require_once(__DIR__ . '/../includes/PHPMailer/PHPMailerAutoload.php');
 
 // Autoload
@@ -179,18 +181,23 @@ class CoreFunctions extends \Utilities {
 	
 	// -------------------- Local Login -------------------- \\
 	private function loginLocal($form) {
-		// Set vars
-		$Database = new \Database;
-		$DataTypes = new \DataTypes;
+		// Need to set the correct database connection whether it is local or remote
+		$args = array();
+		if($this->siteSettings('REMOTE_SITE') == 'Secondary') {
+			$args['db'] = $this->siteSettings('REMOTE_DATABASE');
+		}
+		$Database = new \Database($args);
+		
+		// Set variables
 		require_once(__DIR__ . '/../includes/PasswordHash.php');
 		$t_hasher = new \PasswordHash(13, FALSE);
 		$alerts = array();
 		
-		// Grab DB password
+		// Grab database password (10) by looking up username
 		if(!$Database->Q(array(
 			'params' => array(
 				':username' => $form['username'],
-				':password_id' => \Enums\DataTypes::PASSWORD['id']
+				':password_id' => 10
 			),
 			'query' => '
 				SELECT
@@ -233,17 +240,26 @@ class CoreFunctions extends \Utilities {
 	// -------------------- Create and Send Verification Code -------------------- \\
 	private function sendVerificationEmail( $member_id ) {
 		// Set vars
-		$DataTypes = new \DataTypes();
+		//$DataTypes = new \DataTypes();
 		$subject = $this->siteSettings('EMAIL_VERIFICATION_SUBJECT');
 		$body = $this->siteSettings('EMAIL_VERIFICATION_TEMPLATE');
 		
-		// Grab member data
-		$data = $DataTypes->getData(array(
-				\Enums\DataTypes::FIRST_NAME,
-				\Enums\DataTypes::EMAIL_ADDRESS
-			),
-			$member_id
+		// Create an array for Data Handler to use for members data
+		$_info = array(
+			'members' => array(
+				'base' => 'fks_members',						// Base Table
+				'data' => 'fks_member_data',					// Data Table
+				'data_types' => 'fks_member_data_types',		// Data Type Table
+				'base_column' => 'member_id',					// Column name (data table link to base table)
+				'data_types_column' => 'id'						// Column name (data table link to data types table)
+			)
 		);
+		
+		// Create Data Handler for remote site
+		$DataHandler = new \DataHandler($_info);
+		
+		// Grab members first name (2) and email address (4)
+		if( !$data = $DataHandler->getData('remote', 'members', $member_id, array(2,4)) ) { return array('result' => 'failure', 'message' => 'Failed to get email address'); }
 		
 		// Create new code
 		$verify_code = $this->makeKey(6, '1234567890');
@@ -251,13 +267,13 @@ class CoreFunctions extends \Utilities {
 		// Json encode for storing in the DB
 		$json = json_encode(array('code' => $verify_code, 'date' => gmdate('Y-m-d h:i:s')));
 		
-		// Save code
-		$DataTypes->setData(array(\Enums\DataTypes::VERIFY_CODE['id'] => $json), $member_id, true);
+		// Save verify code (9)
+		if( !$DataHandler->setData('remote', 'members', $member_id, array(9 => $json), true) ) { return array('result' => 'failure', 'message' => 'Failed to set verify code'); }
 		
 		// Create replacement array
 		$replacement = array(
 			'%VERIFY_CODE%' => $verify_code,
-			'%FIRST_NAME%' => ($data['FIRST_NAME'] ? $data['FIRST_NAME'] : 'Hello'),
+			'%FIRST_NAME%' => ($data[2]['value'] ? $data[4]['value'] : 'Hello'),
 			'%SITE_USERNAME%' => $this->siteSettings('SITE_USERNAME'),
 			'%SITE_TITLE%' => $this->siteSettings('SITE_TITLE')
 		);
@@ -268,28 +284,29 @@ class CoreFunctions extends \Utilities {
 		
 		// Send email
 		$mail = $this->sendEmail(array(
-			'to_address' => $data['EMAIL_ADDRESS'],
+			'to_address' => $data[4]['value'],
 			'subject' => $subject,
 			'body' => $body
 		));
 		
-		// Return
+		// If we fail to send email remove the verify code (9)
 		if($mail['result'] == 'failure') {
-			return false;
-		} else {
-			return true;
+			if( !$DataHandler->setData('remote', 'members', $member_id, array(9 => null), true) ) { return array('result' => 'failure', 'message' => 'Failed to null verify code'); }
 		}
+		
+		// Return
+		return $mail;
 	}
 	
 	// -------------------- Check for unused Email Address -------------------- \\
 	private function checkForUnusedEmail( $email_address ) {
 		// Set database
-		$Database = new \Database;
+		$Database = new \Database(array('db' => $this->siteSettings('REMOTE_DATABASE')));
 		
 		// Query for email address
 		if($Database->Q(array(
 			'params' => array(
-				':email_address_id' => \Enums\DataTypes::EMAIL_ADDRESS['id'],
+				':email_address_id' => 4,
 				':email_address' => $email_address
 			),
 			'query' => '
@@ -320,6 +337,73 @@ class CoreFunctions extends \Utilities {
 		} else {
 			return false;
 		}
+	}
+	
+	// -------------------- Check for First Access (Secondary Site) -------------------- \\
+	private function checkForRemoteAccess($member_id) {
+		// TODO - Error Checks
+		// Set database
+		$Database = new \Database();
+		
+		// Check to see if this member is listed in the table
+		if($Database->Q(array(
+			'db' => $this->siteSettings('REMOTE_DATABASE'),
+			'params' => array(
+				':member_id' => $member_id,
+				':site_id' => $this->siteSettings('REMOTE_ID')
+			),
+			'query' => 'SELECT date_created FROM fks_member_sites WHERE member_id = :member_id AND site_id = :site_id'
+		))) {
+			// If member already exists return
+			if( $Database->r['found'] > 0 ){ return; }
+		} else {
+			// Query failed
+			return;
+		}
+		
+		// Check to see if they already have an access group
+		if(!$Database->Q(array(
+			'params' => array(
+				':id' => 8,
+				':member_id' => $member_id
+			),
+			'query' => 'SELECT data FROM fks_member_data WHERE id = :id AND member_id = :member_id'
+		))) {
+			// Query failed
+			return;
+		}
+		
+		// Give member default local access group
+		if( $Database->r['found'] == 0 ) {
+			if(!$Database->Q(array(
+				'params' => array(
+					':id' => 8,
+					':member_id' => $member_id,
+					':data' => $this->siteSettings('DEFAULT_ACCESS_LOCAL')
+				),
+				'query' => 'INSERT INTO fks_member_data SET id = :id, member_id = :member_id, data = :data'
+			))) {
+				// Query failed
+				return;
+			}
+		}
+		
+		// Add member to the list
+		if(!$Database->Q(array(
+			'db' => $this->siteSettings('REMOTE_DATABASE'),
+			'params' => array(
+				':member_id' => $member_id,
+				':site_id' => $this->siteSettings('REMOTE_ID'),
+				':date_created' => gmdate('Y-m-d H:i:s')
+			),
+			'query' => 'INSERT INTO fks_member_sites SET member_id = :member_id, site_id = :site_id, date_created = :date_created'
+		))) {
+			// Query failed
+			return;
+		}
+		
+		// Return
+		return;
 	}
 	
 /*----------------------------------------------
@@ -499,13 +583,14 @@ class CoreFunctions extends \Utilities {
 			}
 		}
 		
-		// Set vars
+		// Set variables
 		$settings = array(
 			'ACTIVE_DIRECTORY' => $this->siteSettings('ACTIVE_DIRECTORY'),
 			'AD_FAILOVER' => $this->siteSettings('AD_FAILOVER'),
 			'AD_PREFERRED' => strtolower($this->siteSettings('AD_PREFERRED')),
 			'AD_LOGIN_SELECTOR' => $this->siteSettings('AD_LOGIN_SELECTOR'),
-			'EMAIL_VERIFICATION' => $this->siteSettings('EMAIL_VERIFICATION')
+			'EMAIL_VERIFICATION' => $this->siteSettings('EMAIL_VERIFICATION'),
+			'REMOTE_SITE' => $this->siteSettings('REMOTE_SITE')
 		);
 		$selector = isset($form['selector']) && $settings['AD_LOGIN_SELECTOR'] ? $form['selector'] : 'default';
 		$attempts = array(
@@ -575,23 +660,38 @@ class CoreFunctions extends \Utilities {
 			return array('result' => 'failure', 'message' => $attempts['message'], 'debug' => $attempts);
 		}
 		
-		// Grab member data so we can check a few more things
-		$DataTypes = new \DataTypes();
-		$member_data = $DataTypes->getData(array(
-				\Enums\DataTypes::EMAIL_ADDRESS,
-				\Enums\DataTypes::VERIFY_CODE,
-				\Enums\DataTypes::EMAIL_VERIFIED
-			), $attempts['member']
+		// Create an array for Data Handler to use for members data
+		$_info = array(
+			'members' => array(
+				'base' => 'fks_members',						// Base Table
+				'data' => 'fks_member_data',					// Data Table
+				'data_types' => 'fks_member_data_types',		// Data Type Table
+				'base_column' => 'member_id',					// Column name (data table link to base table)
+				'data_types_column' => 'id'						// Column name (data table link to data types table)
+			)
 		);
-		$member_data['VERIFY_CODE'] = ($member_data['VERIFY_CODE'] ? json_decode($member_data['VERIFY_CODE'], true) : false);
 		
-		// Check if Email Verification is enabled and if this account is not Verified
-		if( $settings['EMAIL_VERIFICATION'] == 1 && (!$member_data['EMAIL_VERIFIED'] || !$member_data['EMAIL_ADDRESS'])  ) {
+		// Create Data Handler for remote site
+		$DataHandler = new \DataHandler($_info);
+		
+		// Grab member data so we can check a few more things, return if it fails
+		if( !$member_data = $DataHandler->getData('remote', 'members', $attempts['member'], array(4,9,12)) ) {
+			return array('result' => 'failure', 'message' => 'Data Handler Error', 'attempt' => $attempt, 'data' => $member_data);
+		}
+		
+		// JSON decode the verify code if there is one
+		$member_data[9]['value'] = (is_null($member_data[9]['value']) ? null : json_decode($member_data[9]['value'], true));
+		
+// Testing
+//return array('result' => 'failure', 'message' => 'Testing - Unverified', 'attempt' => $attempt, 'data' => $member_data);
+		
+		// Check if Email Verification is enabled check to see if email is verified (12) and email is set (4)
+		if( $settings['EMAIL_VERIFICATION'] == 1 && (is_null($member_data[12]['value']) || is_null($member_data[4]['value']))  ) {
 			// Unset email_verified
-			$DataTypes->setData(array(\Enums\DataTypes::EMAIL_VERIFIED['id'] => null), $attempts['member']);
+			$DataHandler->setData('remote', 'members', $attempts['member'], array(12 => null), true);
 			
 			// Check to see if this account has an email address
-			if( !$member_data['EMAIL_ADDRESS'] ) {
+			if( is_null($member_data[4]['value']) ) {
 				// Add id to session for adding email address
 				$this->Session->update(array(
 					'temp_id' => $attempts['member']
@@ -599,12 +699,14 @@ class CoreFunctions extends \Utilities {
 				return array('result' => 'email', 'message' => 'You must have an email address, please enter one.', 'debug' => $attempts);
 			}
 			
-			// Check to see if there is a code in the DB
-			if( !$member_data['VERIFY_CODE'] ) {
-				if( $this->sendVerificationEmail($attempts['member']) ) {
+			// Check to see if there is a verify code (9) in the DB
+			if( is_null($member_data[9]['value']) ) {
+				$sendEmail = $this->sendVerificationEmail($attempts['member']);
+				
+				if( $sendEmail['result'] == 'success' ) {
 					return array('result' => 'verify', 'message' => 'A code has been emailed to you, please check your email.', 'debug' => $attempts);
 				} else {
-					return array('result' => 'failure', 'message' => 'Unable to send verification email!', 'debug' => $attempts);
+					return array('result' => 'failure', 'message' => 'Unable to send verification email!', 'debug' => $attempts, 'status' => $sendEmail);
 				}
 			}
 			
@@ -614,18 +716,12 @@ class CoreFunctions extends \Utilities {
 			}
 			
 			// Check to see if the code is correct
-			if( $form['verify_code'] != $member_data['VERIFY_CODE']['code'] ) {
+			if( $form['verify_code'] != $member_data[9]['value']['code'] ) {
 				return array('result' => 'failure', 'message' => 'The code you supplied is incorrect!', 'debug' => $attempts);
 			}
 			
-			// Everything is good, remove the code and verify account
-			$DataTypes->setData(array(
-					\Enums\DataTypes::VERIFY_CODE['id'] => null,
-					\Enums\DataTypes::EMAIL_VERIFIED['id'] => 1
-				),
-				$attempts['member'],
-				true
-			);
+			// Everything is good, remove the verify code (9), verify account (12), and make the server do it
+			$DataHandler->setData('remote', 'members', $attempts['member'], array(9 => null, 12 => 1), true);
 		}
 		
 		// Check for Two Step Auth
@@ -633,7 +729,12 @@ class CoreFunctions extends \Utilities {
 		//
 		//
 		
-		// Prepare Session Data
+		// Check for remote site first login
+		if($settings['REMOTE_SITE'] == 'Secondary') {
+			$this->checkForRemoteAccess($attempts['member']);
+		}
+		
+		// Prepare session data
 		$session_data = array(
 			'id' => $attempts['member'],
 			'username' => $form['username'],
@@ -644,7 +745,7 @@ class CoreFunctions extends \Utilities {
 			'guest' => false
 		);
 		
-		// Start Session
+		// Start session
 		$this->Session->start($session_data);
 		
 		// Add login event to member log
@@ -653,7 +754,7 @@ class CoreFunctions extends \Utilities {
 		$log_misc['session_id'] = session_id();
 		$MemberLog = new \MemberLog(\Enums\LogActions::LOGIN, $session_data['id'], null, json_encode($log_misc));
 		
-		$this->updateSessionAccess();
+		$this->updateSessionAccess();	
 		
 		// Custom function to run after login
 		if(isset($this->Extenders['Login'])) {
@@ -664,6 +765,7 @@ class CoreFunctions extends \Utilities {
 			}
 		}
 		
+		// Return log in successful with attempts and alerts
 		return array('result' => 'success', 'message' => 'Login successful!', 'debug' => $attempts, 'alerts' => $alerts);
 	}
 	
@@ -842,9 +944,22 @@ class CoreFunctions extends \Utilities {
 			return array('result' => 'failure', 'message' => 'That email address is already in use!');
 		}
 		
+		// Create an array for Data Handler to use for members data
+		$_info = array(
+			'members' => array(
+				'base' => 'fks_members',						// Base Table
+				'data' => 'fks_member_data',					// Data Table
+				'data_types' => 'fks_member_data_types',		// Data Type Table
+				'base_column' => 'member_id',					// Column name (data table link to base table)
+				'data_types_column' => 'id'						// Column name (data table link to data types table)
+			)
+		);
+		
+		// Create Data Handler for remote site
+		$DataHandler = new \DataHandler($_info);
+		
 		// Add email address
-		$DataTypes = new \DataTypes();
-		if(!$DataTypes->setData(array(\Enums\DataTypes::EMAIL_ADDRESS['id'] => $data['email']), $_SESSION['temp_id'], true)){
+		if( !$DataHandler->setData('remote', 'members', $_SESSION['temp_id'], array(4 => $data['email']), true) ) {
 			return array('result' => 'failure', 'message' => 'Unable to add email address!');
 		}
 		
@@ -907,6 +1022,7 @@ class CoreFunctions extends \Utilities {
 			'timeout' => $_SESSION['timeout'],
 			'last_action' => $_SESSION['last_action'],
 			'access' => $access,
+			'site_home_page' => $_SESSION['site_home_page'],
 			'announcements' => $_SESSION['announcements']
 		);
 	}
@@ -952,7 +1068,6 @@ class CoreFunctions extends \Utilities {
 		
 		// Set Variables
 		$Database = new \Database;
-		$DataTypes = new \DataTypes;
 		$temp_data = array();
 		$access_out = array();
 		
@@ -988,35 +1103,37 @@ class CoreFunctions extends \Utilities {
 		} else {
 			return false;
 		}
-
+		
+		$DataHandler = new \DataHandler(array(
+			'members' => array(
+				'data' => 'fks_member_data',					// Data table name
+				'data_types' => 'fks_member_data_types',		// Data type table name
+				'base_column' => 'member_id',					// Column name (optional | data table link to base table | default: target_id)
+				'data_types_column' => 'id'						// Column name (optional | data table link to data types table | default: data_type_id)
+			)
+		));
+		
+		$_member_data = $DataHandler->getData('local', 'members', $member, array(
+			6,		// date format
+			7,		// timezone
+			8,		// access groups
+			13,		// site layout
+			15		// site home page
+		));
+		
 		// Grab Member's Access Groups
-		if($temp_data = $DataTypes->getData(array(\Enums\DataTypes::ACCESS_GROUPS), $member)) {
+		$temp_access = null;
+		$access_out = null;
+		if(empty($_member_data[8]['value'])) {
 			if($member == 0) {
-				// Member is a Guest
-				$temp_data['ACCESS_GROUPS'] = $site_settings['DEFAULT_ACCESS_GUEST'];
+				$temp_access = $site_settings['DEFAULT_ACCESS_GUEST'];
 			}
 		} else {
-			return false;
+			$temp_access = $_member_data[8]['value'];
 		}
-		
-		// Grab Member's Timezone & Date Format
-		$time_settings = $DataTypes->getData(array(\Enums\DataTypes::TIMEZONE, \Enums\DataTypes::DATE_FORMAT), $member);
-		if(!$time_settings['TIMEZONE']) { $time_settings['TIMEZONE'] = $site_settings['TIMEZONE']; }
-		if(!$time_settings['DATE_FORMAT']) { $time_settings['DATE_FORMAT'] = $site_settings['DATE_FORMAT']; }
-		if($time_settings['TIMEZONE'] == null) { $time_settings['TIMEZONE'] = @date_default_timezone_get(); }
-		
-		// Grab Member's Site Layout
-		if($site_layout = $DataTypes->getData(array(\Enums\DataTypes::SITE_LAYOUT), $member)['SITE_LAYOUT']) {
-			if(!$site_layout) {
-				$site_layout = $this->siteSettings('SITE_LAYOUT');
-			}
-		} else {
-			$site_layout = $this->siteSettings('SITE_LAYOUT');
-		}
-		
-		// No Access
-		if($temp_data['ACCESS_GROUPS']) {
-			foreach(explode(',', $temp_data['ACCESS_GROUPS']) as $group) {
+
+		if(!empty($temp_access)) {
+			foreach(explode(',', $temp_access) as $group) {
 				$access_out[$group] = array();
 				foreach(json_decode($access_groups[$group]['data'], true) as $item => $access) {
 					if(!isset($menu_items[$item])) { continue; }
@@ -1024,6 +1141,49 @@ class CoreFunctions extends \Utilities {
 				}
 			}
 		}
+		
+		// Grab Member's Site Home Page
+		$site_home_page = null;
+		$hierarchy = 0;
+		if(!empty($_member_data[15]['value'])) {
+			$site_home_page = $_member_data[15]['value'];
+		}
+		
+		if(empty($site_home_page) && !empty($temp_access)) {
+			foreach(explode(',', $temp_access) as $group) {
+				if(!empty($access_groups[$group]['home_page']) && $access_groups[$group]['hierarchy'] <= $hierarchy) {
+					$site_home_page = $access_groups[$group]['home_page'];
+					$hierarchy = $access_groups[$group]['hierarchy'];
+				}
+			}
+		}
+		
+		if(empty($site_home_page)) {
+			$site_home_page = $site_settings['SITE_HOME_PAGE'];
+		}
+		
+		if(!empty($site_home_page)) {
+			$site_home_page = $this->getMenuItemStructures(false, true)[$site_home_page];
+		}
+		
+		// Grab Member's Site Layout
+		$site_layout = null;
+		if(!empty($_member_data[13]['value'])) {
+			$site_layout = $_member_data[13]['value'];
+		} else {
+			$site_layout = $site_settings['SITE_LAYOUT'];
+		}
+		
+		
+		// Grab Member's Timezone & Date Format
+		$time_settings = array(
+			'timezone' => $_member_data[7]['value'],
+			'date_format' => $_member_data[6]['value']
+		);
+		if(empty($time_settings['timezone'])) { $time_settings['timezone'] = $site_settings['TIMEZONE']; }
+		if(empty($time_settings['timezone'])) { $time_settings['timezone'] = @date_default_timezone_get(); }
+		if(empty($time_settings['date_format'])) { $time_settings['date_format'] = $site_settings['DATE_FORMAT']; }
+
 		
 		// Load announcements
 		$announcements = isset($_SESSION['timezone']) ? $this->loadAnnouncements($site_settings) : array();
@@ -1043,9 +1203,10 @@ class CoreFunctions extends \Utilities {
 		$this->Session->update(array(
 			'site_settings' => $site_settings,
 			'access_groups' => $access_out,
-			'timezone' => $time_settings['TIMEZONE'],
-			'date_format' => $time_settings['DATE_FORMAT'],
+			'timezone' => $time_settings['timezone'],
+			'date_format' => $time_settings['date_format'],
 			'site_layout' => $site_layout,
+			'site_home_page' => $site_home_page,
 			'announcements' => $announcements
 		));
 		
@@ -1057,7 +1218,13 @@ class CoreFunctions extends \Utilities {
 	//	Check Access Groups for Access
 	//---------------------------------------------\\
 	public function checkAccess($checking, $value, $die = false) {
-		if(!isset($_SESSION['access_groups']) || !is_array($_SESSION['access_groups']) || !$checking || !$value) { return false; }
+		if(!isset($_SESSION['access_groups']) || !is_array($_SESSION['access_groups']) || empty($_SESSION['access_groups']) || !$checking || !$value) { 
+			if($die) {
+				die(include(__DIR__ . '/../../../views/403.php'));
+			}
+			
+			return false;
+		}
 		$out = 0;
 		foreach($_SESSION['access_groups'] as $group) {
 			if(isset($group[$checking]) && $group[$checking] > $out) { $out = $group[$checking]; }

@@ -1,8 +1,8 @@
 <?PHP
 /*##############################################
 	Database Simplistic PDO Wrapper
-	Version: 1.8.20180627
-	Updated: 06/27/2018
+	Version: 1.9.20190322
+	Updated: 03/22/2019
 ##############################################*/
 
 /*----------------------------------------------
@@ -251,6 +251,46 @@ class Database {
 			}
 		}
 		return false;
+	}
+/*----------------------------------------------
+	Get Primary Keys
+----------------------------------------------*/
+	public function primaryKeys($table) {
+		$keys = array();
+        switch($this->type) {
+			case 'mysql':
+				if($this->Q('SHOW INDEX FROM ' . $table . ' WHERE Key_name = "PRIMARY"')) {
+					if($this->r['found'] > 0) {
+						foreach($this->r['rows'] as $k => $v) {
+							array_push($keys, $v['Column_name']);
+						}
+					}
+				}
+				break;
+				
+			case 'sqlsrv':
+			case 'mssql':
+				if($this->Q('
+					SELECT
+						COLUMN_NAME
+						
+					FROM
+						INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+						
+					WHERE
+						OBJECTPROPERTY(OBJECT_ID(CONSTRAINT_SCHEMA + '.' + QUOTENAME(CONSTRAINT_NAME)), \'IsPrimaryKey\') = 1
+							AND
+						TABLE_NAME = \'' . $table . '\'
+				')) {
+					if($this->r['found'] > 0) {
+						foreach($this->r['rows'] as $k => $v) {
+							array_push($keys, $v['COLUMN_NAME']);
+						}
+					}
+				}
+				break;
+		}
+		return $keys;
 	}
 }
 ?>

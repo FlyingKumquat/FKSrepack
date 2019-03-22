@@ -29,6 +29,9 @@ $RECYCLE.BIN/
 # Renamed install directory
 FKSrepack/_install
 
+# Backups directory
+FKSrepack/install/backups
+
 # Remove favicon
 FKSrepack/img/favicon.ico
 

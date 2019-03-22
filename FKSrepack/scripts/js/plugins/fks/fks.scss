@@ -1,5 +1,5 @@
 /***********************************************
-	Updated: 02/22/2019
+	Updated: 02/27/2019
 ***********************************************/
 $top_nav_height: 40px;
 $side_nav_width: 200px;
@@ -1357,6 +1357,24 @@ fieldset {
 	}
 }
 
+.form-checkbox {
+	display: block;
+	line-height: 36px;
+	font-weight: bold;
+	padding: 0px .75rem;
+	margin-bottom: 0px;
+	border: 1px solid #dfdfdf;
+	cursor: pointer;
+	.icheckbox_minimal {
+		margin-top: -1px;
+		margin-right: 7px;
+		background-color: white;
+	}
+	&:hover {
+		background-color: rgba(0,0,0,0.075);
+	}
+}
+
 /*-------------------------------------------------------------------
 	FKS Custom Form Class
 -------------------------------------------------------------------*/
@@ -1373,6 +1391,8 @@ form.fks-form {
 			max-height: 38px;
 		}
 	}
+	
+	
 
 	&.fks-form-sm {
 		.form-control:not(.form-control-md):not(.form-control-lg),
@@ -1386,6 +1406,11 @@ form.fks-form {
 				height: 27px !important;
 				max-height: 27px;
 			}
+		}
+		
+		.form-checkbox {
+			line-height: 25px;
+			padding: 0px .5rem;
 		}
 	}
 	
@@ -1401,6 +1426,11 @@ form.fks-form {
 				height: 51px !important;
 				max-height: 51px;
 			}
+		}
+		
+		.form-checkbox {
+			line-height: 49px;
+			padding: 0px 1.5rem;
 		}
 	}
 }

@@ -209,6 +209,8 @@
 			$(document).ready(function() {
 				fks.submitForm();
 				
+				fks.debug.ajax = false;
+				
 				$('[fks-action="toggle-forms"]').on('click', function() {
 					togglePanels($(this).attr('fks-target'));
 				});
@@ -224,7 +226,7 @@
 					$.post(fks.handler, {wait: true, action: 'accountLogin', data: data})
 					.done(function(data) {
 						if(fks.debug.ajax) { console.log(data); }
-						var response = JSON.parse(data);
+						try { var response = JSON.parse(data); } catch(e) { $('#login_form .fks-alert-danger').html('Server error!'); return; }
 						switch(response.result) {
 							case 'success':
 								window.location = '/' + window.location.hash;
@@ -265,7 +267,7 @@
 					$.post(fks.handler, {wait: true, action: 'accountAddEmail', data: data})
 					.done(function(data) {
 						if(fks.debug.ajax) { console.log(data); }
-						var response = JSON.parse(data);
+						try { var response = JSON.parse(data); } catch(e) { $('#email_form .fks-alert-danger').html('Server error!'); return; }
 						switch(response.result) {
 							case 'success':
 								togglePanels('login');
@@ -309,7 +311,7 @@
 					$.post(fks.handler, {wait: true, action: 'accountRegister', data: data})
 					.done(function(data) {
 						if(fks.debug.ajax) { console.log(data); }
-						try { var response = JSON.parse(data); } catch(e) { form.children('.alert').html('Server error!'); return; }
+						try { var response = JSON.parse(data); } catch(e) { $('#register_form .fks-alert-danger').html('Server error!'); return; }
 						switch(response.result) {
 							case 'success':
 								togglePanels('login');
@@ -352,7 +354,7 @@
 					$.post(fks.handler, {wait: true, action: 'forgotPassword', data: data})
 					.done(function(data) {
 						if(fks.debug.ajax) { console.log(data); }
-						var response = JSON.parse(data);
+						try { var response = JSON.parse(data); } catch(e) { form.children('.alert').html('Server error!'); return; }
 						switch(response.result) {
 							case 'success':
 								togglePanels('login');

@@ -1,1 +1,2 @@
 RedirectMatch 403 ^/_install/.*$
+RedirectMatch 403 ^/install/backups/.*$

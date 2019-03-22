@@ -1,6 +1,6 @@
 @charset "UTF-8";
 /***********************************************
-	Updated: 02/22/2019
+	Updated: 02/27/2019
 ***********************************************/
 @import url(https://fonts.googleapis.com/css?family=Roboto);
 /*-------------------------------------------------------------------
@@ -1681,6 +1681,24 @@ fieldset > legend {
   max-height: 51px;
 }
 
+.form-checkbox {
+  display: block;
+  line-height: 36px;
+  font-weight: bold;
+  padding: 0px .75rem;
+  margin-bottom: 0px;
+  border: 1px solid #dfdfdf;
+  cursor: pointer;
+}
+.form-checkbox .icheckbox_minimal {
+  margin-top: -1px;
+  margin-right: 7px;
+  background-color: white;
+}
+.form-checkbox:hover {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+
 /*-------------------------------------------------------------------
 	FKS Custom Form Class
 -------------------------------------------------------------------*/
@@ -1746,6 +1764,10 @@ form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg)
   height: 27px !important;
   max-height: 27px;
 }
+form.fks-form.fks-form-sm .form-checkbox {
+  line-height: 25px;
+  padding: 0px .5rem;
+}
 form.fks-form.fks-form-lg .form-control:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md), .select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .select2.select2-container > .selection .select2-selection:not(.form-control-sm):not(.form-control-md), .select2.select2-container > .selection form.fks-form.fks-form-lg .select2-selection:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length select:not(.form-control-sm):not(.form-control-md), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg select:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter input:not(.form-control-sm):not(.form-control-md), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg input:not(.form-control-sm):not(.form-control-md),
 form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .form-control,
 form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search.input-group:not(.input-group-sm):not(.input-group-md) > input[type="search"],
@@ -1776,6 +1798,10 @@ form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md)
 form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-btn > .btn:not([multiple]):not(textarea) {
   height: 51px !important;
   max-height: 51px;
+}
+form.fks-form.fks-form-lg .form-checkbox {
+  line-height: 49px;
+  padding: 0px 1.5rem;
 }
 
 /*-------------------------------------------------------------------

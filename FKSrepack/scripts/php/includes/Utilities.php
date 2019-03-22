@@ -194,9 +194,35 @@ class Utilities {
 	}
 	
 	/*----------------------------------------------
+		Format GitHub Changelog
+	----------------------------------------------*/
+	public function formatGitHubChangelog($link = false) {
+		if(empty($link)) { return false; }
+		
+		$Curl = new \Curl();
+		if(!$Curl->get($link)) {
+			return array('result' => 'failure', 'message' => 'Failed to load changelog from GitHub.');
+		}
+		
+		if(!isset($Curl->r['json']['body'])) { 
+			return array('result' => 'failure', 'message' => 'Changelog has no body.');
+		}
+		
+		$_body = $Curl->r['json']['body'];
+		$_lines = explode("\r\n", $_body);
+		$_out = '';
+		
+		foreach($_lines as $_line) {
+			
+		}
+		
+		return array('result' => 'success', 'body' => $_body, 'lines' => $_lines, 'out' => $_out);
+	}
+	
+	/*----------------------------------------------
 		Get Menu Item Structures
 	----------------------------------------------*/
-	public function getMenuItemStructures($check_access = false) {
+	public function getMenuItemStructures($check_access = false, $content_only = false) {
 		// Set database connection
 		$Database = new \Database;
 		
@@ -217,6 +243,9 @@ class Utilities {
 			// Continue if no access
 			if($check_access && !$this->checkAccess($v['label'], 1)) { continue; }
 			
+			// Continue if no content
+			if($content_only && !$v['has_content']) { continue; }
+			
 			$url = array();
 			array_unshift($url, $v['url']);
 			if($v['parent_id'] > 0) {
@@ -228,7 +257,16 @@ class Utilities {
 			$menu_items[$k] = implode('/', $url);
 		}
 		
+		asort($menu_items);
+		
 		return $menu_items;
+	}
+	
+	/*----------------------------------------------
+		Get Home Page
+	----------------------------------------------*/
+	public function getHomePage() {
+		return 'home';
 	}
 	
 	/*----------------------------------------------
@@ -894,21 +932,23 @@ class Utilities {
 		Site Settings
 	----------------------------------------------*/
 	public function siteSettings($title, $from_db = false) {
-		if($this->Session->active()) {
+
+		if(isset($this->Session) && $this->Session->active()) {
 			if(!$from_db && isset($_SESSION['site_settings']) && isset($_SESSION['site_settings'][$title])) {
 				return $_SESSION['site_settings'][$title];
-			} else {
-				$Database = new \Database;
-				if($Database->Q(array(
-					'params' => array(':id' => $title),
-					'query' => 'SELECT data FROM fks_site_settings WHERE id = :id'
-				))) {
-					if($Database->r['found'] > 0) {
-						return $Database->r['row']['data'];
-					}
-				}
 			}
 		}
+		
+		$Database = new \Database;
+		if($Database->Q(array(
+			'params' => array(':id' => $title),
+			'query' => 'SELECT data FROM fks_site_settings WHERE id = :id'
+		))) {
+			if($Database->r['found'] > 0) {
+				return $Database->r['row']['data'];
+			}
+		}
+		
 		return false;
 	}
 	
@@ -960,9 +1000,9 @@ class Utilities {
 	}
 	
 	/*----------------------------------------------
-		Form Input
+		Build Form Group
 	----------------------------------------------*/
-	public function formInput($params) {
+	public function buildFormGroup($params) {
 		// Set variables
 		$out = '';
 		$parts = array();
@@ -970,6 +1010,7 @@ class Utilities {
 		$classes = array();
 		$name_set = false;
 		$attributes = array();
+		$required = ' <span style="color: red;">*</span>';
 		
 		// Add
 		array_push($classes, 'form-control');
@@ -1011,8 +1052,10 @@ class Utilities {
 			return $out;
 		}
 		
-		// Add label to parts
-		array_push($parts, '<label for="' . $params['id'] . '" class="form-control-label">' . $params['title'] . '</label>');
+		// Add label to parts if not a checkbox
+		if($params['type'] != 'checkbox') {
+			array_push($parts, '<label for="' . $params['id'] . '" class="form-control-label">' . $params['title'] . (isset($params['required']) && $params['required'] ? $required : '') . '</label>');
+		}
 
 		// Attributes / Classes / Properties
 		$_acp = 'class="' . implode(' ', $classes) . '" ' . implode(' ', $attributes);
@@ -1038,6 +1081,13 @@ class Utilities {
 					}
 				}
 				array_push($content, '<select ' . $_acp . '>' . implode('', $_options) . '</select>');
+				break;
+				
+			case 'checkbox':
+				$_checkbox = '<input type="checkbox" ' . $_acp . ' />'
+					. $params['title']
+					. (isset($params['required']) && $params['required'] ? $required : '');
+				array_push($content, '<label class="form-checkbox">' . $_checkbox . '</label>');
 				break;
 		}
 		

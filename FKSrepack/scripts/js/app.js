@@ -200,13 +200,14 @@ require(['popper'], function(Popper) {
 			fks.bootbox = bootbox;
 			fks.toastr = toastr;
 			fks.Sortable = Sortable;
-			fks.initialize();
-			require(['autoloader'], function(content) {
-				// Loaded
-			}, function(err) {
-				// Error
+			fks.initialize(function() {
+				require(['autoloader'], function(content) {
+					// Loaded
+				}, function(err) {
+					// Error
+				});
+				new MainRouter;
 			});
-			new MainRouter;
 		});
 	});
 });

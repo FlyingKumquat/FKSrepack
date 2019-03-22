@@ -104,6 +104,45 @@ class PageFunctions extends CoreFunctions {
 				$return .= '<textarea class="form-control form-control-sm" id="' . $formData['id'] . '" name="' . $formData['id'] . '" ' . (isset($json['attributes']) ? $json['attributes'] : '') . ' aria-describedby="' . $formData['id'] . '_HELP" ' . ($this->access == 3 ? '' : ' disabled') . '>' . (isset($formData['data']) ? $formData['data'] : '') . '</textarea>';
 				break;
 				
+			case 'web_page':
+				// Start the select
+				$return .= '<select class="form-control form-control-sm" id="' . $formData['id'] . '" name="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>';
+				
+				// Default NULL
+				$return .= '<option value="">-</option>';
+				
+				// Loop through options 
+				foreach($this->getMenuItemStructures(false, true) as $k => $v) {
+					$return .= '<option value="' . $k . '"' . ($formData['data'] == $k ? ' selected' : '') . '>' . $v . '</option>';
+				}
+				
+				// End the select
+				$return .= '</select>';
+				break;
+				
+			case 'connection':
+				// Start the select
+				$return .= '<select class="form-control form-control-sm" id="' . $formData['id'] . '" name="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>';
+				
+				// Default NULL
+				$return .= '<option value="">-</option>';
+				
+				// Make a database connection
+				$Database = new \Database();
+				
+				// Loop through options 
+				foreach($Database->db as $k => $v) {
+					// Skip things
+					if( $k == 'persist' || $k == 'default' || $k == $Database->db['default'] ){ continue; }
+					
+					// Add option
+					$return .= '<option value="' . $k . '"' . ($formData['data'] == $k ? ' selected' : '') . '>' . $k . '</option>';
+				}
+				
+				// End the select
+				$return .= '</select>';
+				break;
+				
             default:
 				$return .= '<input type="text" class="form-control form-control-sm" id="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP" value="There was an issue with this form (' . $formData['type'] . ')" disabled>';
 				break;
@@ -137,7 +176,7 @@ class PageFunctions extends CoreFunctions {
 				</div>
 				<div class="row">
 					<div class="col-xl-6">' . $this->formGroup($site_settings['SITE_LAYOUT']) . '</div>
-					<div class="col-xl-6"></div>
+					<div class="col-xl-6">' . $this->formGroup($site_settings['SITE_HOME_PAGE']) . '</div>
 				</div>
 				<div class="row">
 					<div class="col-xl-12">' . $this->formGroup($site_settings['PROTECTED_USERNAMES']) . '</div>
@@ -158,6 +197,8 @@ class PageFunctions extends CoreFunctions {
 				<p>' . $site_settings['DATE_FORMAT']['description'] . '</p>
 				<h6>' . $site_settings['SITE_LAYOUT']['title'] . '</h6>
 				<p>' . $site_settings['SITE_LAYOUT']['description'] . '</p>
+				<h6>' . $site_settings['SITE_HOME_PAGE']['title'] . '</h6>
+				<p>' . $site_settings['SITE_HOME_PAGE']['description'] . '</p>
 				<h6>' . $site_settings['PROTECTED_USERNAMES']['title'] . '</h6>
 				<p>' . $site_settings['PROTECTED_USERNAMES']['description'] . '</p>
 			</div>
@@ -376,57 +417,88 @@ class PageFunctions extends CoreFunctions {
 			return array('result' => 'failure', 'message' => 'Failed to grab settings from DB!');
 		}
 		
-		//
-		$return = '<div class="row">
-			<div class="col-xl-7">		
-				<div class="row">
-					<div class="col-xl-6">
-						<div class="form-group">
-							<label for="DEFAULT_ACCESS_GUEST" class="form-control-label">Guest Default Access Group</label>
-							<select class="form-control form-control-sm access-lists" id="DEFAULT_ACCESS_GUEST" name="DEFAULT_ACCESS_GUEST" multiple="multiple" aria-describedby="DEFAULT_ACCESS_GUEST_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>
-								' . $access['guest']['options'] . '
-							</select>
-							<div class="form-control-feedback"></div>
-							<small id="DEFAULT_ACCESS_GUEST_HELP" class="form-text text-muted">Default Access Group(s) for accounts that aren\'t logged in.</small>
+		// Panel start
+		$return = '<div class="fks-panel tabs mar-bot-0">';
+		
+		// Email tabs
+		$return .= '<div class="header">
+			<ul class="nav nav-tabs">
+				<li class="nav-item">
+					<a class="nav-link active" data-toggle="tab" href="#tab4-1" role="tab" draggable="false"><i class="fa fa-gears fa-fw"></i> Guest</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" data-toggle="tab" href="#tab4-2" role="tab" draggable="false"><i class="fa fa-handshake-o fa-fw"></i> Local</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" data-toggle="tab" href="#tab4-3" role="tab" draggable="false"><i class="fa fa-question fa-fw"></i> LDAP</a>
+				</li>
+			</ul>
+		</div>';
+		
+		// Email tab bodies
+		$return .= '<div class="body">
+			<div class="tab-content">
+				<div class="tab-pane active" id="tab4-1" role="tabpanel">
+					<div class="row">
+						<div class="col-xl-7">
+							<div class="form-group">
+								<label for="DEFAULT_ACCESS_GUEST" class="form-control-label">Guest Default Access Group</label>
+								<select class="form-control form-control-sm access-lists" id="DEFAULT_ACCESS_GUEST" name="DEFAULT_ACCESS_GUEST" multiple="multiple" aria-describedby="DEFAULT_ACCESS_GUEST_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>
+									' . $access['guest']['options'] . '
+								</select>
+								<div class="form-control-feedback"></div>
+								<small id="DEFAULT_ACCESS_GUEST_HELP" class="form-text text-muted">Default Access Group(s) for accounts that aren\'t logged in.</small>
+							</div>
 						</div>
-					</div>
-					<div class="col-xl-6">
-						<div class="form-group">
-							<label for="DEFAULT_ACCESS_LOCAL" class="form-control-label">Local Default Access Group</label>
-							<select class="form-control form-control-sm access-lists" id="DEFAULT_ACCESS_LOCAL" name="DEFAULT_ACCESS_LOCAL" multiple="multiple" aria-describedby="DEFAULT_ACCESS_LOCAL_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>
-								' . $access['local']['options'] . '
-							</select>
-							<div class="form-control-feedback"></div>
-							<small id="DEFAULT_ACCESS_LOCAL_HELP" class="form-text text-muted">Default Access Group(s) for accounts that are created through registration.</small>
+						<div class="col-xl-5">
+							<h6>' . $site_settings['DEFAULT_ACCESS_GUEST']['title'] . '</h6>
+							<p>' . $site_settings['DEFAULT_ACCESS_GUEST']['description'] . '</p>
 						</div>
 					</div>
 				</div>
-				<div class="row">
-					<div class="col-xl-6">
-						<div class="form-group">
-							<label for="DEFAULT_ACCESS_LDAP" class="form-control-label">LDAP Default Access Group</label>
-							<select class="form-control form-control-sm access-lists" id="DEFAULT_ACCESS_LDAP" name="DEFAULT_ACCESS_LDAP" multiple="multiple" aria-describedby="DEFAULT_ACCESS_LDAP_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>
-								' . $access['ldap']['options'] . '
-							</select>
-							<div class="form-control-feedback"></div>
-							<small id="DEFAULT_ACCESS_LDAP_HELP" class="form-text text-muted">Default Access Group(s) for accounts that are created using LDAP.</small>
+				<div class="tab-pane" id="tab4-2" role="tabpanel">
+					<div class="row">
+						<div class="col-xl-7">
+							<div class="form-group">
+								<label for="DEFAULT_ACCESS_LOCAL" class="form-control-label">Local Default Access Group</label>
+								<select class="form-control form-control-sm access-lists" id="DEFAULT_ACCESS_LOCAL" name="DEFAULT_ACCESS_LOCAL" multiple="multiple" aria-describedby="DEFAULT_ACCESS_LOCAL_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>
+									' . $access['local']['options'] . '
+								</select>
+								<div class="form-control-feedback"></div>
+								<small id="DEFAULT_ACCESS_LOCAL_HELP" class="form-text text-muted">Default Access Group(s) for accounts that are created through registration.</small>
+							</div>
+						</div>
+						<div class="col-xl-5">
+							<h6>' . $site_settings['DEFAULT_ACCESS_LOCAL']['title'] . '</h6>
+							<p>' . $site_settings['DEFAULT_ACCESS_LOCAL']['description'] . '</p>
 						</div>
 					</div>
-					<div class="col-xl-6">
-						<div class="d-xl-inline d-none"><hr/></div>
+				</div>
+				<div class="tab-pane" id="tab4-3" role="tabpanel">
+					<div class="row">
+						<div class="col-xl-7">
+							<div class="form-group">
+								<label for="DEFAULT_ACCESS_LDAP" class="form-control-label">LDAP Default Access Group</label>
+								<select class="form-control form-control-sm access-lists" id="DEFAULT_ACCESS_LDAP" name="DEFAULT_ACCESS_LDAP" multiple="multiple" aria-describedby="DEFAULT_ACCESS_LDAP_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>
+									' . $access['ldap']['options'] . '
+								</select>
+								<div class="form-control-feedback"></div>
+								<small id="DEFAULT_ACCESS_LDAP_HELP" class="form-text text-muted">Default Access Group(s) for accounts that are created using LDAP.</small>
+							</div>
+						</div>
+						<div class="col-xl-5">
+							<h6>' . $site_settings['DEFAULT_ACCESS_LDAP']['title'] . '</h6>
+							<p>' . $site_settings['DEFAULT_ACCESS_LDAP']['description'] . '</p>
+						</div>
 					</div>
 				</div>
-			</div>
-			<div class="col-xl-5">
-				<h6>' . $site_settings['DEFAULT_ACCESS_GUEST']['title'] . '</h6>
-				<p>' . $site_settings['DEFAULT_ACCESS_GUEST']['description'] . '</p>
-				<h6>' . $site_settings['DEFAULT_ACCESS_LOCAL']['title'] . '</h6>
-				<p>' . $site_settings['DEFAULT_ACCESS_LOCAL']['description'] . '</p>
-				<h6>' . $site_settings['DEFAULT_ACCESS_LDAP']['title'] . '</h6>
-				<p>' . $site_settings['DEFAULT_ACCESS_LDAP']['description'] . '</p>
 			</div>
 		</div>';
 		
+		// Panel end
+		$return .= '</div>';
+		
+		// Return
 		return $return;
 	}
 	
@@ -472,6 +544,7 @@ class PageFunctions extends CoreFunctions {
 			</div>
 		</div>';
 		
+		// Return
 		return $return;
 	}
 	
@@ -503,6 +576,53 @@ class PageFunctions extends CoreFunctions {
 				<p>' . $site_settings['ERROR_EMAIL_ADDRESS']['description'] . '</p>
 				<h6>' . $site_settings['ERROR_MESSAGE']['title'] . '</h6>
 				<p>' . $site_settings['ERROR_MESSAGE']['description'] . '</p>
+			</div>
+		</div>';
+		
+		return $return;
+	}
+	
+	// -------------------- Remote Site Tab Settings -------------------- \\
+	private function tabRemote($site_settings) {
+		$return = '<div class="row">
+			<div class="col-xl-7">		
+				<div class="row">
+					<div class="col-xl-6">' . $this->formGroup($site_settings['REMOTE_SITE']) . '</div>
+					<div class="col-xl-6">' . $this->formGroup($site_settings['REMOTE_DATABASE']) . '</div>
+				</div>
+				<div class="row remote-validate">
+					<div class="col-xl-6">
+						<div class="form-group">
+							<button type="button" class="btn fks-btn-info btn-sm remote-test-btn" style="width:100%;margin-top:26px;"><i class="fa fa-question fa-fw"></i> Validate</button>
+						</div>
+					</div>
+					<div class="col-xl-6"></div>
+				</div>
+				<div style="display:none;" class="remote-user-search">
+					<div class="row">
+						<div class="col-xl-6">' . $this->buildFormGroup(array('title' => 'Member Search','type' => 'text','id' => 'REMOTE_SEARCH','help' => 'Search for a user on the remote DB.',
+							'group' => array(
+								'after' => '<btn class="input-group-addon" id="icon_preview"><i class="fa fa-search fa-fw"></i></btn>'
+							))) . '</div>
+						<div class="col-xl-6"><button type="button" class="btn fks-btn-info btn-sm remote-search-btn" style="width:100%;margin-top:26px;"><i class="fa fa-search fa-fw"></i> Search</button></div>
+					</div>
+					<div class="row">
+						<div class="col-xl-12">
+							<table class="table table-sm table-striped table-hover remote-admins">
+								<thead class="thead-dark">
+									<tr><th>Username</th><th>First Name</th><th>Last Name</th><th>Access</th><th style="width:50px;text-align:center;padding-right:11px;"><i class="fa fa-trash fa-fw"></i></th></tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-5">
+				<h6>' . $site_settings['REMOTE_SITE']['title'] . '</h6>
+				<p>' . $site_settings['REMOTE_SITE']['description'] . '</p>
+				<h6>' . $site_settings['REMOTE_DATABASE']['title'] . '</h6>
+				<p>' . $site_settings['REMOTE_DATABASE']['description'] . '</p>
 			</div>
 		</div>';
 		
@@ -558,10 +678,13 @@ class PageFunctions extends CoreFunctions {
 			<li class="nav-item">
 				<a class="nav-link" data-toggle="tab" href="#tab1-6" role="tab" draggable="false"><i class="fa fa-exclamation-triangle fa-fw"></i> Error</a>
 			</li>
+			<li class="nav-item">
+				<a class="nav-link" data-toggle="tab" href="#tab1-7" role="tab" draggable="false"><i class="fa fa-link fa-fw"></i> Remote Site</a>
+			</li>
 		</ul>';
 		
 		// Tab Content
-		$body = '<form id="editSiteSettingsForm" role="form" action="javascript:void(0);" autocomplete="off">
+		$body = '<form id="editSiteSettingsForm" class="fks-form fks-form-sm" role="form" action="javascript:void(0);" autocomplete="off">
 			<div class="tab-content">
 				<div class="tab-pane active" id="tab1-1" role="tabpanel">
 					' . $this->tabGeneral($d) . '
@@ -580,6 +703,9 @@ class PageFunctions extends CoreFunctions {
 				</div>
 				<div class="tab-pane" id="tab1-6" role="tabpanel">
 					' . $this->tabError($d) . '
+				</div>
+				<div class="tab-pane" id="tab1-7" role="tabpanel">
+					' . $this->tabRemote($d) . '
 				</div>
 			</div>
 		</form>';
@@ -604,11 +730,18 @@ class PageFunctions extends CoreFunctions {
 		// Decode email password
 		$data['EMAIL_PASSWORD'] = base64_decode($data['EMAIL_PASSWORD']);
 		
-		// Set Vars
+		// Set variables
 		$Validator = new \Validator($data);
 		$Database = new \Database();
 		$failed = array();
 		$updated = array();
+		$connections = array();
+		$do_log = true;							// Whether we create a member log when saving
+		
+		// Get allowed connections
+		foreach($Database->db as $k => $v) {
+			if( $k != 'persist' && $k != 'default' && $k != $Database->db['default'] ){ array_push($connections, $k); }
+		}
 
         // Grab Current Settings
         if($Database->Q(array(
@@ -622,13 +755,15 @@ class PageFunctions extends CoreFunctions {
         }
 		
 		// Validation
+		$Validator->validate('SITE_HOME_PAGE', array('required' => false));
 		$Validator->validate('SITE_LAYOUT', array('required' => true, 'values' => json_decode($site_settings['SITE_LAYOUT']['misc'], true)['options']));
 		$Validator->validate('SITE_TITLE', array('required' => true, 'min_length' => 3, 'max_length' => 15));
+		$Validator->validate('SITE_USERNAME', array('required' => true));
+		
 		$Validator->validate('MEMBER_REGISTRATION', array('required' => true, 'bool' => true));
 		$Validator->validate('REQUIRE_LOGIN', array('required' => true, 'bool' => true));
 		$Validator->validate('TIMEZONE', array('timezone' => true));
 		$Validator->validate('DATE_FORMAT', array('required' => true));
-		$Validator->validate('SITE_USERNAME', array('required' => true));
 		$Validator->validate('PROTECTED_USERNAMES', array('max_length' => 255));
 		
 		$Validator->validate('CAPTCHA', array('required' => true, 'bool' => true));
@@ -664,6 +799,10 @@ class PageFunctions extends CoreFunctions {
 		$Validator->validate('DEFAULT_ACCESS_LOCAL', array('required' => true));
 		$Validator->validate('DEFAULT_ACCESS_LDAP', array('required' => true));
 		
+		$Validator->validate('REMOTE_SITE', array('required' => true, 'values' => json_decode($site_settings['REMOTE_SITE']['misc'], true)['options']));
+		$Validator->validate('REMOTE_DATABASE', array('required' => ($data['REMOTE_SITE'] == 'Secondary'), 'values' => $connections));
+		$Validator->validate('REMOTE_ADMINS', array('required' => ($data['REMOTE_SITE'] == 'Secondary')));
+		
 		$Validator->validate('ACTIVE_DIRECTORY', array('required' => true, 'bool' => true));
 		$Validator->validate('AD_ACCOUNT_CREATION', array('required' => true, 'bool' => true));
 		$Validator->validate('AD_FAILOVER', array('required' => true, 'bool' => true));
@@ -684,6 +823,114 @@ class PageFunctions extends CoreFunctions {
 			if( !empty($form['EMAIL_PASSWORD']) ) {
 				$Crypter = new \Crypter();
 				$form['EMAIL_PASSWORD'] = $Crypter->toRJ256($form['EMAIL_PASSWORD']);
+			}
+		}
+		
+		// Return failure if Remote Site AND Active Directory is enabled
+		if($form['ACTIVE_DIRECTORY'] == 1 && $form['REMOTE_SITE'] != 'disabled') {
+			return array('result' => 'failure', 'message' => 'You can not have both Active Directory and Remote Site enabled!');
+		}
+		
+		// TESTING the activation of Remote Site settings
+		if(($site_settings['REMOTE_SITE']['data'] == 'Disabled' || $site_settings['REMOTE_SITE']['data'] == 'Primary') && $form['REMOTE_SITE'] == 'Secondary') {
+			// We do not want to create a member log
+			$do_log = false;
+
+			// Connect to Primary site to generate an ID
+			if($Database->Q(array(
+				'db' => $form['REMOTE_DATABASE'],
+				'query' => 'SELECT data FROM fks_site_settings WHERE id = "REMOTE_SITE_IDS"'
+			))){
+				// Check for the record
+				if($Database->r['found'] == 0){
+					// Return error message with error code
+					return array('result' => 'failure', 'title' => 'Database Error', 'message' => 'Remote database is missing data!');
+				}
+				
+				// Explode ID's if not null
+				$_ids = is_null($Database->r['row']['data']) ? array() : explode(',', $Database->r['row']['data']);
+				
+				// Loop through known ID's and generate a new one
+				while(true){
+					$_key = $this->makeKey(4);
+					if(!in_array($_key, $_ids)){break;}
+				}
+				
+				// Add key to the known list
+				array_push($_ids, $_key);
+			} else {
+				// Return error message with error code
+				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+			}
+			
+			// Update remote sites list of ID's
+			if(!$Database->Q(array(
+				'db' => $form['REMOTE_DATABASE'],
+				'params' => array(
+					':data' => implode(',', $_ids)
+				),
+				'query' => 'UPDATE fks_site_settings SET data = :data WHERE id = "REMOTE_SITE_IDS"'
+			))){
+				// Return error message with error code
+				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+			}
+			
+			// Update local site's current ID
+			if(!$Database->Q(array(
+				'params' => array(
+					':data' => $_key
+				),
+				'query' => 'UPDATE fks_site_settings SET data = :data WHERE id = "REMOTE_ID"'
+			))){
+				// Return error message with error code
+				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+			}
+			
+			// Reset tables
+			if(!$this->resetLocalTables()) {
+				// Return error message with error code
+				return array('result' => 'failure', 'title' => 'Database Error', 'message' => 'Failed to reset tables!');
+			}
+			
+			// Add passed member access group
+			foreach($form['REMOTE_ADMINS'] as $k => $v) {
+				if(!$Database->Q(array(
+					'params' => array(
+						':id' => 8,
+						':member_id' => $v['id'],
+						':data' => $v['access_id']
+					),
+					'query' => 'INSERT INTO fks_member_data SET id = :id, member_id = :member_id, data = :data'
+				))){
+					// Return error message with error code
+					return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+				}
+			}
+			
+			// Do not save this data
+			unset($form['REMOTE_ADMINS']);
+			
+			// Log out current user
+			$this->Session->destroy();
+		}
+		
+		// Set the Remote ID if setting REMOTE_SITE to Primary
+		if($form['REMOTE_SITE'] == 'Primary') {
+			if(!$Database->Q('UPDATE fks_site_settings SET data = 0 WHERE id = "REMOTE_ID"')){
+				$failed['REMOTE_SITE'] = 'Could not save to the DB!';
+				unset($form['REMOTE_SITE']);
+				
+				// TODO - set tables auto increment back to 1?
+			}
+		}
+		
+		// Set the Remote ID if setting REMOTE_SITE to Disabled
+		if($form['REMOTE_SITE'] == 'Disabled') {
+			if(!$Database->Q('UPDATE fks_site_settings SET data = NULL WHERE id = "REMOTE_ID"')){
+				$failed['REMOTE_SITE'] = 'Could not save to the DB!';
+				unset($form['REMOTE_SITE']);
+				
+				// TODO - set tables auto increment back to 1?
 			}
 		}
 		
@@ -710,20 +957,54 @@ class PageFunctions extends CoreFunctions {
 		}
 		
 		// Add Member Log
-		if(count($updated) > 0) {
+		if(count($updated) > 0 && $do_log) {
 			$MemberLog = new \MemberLog(\Enums\LogActions::SITE_SETTINGS_MODIFIED, $_SESSION['id'], NULL, json_encode($updated));
 		}
 		
 		// Return Status
 		if(count($failed) > 0) {
-			return array('result' => 'validate', 'message' => 'Some settings were not saved!', 'validation' => $failed);
+			return array('result' => 'validate', 'message' => 'Some settings were not saved!', 'validation' => $failed, 'do_log' => $do_log);
 		} else {
 		    if( count($updated) > 0 ) {
-                return array('result' => 'success', 'message' => 'Settings have been updated!', 'updated_count' => count($updated), 'reload' => (isset($updated['SITE_LAYOUT']) ? 'true' : 'false'));
+                return array('result' => 'success', 'message' => 'Settings have been updated!', 'updated_count' => count($updated), 'reload' => (isset($updated['SITE_LAYOUT']) ? 'true' : 'false'), 'do_log' => $do_log);
             } else {
-                return array('result' => 'info', 'message' => 'No changes detected!', 'updated_count' => count($updated));
+                return array('result' => 'info', 'message' => 'No changes detected!', 'updated_count' => count($updated), 'do_log' => $do_log);
             }
 		}
+	}
+	
+	// -------------------- Reset Locak Tables -------------------- \\
+	private function resetLocalTables() {
+		// Set variables
+		$Database = new \Database();
+		$return = true;
+		
+		// Clear member_data table
+		if(!$Database->Q('DELETE FROM fks_member_data')){
+			$this->createError($Database->r);
+			$return = false;
+		}
+		
+		// Reset member_data table auto increment
+		if(!$Database->Q('ALTER TABLE fks_member_data AUTO_INCREMENT = 1')){
+			$this->createError($Database->r);
+			$return = false;
+		}
+		
+		// Clear member_logs table
+		if(!$Database->Q('DELETE FROM fks_member_logs')){
+			$this->createError($Database->r);
+			$return = false;
+		}
+		
+		// Reset member_logs table auto increment
+		if(!$Database->Q('ALTER TABLE fks_member_logs AUTO_INCREMENT = 1')){
+			$this->createError($Database->r);
+			$return = false;
+		}
+		
+		// Return
+		return $return;
 	}
 	
 	// -------------------- Load Site Settings History -------------------- \\
@@ -788,6 +1069,79 @@ class PageFunctions extends CoreFunctions {
 		} else {
 			return array('result' => 'failure', 'message' => $mail['message']);
 		}
+	}
+	
+	// -------------------- Remote Database Validator -------------------- \\
+    public function validateRemoteDatabase($data) {
+        // Check for write access
+	    if( $this->access < 2 ){ return array('result' => 'failure', 'message' => 'Access Denied!'); }
+		
+		// Check for data
+	    if( !isset($data) || is_null($data) ){ return array('result' => 'failure', 'message' => 'Data was not passed...'); }
+		
+		// Create database class
+		$Database = new \Database(array('db' => $data));
+		
+		// Check for valid connection
+		if( !isset($Database->db[$data]) ){ return array('result' => 'failure', 'message' => 'Not a valid connection.'); }
+		
+		// Attempt a connection
+		if( !$Database->con() ){ return array('result' => 'failure', 'message' => $Database->r['error']); }
+		
+		// Return
+		return array('result' => 'success', 'message' => 'Successfully validated!', 'data' => $data);
+	}
+	
+	// -------------------- Remote Database Search -------------------- \\
+    public function searchRemoteDatabase($data) {
+        // Check for write access
+	    if( $this->access < 2 ){ return array('result' => 'failure', 'message' => 'Access Denied!'); }
+		
+		// Check for data
+	    if( !isset($data) || is_null($data) ){ return array('result' => 'failure', 'message' => 'Data was not passed...'); }
+		
+		// Create local database class
+		$Database = new \Database();
+		
+		// Grab local access groups
+		if($Database->Q('SELECT id, title FROM fks_access_groups WHERE active = 1 AND deleted = 0 ORDER BY hierarchy DESC')) {
+			$access = '';
+			foreach($Database->r['rows'] as $k => $v) {
+				$access .= '<option value="' . $v['id'] . '">' . $v['title'] . '</option>';
+			}
+		} else {
+			return array('result' => 'failure', 'message' => 'Unable to load access groups!');
+		}
+		
+		// Search for remote member
+		if($Database->Q(array(
+			'db' => $data['database'],
+			'params' => array(
+				'username' => '%' . $data['search'] . '%'
+			),
+			'query' => 'SELECT id, username FROM fks_members WHERE username LIKE :username AND active = 1 AND deleted = 0'
+		))) {
+			$table = '';
+			foreach($Database->r['rows'] as $k => $v) {
+				$table .= '<tr><td>' . $v['id'] . '</td><td class="username">' . $v['username'] . '</td><td><select member-id="' . $v['id'] . '" class="form-control form-control-sm member-access">' . $access . '</select></td><td><button type="button" class="btn fks-btn-success btn-sm member-add-btn"><i class="fa fa-plus fa-fw"></i></button></td></tr>';
+			}
+		} else {
+			return array('result' => 'failure', 'message' => 'Database failure!');
+		}
+		
+		// Create the modal body
+		$body = '<table class="table table-striped table-hover table-sm"><thead class="thead-dark"><tr><th>ID</th><th>Username</th><th>Access</th><th style="width:50px;text-align:center;padding-right:11px;"><i class="fa fa-plus fa-fw"></i></th></tr></thead><tbody>' . $table . '</tbody></table>';
+		
+		// Return parts
+        return array(
+			'result' => 'success',
+			'parts' => array(
+				'title' => 'Member Lookup',
+				'size' => 'lg',
+				'body' => $body,
+				'footer' => '<button class="btn fks-btn-danger btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> Close</button>'
+			)
+		);
 	}
 }
 ?>

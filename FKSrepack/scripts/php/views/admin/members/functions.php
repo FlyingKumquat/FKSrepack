@@ -32,15 +32,15 @@ class PageFunctions extends CoreFunctions {
 		// Check for read access
 		if($this->access < 1) { return array('result' => 'failure', 'message' => 'Access Denied!'); }
 		
-		// Set vars
+		// Set variables
 		$your_hierarchy = $this->getHierarchy($_SESSION['id']);
 		$readonly = ($this->access == 1);
 		$Database = new \Database();
-		$DataTypes = new \DataTypes();
 		$del = $this->access < 3 ? ' WHERE deleted = 0' : '';
 		
 		// Grab all members
 		if($Database->Q(array(
+			'db' => ($this->siteSettings('REMOTE_SITE') == 'Secondary' ? $this->siteSettings('REMOTE_DATABASE') : $Database->db['default']),
 			'assoc' => 'id',
 			'query' => '
 				SELECT
@@ -71,35 +71,46 @@ class PageFunctions extends CoreFunctions {
 			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 		}
 		
+		// Create Data Handler for remote site
+		$DataHandler = new \DataHandler(array(
+			'members' => array(
+				'base' => 'fks_members',						// Base Table
+				'data' => 'fks_member_data',					// Data Table
+				'data_types' => 'fks_member_data_types',		// Data Type Table
+				'base_column' => 'member_id',					// Column name (data table link to base table)
+				'data_types_column' => 'id'						// Column name (data table link to data types table)
+			)
+		));
+		
+		// Loop through each member to grab data
 		foreach($data as $k => &$v) {
-			$found = $DataTypes->getData(array(
-					\Enums\DataTypes::FIRST_NAME,
-					\Enums\DataTypes::LAST_NAME,
-					\Enums\DataTypes::EMAIL_ADDRESS,
-					\Enums\DataTypes::ACCESS_GROUPS
-				),
-				$v['id']
-			);
+			// First, Last, Email, Access
+			$_r = $DataHandler->getData('remote', 'members', $v['id'], array(2,3,4));
+			$_l = $DataHandler->getData('local', 'members', $v['id'], array(8));
+			$_h = 0;
 			
-			foreach( $found as $name => $value ) {
-				$v[ strtolower($name) ] = !$value || $value == NULL ? '-' : $value;
-			}
-			
-			$h = 0;
-			$access = explode(',', $v['access_groups']);
-			if($access[0] != '-') {
-				foreach($access as $ak => $av){
-					$access[$ak] = $access_groups[$av]['title'];
-					if($access_groups[$av]['hierarchy'] > $h) { $h = $access_groups[$av]['hierarchy']; }
+			// Convert access group id's to names
+			$_a = explode(',', $_l[8]['value']);
+			if($_a[0] != '-') {
+				foreach($_a as $ak => $av){
+					$_a[$ak] = $access_groups[$av]['title'];
+					if($access_groups[$av]['hierarchy'] > $_h) { $_h = $access_groups[$av]['hierarchy']; }
 				}
 			}
-			$v['access_groups'] = implode(', ', $access);
 			
+			// Datatable columns
+			$v['first_name'] = is_null($_r[2]['value']) ? '-' : $_r[2]['value'];
+			$v['last_name'] = is_null($_r[3]['value']) ? '-' : $_r[3]['value'];
+			$v['email_address'] = is_null($_r[4]['value']) ? '-' : $_r[4]['value'];
+			$v['access_groups'] = implode(', ', $_a);
+			
+			// Tools
 			$v['tools'] = '<span class="pull-right">';
 				// History
 				if($this->access > 2) { $v['tools'] .= '<a class="history" href="javascript:void(0);" data-toggle="fks-tooltip" title="History"><i class="fa fa-history fa-fw"></i></a>&nbsp;'; }
+				
 				// View & Edit
-				if($your_hierarchy >= $h && !$readonly) {
+				if($your_hierarchy >= $_h && !$readonly) {
 					$v['tools'] .= '<a class="edit" href="javascript:void(0);" data-toggle="fks-tooltip" title="Edit"><i class="fa fa-edit fa-fw"></i></a>';
 				} else {
 					$v['tools'] .= '<a class="edit" href="javascript:void(0);" data-toggle="fks-tooltip" title="View"><i class="fa fa-eye fa-fw"></i></a>';
@@ -123,6 +134,7 @@ class PageFunctions extends CoreFunctions {
 		$Database = new \Database();
 		$DataTypes = new \DataTypes();
 		$readonly = '';
+		$remote_site = false;
 		
 		// Grab member data
 		if($Database->Q(array(

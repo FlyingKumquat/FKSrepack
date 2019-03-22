@@ -17,25 +17,29 @@ class Functions {
 /*----------------------------------------------
 	Global Variables
 ----------------------------------------------*/
-	public $fks_version = '0.0.190227';
+	public $fks_version = '0.0.190322';
 	public $Database;
 	public $versions = array(
 		'fks_versions' 				=> 1710220423,
 		'fks_announcements_seen' 	=> 1706010435,
 		'fks_announcements' 		=> 1710270044,
-		'fks_access_groups' 		=> 1711160210,
+		'fks_access_groups' 		=> 1903010423,
 		'fks_changelog_pages'		=> 1710250704,
 		'fks_changelog_notes'		=> 1710260023,
 		'fks_changelog'				=> 1710260522,
 		'fks_member_data' 			=> 1710250149,
+		'fks_member_data_types' 	=> 1903010423,
 		'fks_member_logs' 			=> 1710260522,
+		'fks_member_sites' 			=> 1903010020,
 		'fks_members' 				=> 1710270601,
 		'fks_menu_items' 			=> 1711160210,
 		'fks_menus' 				=> 1710260656,
 		'fks_site_errors' 			=> 1711160153,
-		'fks_site_settings' 		=> 1902220027
+		'fks_site_settings' 		=> 1903010423
 	);
 	public $current_versions = array();
+	
+	private $backup_data = null;
 	
 /*----------------------------------------------
 	Construct
@@ -52,6 +56,7 @@ class Functions {
 /*----------------------------------------------
 	Private Functions
 ----------------------------------------------*/
+	// -------------------- Check Table Exists --------------------
 	private function checkTableExists($table){
 		// Get schema name
 		$schema = $this->Database->db[$this->Database->db['default']]['name'];
@@ -68,6 +73,7 @@ class Functions {
 		}
 	}
 	
+	// -------------------- Get Table Versions --------------------
 	private function getTableVersions(){
 		// Check to see if versions table exists
 		if(!$this->checkTableExists('fks_versions')) {
@@ -85,6 +91,7 @@ class Functions {
 		}
 	}
 	
+	// -------------------- Update Table Versions --------------------
 	private function updateTableVersions($table){
 		// Check to see if versions table exists
 		if(!$this->checkTableExists($table)) {
@@ -105,6 +112,7 @@ class Functions {
 		}
 	}
 	
+	// -------------------- Update FKS Version --------------------
 	private function updateFKSVersion() {
 		$this->Database->Q(array(
 			'params' => array(
@@ -114,6 +122,7 @@ class Functions {
 		));
 	}
 	
+	// -------------------- Drop Table --------------------
 	private function dropTable( $table_name ) {
 		// Set database
 		$Database = $this->Database;
@@ -137,6 +146,36 @@ class Functions {
 		}
 	}
 	
+	// -------------------- Backup Table --------------------
+	private function backupTable( $table_name ) {
+		// Set database
+		$Database = $this->Database;
+		
+		// Grab all data from the table
+		if(!$Database->Q("SELECT * FROM " . $table_name)) {
+			return array('result' => 'failure', 'message' => $Database->r['error']);
+		}
+		
+		// Save the table data so we can use it to restore
+		$this->backup_data = $Database->r['rows'];
+		
+		// Create the directory if it doesn't exist
+		if( !is_dir('backups/' . $table_name) ) {
+			if( !mkdir('backups/' . $table_name, 0777, true) ) {
+				return array('result' => 'failure', 'message' => 'Failed to create backup directory.');
+			}
+		}
+		
+		// Save file
+		if( file_put_contents('backups/' . $table_name . '/' . $table_name . '-' . time() . '.txt', json_encode($Database->r['rows'])) === FALSE) {
+			return array('result' => 'failure', 'message' => 'Failed to create backup file.');
+		}
+		
+		// Return success
+		return array('result' => 'success', 'message' => '');
+	}
+	
+	// -------------------- Create Table --------------------
 	private function createTable( $table_name ) {
 		// Set vars
 		$Database = $this->Database;
@@ -150,6 +189,7 @@ class Functions {
 						`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
 						`title` VARCHAR(45) DEFAULT NULL,
 						`hierarchy` INT(11) UNSIGNED NOT NULL,
+						`home_page` INT(11) UNSIGNED DEFAULT NULL,
 						`data` TEXT NOT NULL,
 						`date_created` DATETIME NOT NULL,
 						`created_by` INT(11) UNSIGNED DEFAULT '0',
@@ -265,6 +305,24 @@ class Functions {
 				}
 				break;
 				
+			case 'fks_member_data_types':
+				if(!$Database->Q("CREATE TABLE `fks_member_data_types` (
+						`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+						`title` VARCHAR(40) NOT NULL,
+						`description` VARCHAR(40) NOT NULL,
+						`input_type` VARCHAR(40) NOT NULL,
+						`help_text` VARCHAR(40) NOT NULL,
+						`position` TINYINT(4) UNSIGNED DEFAULT NULL,
+						`active` TINYINT(1) UNSIGNED NOT NULL DEFAULT '1',
+						`deleted` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
+						PRIMARY KEY (`id`)
+					) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8;"
+				)){ 
+					$message = $Database->r['error'];
+					$success = false;
+				}
+				break;
+				
 			case 'fks_member_logs':
 				if(!$Database->Q("CREATE TABLE `fks_member_logs` (
 						`id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -274,6 +332,19 @@ class Functions {
 						`misc` TEXT,
 						`date_created` DATETIME NOT NULL,
 						PRIMARY KEY (`id`)
+					) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;"
+				)){ 
+					$message = $Database->r['error'];
+					$success = false;
+				}
+				break;
+				
+			case 'fks_member_sites':
+				if(!$Database->Q("CREATE TABLE `fks_member_sites` (
+						`member_id` INT(11) UNSIGNED NOT NULL,
+						`site_id` INT(11) UNSIGNED NOT NULL,
+						`date_created` DATETIME NOT NULL,
+						PRIMARY KEY (`member_id`,`site_id`)
 					) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;"
 				)){ 
 					$message = $Database->r['error'];
@@ -409,6 +480,7 @@ class Functions {
 		return array('result' => ($success ? 'success' : 'failure'), 'message' => $message);
 	}
 	
+	// -------------------- Fill Table --------------------
 	private function fillTable( $table_name ) {
 		// Set vars
 		$Database = $this->Database;
@@ -419,9 +491,32 @@ class Functions {
 		{
 			case 'fks_access_groups':
 				if(!$Database->Q('INSERT INTO fks_access_groups VALUES 
-					(1,"Guest",1,"{\"1\":1}","2017-01-19 07:08:00",0,NULL,NULL,NULL,NULL,1,0),
-					(2,"User",2,"{\"2\":1,\"3\":2,\"4\":1,\"11\":1,\"13\":2}","2017-01-20 08:48:00",0,NULL,NULL,NULL,NULL,1,0),
-					(3,"Admin",9001,"{\"2\":3,\"3\":3,\"4\":3,\"5\":3,\"6\":3,\"7\":3,\"8\":3,\"9\":3,\"10\":3,\"11\":3,\"12\":3,\"13\":3,\"14\":3}","2017-01-19 07:11:00",0,NULL,NULL,NULL,NULL,1,0)'
+					(1,"Guest",1,NULL,"{\"1\":1}","2017-01-19 07:08:00",0,NULL,NULL,NULL,NULL,1,0),
+					(2,"User",2,NULL,"{\"2\":1,\"3\":2,\"4\":1,\"11\":1,\"13\":2}","2017-01-20 08:48:00",0,NULL,NULL,NULL,NULL,1,0),
+					(3,"Admin",9001,NULL,"{\"2\":3,\"3\":3,\"4\":3,\"5\":3,\"6\":3,\"7\":3,\"8\":3,\"9\":3,\"10\":3,\"11\":3,\"12\":3,\"13\":3,\"14\":3}","2017-01-19 07:11:00",0,NULL,NULL,NULL,NULL,1,0)'
+				)){ 
+					$message = $Database->r['error'];
+					$success = false;
+				}
+				break;
+				
+			case 'fks_member_data_types':
+				if(!$Database->Q('INSERT INTO fks_member_data_types VALUES 
+					(1,"Username","Description","text","Help text.",NULL,1,0),
+					(2,"First Name","","","",NULL,1,0),
+					(3,"Last Name","","","",NULL,1,0),
+					(4,"Email Address","","","",NULL,1,0),
+					(5,"Avatar","","","",NULL,1,0),
+					(6,"Date Format","","","",NULL,1,0),
+					(7,"Timezone","","","",NULL,1,0),
+					(8,"Access Groups","","","",NULL,1,0),
+					(9,"Verify Code","","","",NULL,1,0),
+					(10,"Password","","","",NULL,1,0),
+					(11,"Full Name","","","",NULL,1,0),
+					(12,"Email Verified","","","",NULL,1,0),
+					(13,"Site Layout","","","",NULL,1,0),
+					(14,"Two Factor","","","",NULL,1,0),
+					(15,"Home Page","","","",NULL,1,0)'
 				)){ 
 					$message = $Database->r['error'];
 					$success = false;
@@ -500,14 +595,19 @@ class Functions {
 					("FORGOT_PASSWORD_REPLY_TO_ADDRESS","Reply-To Address","email",NULL,"{}","Email sent for forgot password will be replied to this address.","Emails sent from this site for forgot password will be replied to this address. This setting CAN be blank, if it is it will use the default Reply-To Address."),
 					("FORGOT_PASSWORD_SUBJECT","Email Subject","text","%SITE_TITLE% - Forgot Password","{}","What the subject for forgot passwords will say.","What the subject for forgot passwords will say."),
 					("FORGOT_PASSWORD_TEMPLATE","Email Template","div",NULL,"{}","What emails will look like when sending forgot password codes.","What emails will look like when sending forgot password codes."),
-					("MEMBER_REGISTRATION","Member Registration","bool","0","{\"required\":\"true\"}","Whether or not the registration form is enabled on the log in page.","Enabling this allows members to create accounts to log in with. You can enable reCaptcha and Email Verification for extra checks. Once created they will be assigned the Default Local Access Group, which can be changed in the Access tab."),
+					("MEMBER_REGISTRATION","Member Registration","bool","0","{\"required\":\"true\"}","Whether or not the registration form is enabled on the log in page.","Allows guests to create accounts to log in with. Once created they will be assigned the Default Local Access Group, which can be changed in the Access tab."),
 					("PROTECTED_USERNAMES","Protected Usernames","textarea","admin,administrator,fksrepack,snaggybore,flyingkumquat","{\"attributes\":\"rows=\'3\'\"}","Usernames that are not allowed during registration.","A comma seperated list of usernames that will not be allowed to be used during user registration. Capitalization does not matter."),
 					("REQUIRE_LOGIN","Require Login","bool","0","{\"required\":\"true\"}","Whether or not users have to log in to view the site.","This option forces that members log in to access this site. With this off members who are not logged in will be assigned the Default Guest Access Group, which can be changed in the Access tab."),
+					("REMOTE_DATABASE","Remote Database","text",NULL,"{}","Which connection to use for the remote site.","Select which database connection to use for the remote site. This is only used if Remote Site is set to Secondary."),
+					("REMOTE_ID","Remote ID","number",NULL,"{}",NULL,NULL),
+					("REMOTE_SITE","Remote Site","dropdown","Disabled","{\"required\":\"true\",\"options\":[\"Disabled\",\"Primary\",\"Secondary\"]}","Whether to enable remote connections.","<u>Disabled</u> - Stand alone site.<br/><u>Primary</u> - Allows other sites to connect to this site to use log in information.<br/><u>Secondary</u> - Will use log in information from a primary site."),
+					("REMOTE_SITE_IDS","Remote Site ID\'s","text",NULL,"{}",NULL,NULL),
+					("SITE_HOME_PAGE","Site Home Page","web_page",NULL,"{}","What page should load on visit.","Select which page should load for guests when visiting the site. Access groups can have their own default home page set but if they are blank they will default to this setting."),
 					("SITE_LAYOUT","Site Layout","dropdown","Default","{\"options\":[\"Default\",\"Admin\"]}","This changes the layout of the whole site.","<u>Default</u> - This is a fixed width site.<br/><u>Admin</u> - This takes up the full width of the window."),
 					("SITE_TITLE","Site Title","text","FKSrepack","{\"required\":\"true\"}","This is shown in the breadcrumbs and brower title.","This is shown in the browser window or tab as well as the breadcrumbs."),
 					("SITE_USERNAME","Site Username","text","server","{\"required\":\"true\"}","This is username that\'s used when the site creates things.","This is the username that will be displayed when the website creates or modifies anything."),
-					("FKS_VERSION","Version","text","' . $this->fks_version . '","{\"required\":\"true\"}","This is the version number of FKSrepack.","This is the version number of FKSrepack."),
 					("SITE_VERSION","Version","text","0","{\"required\":\"true\"}","This is the version number of this site.","This is the version number of this site."),
+					("FKS_VERSION","Version","text","' . $this->fks_version . '","{\"required\":\"true\"}","This is the version number of FKSrepack.","This is the version number of FKSrepack."),
 					("TIMEZONE","Timezone","timezone",NULL,"{}","Members will use this timezone unless they set their own.","This is the default timezone for all dates and times on this server. Members can set their own timezones to overide this.")
 					'
 				)){ 
@@ -542,6 +642,81 @@ class Functions {
 		return array('result' => ($success ? 'success' : 'failure'), 'message' => $message);
 	}
 	
+	// -------------------- Restore Table --------------------
+	private function restoreTable( $table_name ) {
+		// Set vars
+		$Database = $this->Database;
+		$message = '';
+		$success = true;
+		
+		// Get primary key(s)
+		$table_keys = $Database->primaryKeys($table_name);
+		
+		switch($table_name)
+		{
+			// Special query
+			case 'fks_site_settings':
+				// Cycle through each row
+				foreach( $this->backup_data as $row ) {
+					// Set variables
+					$params = null;				// Array of parametrized values
+					$query = array();			// Insert query
+					
+					// Loop through each field to generate query
+					foreach( $row as $f => $d ) {
+						$params[':' . $f] = $d;
+						array_push($query, $f . ' = :' . $f);
+					}
+					
+					// Insert into table
+					if(!$Database->Q(array(
+						'params' => $params,
+						'query' => 'INSERT INTO ' . $table_name . ' SET ' . implode(', ', $query) . ' ON DUPLICATE KEY UPDATE data = :data'
+					))){
+						$message = $Database->r['error'];
+						$success = false;
+					}
+				}
+				break;
+			
+			// Default query
+			default:
+				// Cycle through each row
+				foreach( $this->backup_data as $row ) {
+					// Set variables
+					$params = null;				// Array of parametrized values
+					$query = array();			// Insert query
+					$update = array();			// On dupe update query
+					
+					// Loop through each field to generate query
+					foreach( $row as $f => $d ) {
+						$params[':' . $f] = $d;
+						array_push($query, $f . ' = :' . $f);
+						
+						// Check for primary key(s)
+						if( !in_array($f, $table_keys) ) {
+							array_push($update, $f . ' = :' . $f);
+						}
+					}
+					
+					// Insert into table
+					if(!$Database->Q(array(
+						'params' => $params,
+						'query' => 'INSERT INTO ' . $table_name . ' SET ' . implode(', ', $query) . ' ON DUPLICATE KEY UPDATE ' . implode(', ', $update)
+					))){
+						$message = $Database->r['error'];
+						$success = false;
+					}
+				}
+				break;
+		}
+		
+		// Return status and message
+		return array('result' => ($success ? 'success' : 'failure'), 'message' => $message);
+	}
+	
+	// -------------------- Add Foreign Key --------------------
+	// NOTE: This is no longer used
 	private function addForeignKey($table_name) {
 		// Set vars
 		$Database = $this->Database;
@@ -612,6 +787,7 @@ class Functions {
 /*----------------------------------------------
 	Public Functions
 ----------------------------------------------*/
+	// -------------------- Help Modal --------------------
 	public function helpModal($data){
 		switch($data)
 		{
@@ -686,7 +862,7 @@ class Functions {
 		// Build return table
 		$return .= '<form>';
 		$return .= '<table class="table table-striped table-hover table-sm table-bordered" style="margin-bottom:10px;">';
-		$return .= '<thead class="thead-dark"><tr><th><input type="checkbox" class="header_checkbox"></th><th>Table Name</th><th>Current Version</th><th>Latest Version</th></tr></thead>';
+		$return .= '<thead class="thead-dark"><tr><th><input type="checkbox" class="header_checkbox"></th><th>Backup and Restore</th><th>Table Name</th><th>Current Version</th><th>Latest Version</th></tr></thead>';
 		foreach($tables as $k => $v) {
 			
 			if($v['exists'] == 0) {
@@ -700,6 +876,7 @@ class Functions {
 			
 			$return .= '<tr>
 				<td style="width:30px"><input type="checkbox" class="table-checkbox" name="' . $k . '" value="1"' . ($v['exists'] == 0 || $v['version'] < $this->versions[$k] ? ' checked' : '') . '></td>
+				<td><select class="form-control form-control-sm table-action-select"><option value="0">no action</option><option value="1">backup</option><option value="2"' . ($v['exists'] == 0 || $v['version'] < $this->versions[$k] ? ' selected' : '') . '>backup & restore</option></select></td>
 				<td>' . $k . '</td>
 				<td>' . $current . '</td>
 				<td>' . $this->versions[$k] . '</td>
@@ -723,73 +900,71 @@ class Functions {
 		$actions = '';
 		$result = 'success';
 		
-		// Check to make sure tables are legit
-		foreach( $tables as $k => $t ) {
+		// Loop through each selected table
+		foreach( $tables as $t => $v ) {
+			// Check to make sure table is legit
 			if( isset( $this->versions[$t] ) ) {
 				$actions[$t] = '<br/>-- ' . $t . ' --';
 			} else {
-				unset( $tables[$k] );
-				$actions[$t] = '<br/>-- ' . $t . ' --' . '<br/>&#9;Unkown Table!';
+				$actions[$t] = '<br/>-- ' . $t . ' --' . '<br/>&#9;Unknown Table!';
+				continue;
 			}
-		}
-		
-		// Drop selected tables
-		foreach( $tables as $t ) {
-			// Private function
-			$status = $this->dropTable($t);
 			
-			// Check result
+			// Backup table
+			if( $v == 1 || $v == 2 ) {
+				$status = $this->backupTable($t);
+				if( $status['result'] == 'success' ) {
+					$actions[$t] .= '<br/>&#9;Backed up table';
+				} else {
+					$actions[$t] .= '<br/>&#9;Failed to backup table - ' . $status['message'];
+					$result = 'failure';
+					continue;
+				}
+			}
+			
+			// Drop table
+			$status = $this->dropTable($t);
 			if( $status['result'] == 'success' ) {
 				$actions[$t] .= '<br/>&#9;Dropped table';
 			} else {
 				$actions[$t] .= '<br/>&#9;Failed to drop table - ' . $status['message'];
 				$result = 'failure';
+				continue;
 			}
-		}
-		
-		// Create selected tables
-		foreach( $tables as $t ) {
-			// Private function
-			$status = $this->createTable($t);
 			
-			// Check result
+			// Create table
+			$status = $this->createTable($t);
 			if( $status['result'] == 'success' ) {
 				$actions[$t] .= '<br/>&#9;Created table';
 			} else {
 				$actions[$t] .= '<br/>&#9;Failed to create table - ' . $status['message'];
 				$result = 'failure';
+				continue;
 			}
-		}
-		
-		// Fill selected tables
-		foreach( $tables as $t ) {
-			// Private function
-			$status = $this->fillTable($t);
 			
-			// Check result
+			// Fill table
+			$status = $this->fillTable($t);
 			if( $status['result'] == 'success' ) {
 				$actions[$t] .= '<br/>&#9;Filled table';
 			} else {
 				$actions[$t] .= '<br/>&#9;Failed to fill table - ' . $status['message'];
 				$result = 'failure';
+				continue;
 			}
-		}
-		/*
-		// Add foreign keys
-		foreach( $tables as $t ) {
-			// Private function
-			$status = $this->addForeignKey($t);
 			
-			// Check result
-			if( $status['result'] == 'success' ) {
-				$actions[$t] .= '<br/>&#9;Created foreign key';
-			} else {
-				$actions[$t] .= ( !empty($status['message']) ? '<br/>&#9;Failed to create foreign key - ' . $status['message'] : '');
+			// Restore table
+			if( $v == 2 ) {
+				$status = $this->restoreTable($t);
+				if( $status['result'] == 'success' ) {
+					$actions[$t] .= '<br/>&#9;Restored table';
+				} else {
+					$actions[$t] .= '<br/>&#9;Failed to restore table - ' . $status['message'];
+					$result = 'failure';
+					continue;
+				}
 			}
-		}
-		*/
-		// Update table versions
-		foreach( $tables as $t ) {
+			
+			// Update table versions
 			$this->updateTableVersions($t);
 		}
 		

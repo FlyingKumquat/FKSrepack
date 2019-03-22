@@ -4,6 +4,7 @@ $( document ).ready(function() {
 	$('input[type="checkbox"]').iCheck({
 		checkboxClass: 'icheckbox_minimal'
 	});
+	fks.debug.ajax = true;
 });
 
 // Test Database (Tab1)
@@ -68,13 +69,16 @@ function createTables(){
 	$('#tab2 .pre pre').html('Creating Tables...<br/>');
 	
 	// Get all checked checkboxes
-	var tables = [];
+	var tables = {};
 	$('#tab2 .data .table-checkbox').each(function(){
 		if($(this).prop('checked')){
-			tables.push($(this).attr('name'));
+			//tables.push($(this).attr('name'));
+			//tables[$(this).attr('name')] = $(this).closest('tr .table-action-select').val();
+			tables[$(this).attr('name')] = $(this).closest('tr').find('.table-action-select').val();
 		}
 	});
 	
+	//console.log(tables);
 	fks.block($('#site_settings'));
 	
 	// Send
