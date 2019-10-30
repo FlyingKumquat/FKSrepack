@@ -17,7 +17,7 @@ class Functions {
 /*----------------------------------------------
 	Global Variables
 ----------------------------------------------*/
-	private $fks_version = '0.1.191025';
+	private $fks_version = '0.1.191030';
 	private $Database;
 	private $Tables;
 	
