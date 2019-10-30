@@ -93,32 +93,31 @@ class PageFunctions extends CoreFunctions {
 		// Get current site version from the DB
 		$version = $this->siteSettings('SITE_VERSION', true);
 		
-		// Body
-		$body = '<form id="modalForm" role="form" action="javascript:void(0);">
-			<div class="row">
-				<div class="col-md-12">
-					<div class="form-group">
-						<label for="modal_version" class="form-control-label">Changelog Version</label>
-						<input type="text" class="form-control form-control-sm" id="modal_version" name="version" aria-describedby="version_help" value="' . ($version ? $version : '') . '" autocomplete="off">
-						<div class="form-control-feedback"></div>
-						<small id="version_help" class="form-text text-muted">Set the changelog version.</small>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-12">
-					<div class="form-group">
-						<label for="modal_settings" class="form-control-label">Update Site Version?</label>
-						<select class="form-control form-control-sm" id="modal_settings" name="settings" aria-describedby="settings_help">
-							<option value="1">Yes</option>
-							<option value="0">No</option>
-						</select>
-						<div class="form-control-feedback"></div>
-						<small id="settings_help" class="form-text text-muted">Update the site version with this version.</small>
-					</div>
-				</div>
-			</div>
-		</form>';
+		// Use function to build inputs
+		$body = $this->buildFormGroups(array(
+			array(
+				'title' => 'Changelog Version',
+				'type' => 'text',
+				'name' => 'version',
+				'value' => (is_null($version) ? '' : $version),
+				'help' => 'Set the changelog version.',
+				'required' => true
+			),array(
+				'title' => 'Update Site Version?',
+				'type' => 'select',
+				'name' => 'settings',
+				'help' => 'Update the site version with this version.',
+				'options' => array(
+					array(
+						'title' => 'Yes',
+						'value' => 1
+					),array(
+						'title' => 'No',
+						'value' => 0
+					)
+				)
+			)
+		));
 		
 		// Return modal parts
 		return array(
@@ -126,7 +125,9 @@ class PageFunctions extends CoreFunctions {
 			'parts' => array(
 				'title' => 'Add Changelog',
 				'size' => 'sm',
+				'body_before' => '<form id="modalForm" role="form" action="javascript:void(0);" class="fks-form fks-form-sm">',
 				'body' => $body,
+				'body_after' => '</form>',
 				'footer' => ''
 					. '<button class="btn fks-btn-danger btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> Close</button>'
 					. '<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#modalForm"><i class="fa fa-save fa-fw"></i> Create</button>'
@@ -144,7 +145,7 @@ class PageFunctions extends CoreFunctions {
 		$Validator = new \Validator($data);
 		
 		// Pre-Validate
-		$Validator->validate('version', array('required' => true, 'max_length' => 45));
+		$Validator->validate('version', array('required' => true, 'not_empty' => true, 'max_length' => 45));
 		
 		// Check for failures
 		if(!$Validator->getResult()) { return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => $Validator->getOutput()); }
@@ -155,7 +156,7 @@ class PageFunctions extends CoreFunctions {
 		// Check for existing version
 		if(!$Database->Q(array(
 			'params' => array(':version' => $form['version']),
-			'query' => 'SELECT * FROM fks_changelog WHERE version = :version AND deleted = 0'
+			'query' => 'SELECT id FROM fks_changelog WHERE version = :version'
 		))) {
 			// Return error message with error code
 			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
@@ -163,50 +164,41 @@ class PageFunctions extends CoreFunctions {
 		
 		// Found existing version
 		if(!empty($Database->r['rows'])) {
-			return array('result' => 'failure', 'message' => 'Version already exists.');
+			return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => array('version' => array('Version already exists.')));
 		}
 		
-		// Create changelog in DB
-		if(!$Database->Q(array(
-			'params' => array(
-				':version' => $form['version'],
-				':date_created' => gmdate('Y-m-d H:i:s'),
-				':created_by' => $_SESSION['id']
-			),
-			'query' => '
-				INSERT INTO
-					fks_changelog
-					
-				SET 
-					version = :version,
-					date_created = :date_created,
-					created_by = :created_by
-				'
-		))){
-			// Return error message with error code
-			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
-		}
+		// Create Data Handler
+		$DataHandler = new \DataHandler(array(
+			'fks_changelog' => array(
+				'base' => 'fks_changelog',
+				'log_actions' => array(
+					'created' => \Enums\LogActions::CHANGELOG_CREATED,
+					'modified' => \Enums\LogActions::CHANGELOG_MODIFIED
+				)
+			)
+		));
 		
-		$last_id = $Database->r['last_id'];
-		
-		// Add log action for creating changelog
-		$MemberLog = new \MemberLog(\Enums\LogActions::CHANGELOG_CREATED, $_SESSION['id'], $Database->r['last_id'], json_encode($form));
-		
-		// Update Site Version in DB if set to true
-		if( $data['settings'] == 1 ) {
-			if(!$Database->Q(array(
-				'params' => array(
-					':version' => $form['version']
-				),
-				'query' => 'UPDATE fks_site_settings SET data = :version WHERE id = "SITE_VERSION"'
-			))){
-				// Return error message with error code
-				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+		// Diff, Set, Log
+		$DSL = $DataHandler->DSL(array(
+			'type' => 'local',
+			'table' => 'fks_changelog',
+			'target_id' => '+',
+			'values' => array(
+				'columns' => $form,
+				'data' => false
+			)
+		));
+
+		// Return
+		if($DSL['result'] == 'success') {
+			if($DSL['diff']['log_type'] == 'created') {
+				return array('result' => 'success', 'message' => 'Created changelog');
+			} else {
+				return array('result' => 'success', 'message' => 'Updated changelog');
 			}
+		} else {
+			return $DSL;
 		}
-		
-		// Return success
-		return array('result' => 'success', 'message' => 'Created changelog.', 'last_id' => $last_id);
 	}
 	
 	// -------------------- View Changelog Modal -------------------- \\
@@ -352,13 +344,34 @@ class PageFunctions extends CoreFunctions {
 		// Set vars
 		$Database = new \Database();
 		$Validator = new \Validator($data);
+		$allowed_ids = array();
+		$disallowed_versions = array();
 		
-		// Pre-Validate
-		$Validator->validate('id', array('required' => true, 'number' => true));
-		$Validator->validate('version', array('required' => true, 'max_length' => 45));
-		$Validator->validate('title', array('min_length' => 1, 'max_length' => 45));
-		$Validator->validate('active', array('required' => true, 'bool' => true));
-		$Validator->validate('notes', array('min_length' => 1));
+		// Grab all changelogs
+		if($Database->Q('SELECT id, version FROM fks_changelog')) {
+			foreach($Database->r['rows'] as $row) {
+				// Add to allowed ids
+				array_push($allowed_ids, $row['id']);
+				
+				// Skip if id is the same
+				if(isset($data['id']) && $data['id'] == $row['id']) { continue; }
+				
+				// Add to disallowed versions
+				array_push($disallowed_versions, strtolower($row['version']));
+			}
+		} else {
+			// Return error message with error code
+			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+		}
+		
+		// Validation
+		$Validator->validate(array(
+			'id' => array('required' => true, 'not_empty' => true, 'numeric' => true, 'values' => $allowed_ids),
+			'version' => array('required' => true, 'not_empty' => true, 'max_length' => 45),
+			'title' => array('required' => true, 'min_length' => 1, 'max_length' => 45),
+			'active' => array('required' => true, 'not_empty' => true, 'bool' => true),
+			'notes' => array('required' => true, 'min_length' => 1)
+		));
 		
 		// Check for failures
 		if(!$Validator->getResult()) { return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => $Validator->getOutput()); }
@@ -366,51 +379,43 @@ class PageFunctions extends CoreFunctions {
 		// Get updated form
 		$form = $Validator->getForm();
 		
-		// Check Diffs
-		$diff = $this->compareQueryArray($form['id'], 'fks_changelog', $form);
+		// Found existing version
+		if(in_array(strtolower($form['version']), $disallowed_versions)) {
+			return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => array('version' => array('Version already exists.')));
+		}
+		
+		// Create Data Handler
+		$DataHandler = new \DataHandler(array(
+			'fks_changelog' => array(
+				'base' => 'fks_changelog',
+				'log_actions' => array(
+					'created' => \Enums\LogActions::CHANGELOG_CREATED,
+					'modified' => \Enums\LogActions::CHANGELOG_MODIFIED
+				)
+			)
+		));
+		
+		// Diff, Set, Log
+		$DSL = $DataHandler->DSL(array(
+			'type' => 'local',
+			'table' => 'fks_changelog',
+			'target_id' => $form['id'],
+			'values' => array(
+				'columns' => $form,
+				'data' => false
+			)
+		));
 
-		// Update the changelog
-		if( $diff ) {
-			if(!$Database->Q(array(
-				'params' => array(
-					':id' => $form['id'],
-					':version' => $form['version'],
-					':title' => $form['title'],
-					':notes' => $form['notes'],
-					':active' => $form['active']
-				),
-				'query' => '
-					UPDATE
-						fks_changelog 
-						
-					SET 
-						version = :version,
-						title = :title,
-						notes = :notes,
-						active = :active
-						
-					WHERE
-						id = :id
-					'
-			))){
-				// Return error message with error code
-				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+		// Return
+		if($DSL['result'] == 'success') {
+			if($DSL['diff']['log_type'] == 'created') {
+				return array('result' => 'success', 'message' => 'Created changelog');
+			} else {
+				return array('result' => 'success', 'message' => 'Updated changelog');
 			}
-		}
-	
-		// Add log action for modifying changelog
-		if( $diff ) {
-			$MemberLog = new \MemberLog(\Enums\LogActions::CHANGELOG_MODIFIED, $_SESSION['id'], $form['id'], json_encode($diff));
 		} else {
-			// Return No Changes
-			return array('result' => 'info', 'title' => 'No Changes Detected', 'message' => 'Nothing was saved.');
+			return $DSL;
 		}
-		
-		// Update modified info for changelog
-		$this->updateChangelogModify($form['id']);
-		
-		// Return changelog stuffs
-		return array('result' => 'success', 'message' => 'Updated changelog');
 	}
 	
 	// -------------------- Add/Edit Changelog Note Modal -------------------- \\
@@ -421,8 +426,7 @@ class PageFunctions extends CoreFunctions {
 		// Set vars
 		$readonly = ($this->access == 1);
 		$Database = new \Database();
-		$type_options = '';
-		$content_pages_options = '';
+		$content_pages_options = array();
 		$menus = array();
 		$menu_items = array();
 		$pages_array = array();
@@ -458,11 +462,6 @@ class PageFunctions extends CoreFunctions {
 				// Return error message with error code
 				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 			}
-		}
-		
-		// Create type options
-		foreach($this->types as $t) {
-			$type_options .= '<option value="' . $t . '"' . (isset($note['type']) && $note['type'] == $t ? ' selected' : '') . '>' . $t . '</option>';
 		}
 		
 		// Grab all menus
@@ -505,59 +504,61 @@ class PageFunctions extends CoreFunctions {
 		// Loop through all menus
 		foreach($menus as $menu) {
 			// Loop though all menu items
-			$menu_content = '';
 			foreach($menu_items as $item) {
 				// Skip if not active or is deleted or doesn't have content or doesn't belong in this menu
 				if($item['active'] == 0 || $item['deleted'] == 1 || $item['has_content'] == 0 || $item['menu_id'] != $menu['id']) { continue; }
-				
-				if(isset($pages_array) && in_array($item['id'], $pages_array)) {
-					$selected = ' selected';
-				} else {
-					$selected = '';
-				}
-				
-				$menu_content .= '<option value="' . $item['id'] . '"' . $selected . ($readonly ? ' disabled' : '') . '>' . $item['full_url'] . '</option>';
-			}
-			if(!empty($menu_content)) {
-				$content_pages_options .= '<optgroup label="' . $menu['title'] . '">' . $menu_content . '</optgroup>';
+
+				array_push($content_pages_options, array(
+					'title' => $item['full_url'],
+					'value' => $item['id'],
+					'group' => $menu['title']
+				));
 			}
 		}
 		
-		// Modal body
-		$body = '<form id="modalForm" role="form" action="javascript:void(0);">
-			<input type="hidden" name="changelog_id" value="' . $data['changelog_id'] . '">
-			<input type="hidden" name="note_id" value="' . $data['note_id'] . '">
-			<div class="row">
-				<div class="col-md-4 form-group">
-					<label for="modal_type" class="form-control-label">Type</label>
-					<select class="form-control form-control-sm" id="modal_type" name="type" aria-describedby="type_help">
-						' . $type_options . '
-					</select>
-					<div class="form-control-feedback"></div>
-					<small id="type_help" class="form-text text-muted">What did this message do.</small>
-				</div>
-			</div>
-			
-			<div class="row">
-				<div class="col-md-12 form-group">
-					<label for="modal_data" class="form-control-label">Message</label>
-					<input type="text" class="form-control form-control-sm " id="modal_data" name="data" aria-describedby="data_help" value="' . (isset($note['data']) ? $note['data'] : ''). '" autocomplete="off">
-					<div class="form-control-feedback"></div>
-					<small id="data_help" class="form-text text-muted">Explain what was done.</small>
-				</div>
-			</div>
-			
-			<div class="row">
-				<div class="col-md-12 form-group">
-					<label for="modal_pages" class="form-control-label">Pages</label>
-					<select class="form-control form-control-sm" id="modal_pages" name="pages" aria-describedby="pages_help" multiple="multiple">
-						' . $content_pages_options . '
-					</select>
-					<div class="form-control-feedback"></div>
-					<small id="pages_help" class="form-text text-muted">What pages were affected by this.</small>
-				</div>
-			</div>
-		</form>';
+		// Use function to build inputs
+		$body = $this->buildFormGroups(array(
+			array(
+				'type' => 'hidden',
+				'name' => 'changelog_id',
+				'value' => $data['changelog_id']
+			),
+			array(
+				'type' => 'hidden',
+				'name' => 'note_id',
+				'value' => $data['note_id']
+			),
+			array(
+				'title' => 'Type',
+				'type' => 'select',
+				'name' => 'type',
+				'value' => (isset($note['type']) ? $note['type'] : ''),
+				'help' => 'What did this message do.',
+				'options' => $this->types,
+				'width' => 6
+			),
+			array(
+				'width' => 6
+			),
+			array(
+				'title' => 'Message',
+				'type' => 'text',
+				'name' => 'data',
+				'value' => (isset($note['data']) ? $note['data'] : ''),
+				'help' => 'Explain what was done.',
+				'required' => true,
+				'attributes' => array('autocomplete' => 'off')
+			),
+			array(
+				'title' => 'Pages',
+				'type' => 'select',
+				'name' => 'pages',
+				'value' => (isset($note['data']) ? $note['data'] : ''),
+				'help' => 'What pages were affected by this.',
+				'properties' => array('multiple'),
+				'options' => $content_pages_options
+			)
+		));
 		
 		// Return modal parts
 		return array(
@@ -565,9 +566,12 @@ class PageFunctions extends CoreFunctions {
 			'parts' => array(
 				'title' => ($data['note_id'] == '+' ? 'Add' : 'Edit') . ' Changelog Note',
 				'size' => 'lg',
+				'body_before' => '<form id="modalForm" class="fks-form fks-form-sm" action="javascript:void(0);">',
 				'body' => $body,
+				'body_after' => '</form>',
 				'footer' => ''
 					. '<button class="btn fks-btn-danger btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> Close</button>'
+					. '<button class="btn fks-btn-warning btn-sm" fks-action="resetForm" fks-target="#modalForm"><i class="fa fa-undo fa-fw"></i> Reset</button>'
 					. '<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#modalForm"><i class="fa fa-save fa-fw"></i> ' . ($data['note_id'] == '+' ? 'Add' : 'Update') . '</button>'
 			)
 		);
@@ -580,12 +584,38 @@ class PageFunctions extends CoreFunctions {
 		// Set vars
 		$Database = new \Database();
 		$Validator = new \Validator($data);
+		$allowed_ids = array();
+		$allowed_menu_items = array();
+		
+		// Grab all changelogs
+		if($Database->Q('SELECT id FROM fks_changelog WHERE deleted = 0')) {
+			foreach($Database->r['rows'] as $row) {
+				// Add to allowed ids
+				array_push($allowed_ids, $row['id']);
+			}
+		} else {
+			// Return error message with error code
+			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+		}
+		
+		// Grab all menu items
+		if($Database->Q('SELECT id FROM fks_menu_items WHERE deleted = 0')) {
+			foreach($Database->r['rows'] as $row) {
+				// Add to allowed menu items
+				array_push($allowed_menu_items, $row['id']);
+			}
+		} else {
+			// Return error message with error code
+			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+		}
 		
 		// Pre-Validate
-		$Validator->validate('changelog_id', array('required' => true));
-		$Validator->validate('type', array('required' => true, 'values' => $this->types));
-		$Validator->validate('data', array('required' => true));
-		$Validator->validate('pages', array('min_length' => 1));
+		$Validator->validate(array(
+			'changelog_id' => array('required' => true, 'values' => $allowed_ids),
+			'type' => array('required' => true, 'values' => $this->types),
+			'data' => array('required' => true, 'not_empty' => true),
+			'pages' => array('values_csv' => $allowed_menu_items)
+		));
 		
 		// Check for failures
 		if(!$Validator->getResult()) { return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => $Validator->getOutput()); }
@@ -594,9 +624,9 @@ class PageFunctions extends CoreFunctions {
 		$form = $Validator->getForm();
 		
 		// Check for missing values
-		if( empty($form['pages']) ){ $form['pages'] = null; }
+		if(empty($form['pages'])) { $form['pages'] = null; }
 		
-		if( $data['note_id'] == '+' ) {
+		if($data['note_id'] == '+') {
 		// Create changelog note in DB
 			// Add the note
 			if(!$Database->Q(array(

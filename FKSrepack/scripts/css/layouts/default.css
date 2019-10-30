@@ -1,5 +1,5 @@
 /***********************************************
-	Updated: 11/24/2017
+	Updated: 10/23/2019
 ***********************************************/
 body {
   margin: 0 auto;
@@ -8,18 +8,23 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
 }
+
 body.collapsed #top_nav > .actions {
   left: 0;
 }
+
 body.collapsed #crumbs > .bar {
   padding-left: 10px;
 }
+
 body.fullscreen .top-nav-background {
   display: none;
 }
+
 body.fullscreen #content {
   border: 1px solid #cbcbcb;
 }
+
 body.modal-open {
   padding-right: 0px !important;
 }
@@ -27,6 +32,7 @@ body.modal-open {
 #top_nav {
   padding-right: 0px;
 }
+
 #top_nav > .actions {
   position: relative;
   float: left;
@@ -34,23 +40,25 @@ body.modal-open {
   margin-left: 10px;
   margin-right: -10px;
 }
+
 #top_nav > [fks-menu] > .nav-list > .nav-item > a > span.title > span.text {
   display: none;
 }
+
 @media (max-width: 575px) {
-  #top_nav > [fks-menu] > .nav-list > .nav-item > .sub-menu,
-  #top_nav > .notifiers > .nav-list > .nav-item > .sub-menu {
+  #top_nav > [fks-menu] > .nav-list > .nav-item .sub-menu,
+  #top_nav > .notifiers > .nav-list > .nav-item .sub-menu {
     position: fixed;
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
   }
-  #top_nav > [fks-menu] > .nav-list > .nav-item > .sub-menu > .nav-item,
-  #top_nav > .notifiers > .nav-list > .nav-item > .sub-menu > .nav-item {
+  #top_nav > [fks-menu] > .nav-list > .nav-item .sub-menu > .nav-item,
+  #top_nav > .notifiers > .nav-list > .nav-item .sub-menu > .nav-item {
     line-height: 40px;
   }
-  #top_nav > [fks-menu] > .nav-list > .nav-item > .sub-menu > .nav-item > a,
-  #top_nav > .notifiers > .nav-list > .nav-item > .sub-menu > .nav-item > a {
+  #top_nav > [fks-menu] > .nav-list > .nav-item .sub-menu > .nav-item > a,
+  #top_nav > .notifiers > .nav-list > .nav-item .sub-menu > .nav-item > a {
     font-size: 14px;
   }
 }
@@ -63,13 +71,16 @@ body.modal-open {
   width: 100%;
   border: none;
 }
+
 #footer .footer-left {
   top: 1px;
 }
+
 #footer .footer-center {
   text-align: center;
   line-height: 40px;
 }
+
 #footer .footer-right {
   top: 1px;
   text-align: right;
@@ -94,6 +105,7 @@ body.modal-open {
 #crumbs {
   margin-bottom: 10px;
 }
+
 #crumbs > .bar {
   position: relative;
   padding-left: 10px;
@@ -119,15 +131,16 @@ body.modal-open {
     width: 750px;
   }
 }
+
 @media (min-width: 992px) {
   body, #top_nav {
     width: 970px;
   }
-
   #top_nav > [fks-menu] > .nav-list > .nav-item > a > span.title > span.text {
     display: inline;
   }
 }
+
 @media (min-width: 1200px) {
   body, #top_nav {
     width: 1170px;

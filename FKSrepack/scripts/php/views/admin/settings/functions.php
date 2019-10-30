@@ -20,612 +20,399 @@ class PageFunctions extends CoreFunctions {
 /*----------------------------------------------
 	Private Functions
 ----------------------------------------------*/
-	private function formGroup($formData = null) {
-		// Return blank if anything is missing
-		if(is_null($formData)) {return '(NULL)';}
-		
-		// JSON decode misc settings
-		$json = json_decode($formData['misc'], true);
-		
-		// Start the form group
-		$return = '<div class="form-group"><label for="' . $formData['id'] . '" class="form-control-label">' . $formData['title'] . (isset($json['required']) && $json['required'] == true ? ' <span style="color:red;">*</span>' : '') . '</label>';
-		
-		switch($formData['type'])
-		{
-            case 'bool':
-				$return .= '<select class="form-control form-control-sm" id="' . $formData['id'] . '" name="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>
-					<option value="0"' . (isset($formData['data']) && $formData['data'] == 0 ? ' selected' : '') . '>Disabled</option>
-					<option value="1"' . (isset($formData['data']) && $formData['data'] == 1 ? ' selected' : '') . '>Enabled</option>
-				</select>';
-				break;
-			
-            case 'email':
-            case 'text':
-            case 'number':
-            case 'password':
-				$return .= '<input type="' . $formData['type'] . '" class="form-control form-control-sm" id="' . $formData['id'] . '" name="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP" value="' . (isset($formData['data']) ? $formData['data'] : '') . '" autocomplete="off"' . ($this->access == 3 ? '' : ' disabled') . '>';
-				break;
-				
-			case 'dropdown':
-				// Start the select
-				$return .= '<select class="form-control form-control-sm" id="' . $formData['id'] . '" name="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>';
-				
-				// Loop through options if set
-				if( isset($json['options']) ) { 
-					foreach($json['options'] as $k => $v) {
-						$return .= '<option value="' . $v . '"' . ($formData['data'] == $v ? ' selected' : '') . '>' . $v . '</option>';
-					}
-				} else {
-					$return .= '<option>Options Not Defined!</option>';
-				}
-				
-				// End the select
-				$return .= '</select>';
-				break;
-				
-            case 'timezone':
-				// Start the select
-				$return .= '<select class="form-control form-control-sm" id="' . $formData['id'] . '" name="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>';
-				
-				// Create the default option
-				$return .= '<option value="">Use Default (' . date_default_timezone_get() . ')</option>';
-				
-				// Select specific time regions
-				$regions = array(
-					//'Africa' => \DateTimeZone::AFRICA,
-					'America' => \DateTimeZone::AMERICA,
-					//'Antarctica' => \DateTimeZone::ANTARCTICA,
-					//'Asia' => \DateTimeZone::ASIA,
-					'Atlantic' => \DateTimeZone::ATLANTIC,
-					//'Europe' => \DateTimeZone::EUROPE,
-					//'Indian' => \DateTimeZone::INDIAN,
-					'Pacific' => \DateTimeZone::PACIFIC
-				);
-				
-				// loop through each time regions
-				foreach ($regions as $name => $mask)
-				{
-					$zones = \DateTimeZone::listIdentifiers($mask);
-					foreach($zones as $timezone)
-					{
-						$return .= '<option value="' . $timezone . '"' . ($formData['data'] == $timezone ? ' selected' : '') . '>' . $timezone . '</option>';
-					}
-				}
-				
-				// End the select
-				$return .= '</select>';
-				break;
-				
-			case 'div':
-				$return .= '<div id="' . $formData['id'] . '" name="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP" ' . ($this->access == 3 ? '' : ' disabled') . '>' . (isset($formData['data']) ? $formData['data'] : '') . '</div>';
-				break;
-				
-			case 'textarea':
-				$return .= '<textarea class="form-control form-control-sm" id="' . $formData['id'] . '" name="' . $formData['id'] . '" ' . (isset($json['attributes']) ? $json['attributes'] : '') . ' aria-describedby="' . $formData['id'] . '_HELP" ' . ($this->access == 3 ? '' : ' disabled') . '>' . (isset($formData['data']) ? $formData['data'] : '') . '</textarea>';
-				break;
-				
-			case 'web_page':
-				// Start the select
-				$return .= '<select class="form-control form-control-sm" id="' . $formData['id'] . '" name="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>';
-				
-				// Default NULL
-				$return .= '<option value="">-</option>';
-				
-				// Loop through options 
-				foreach($this->getMenuItemStructures(false, true) as $k => $v) {
-					$return .= '<option value="' . $k . '"' . ($formData['data'] == $k ? ' selected' : '') . '>' . $v . '</option>';
-				}
-				
-				// End the select
-				$return .= '</select>';
-				break;
-				
-			case 'connection':
-				// Start the select
-				$return .= '<select class="form-control form-control-sm" id="' . $formData['id'] . '" name="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>';
-				
-				// Default NULL
-				$return .= '<option value="">-</option>';
-				
-				// Make a database connection
-				$Database = new \Database();
-				
-				// Loop through options 
-				foreach($Database->db as $k => $v) {
-					// Skip things
-					if( $k == 'persist' || $k == 'default' || $k == $Database->db['default'] ){ continue; }
-					
-					// Add option
-					$return .= '<option value="' . $k . '"' . ($formData['data'] == $k ? ' selected' : '') . '>' . $k . '</option>';
-				}
-				
-				// End the select
-				$return .= '</select>';
-				break;
-				
-            default:
-				$return .= '<input type="text" class="form-control form-control-sm" id="' . $formData['id'] . '" aria-describedby="' . $formData['id'] . '_HELP" value="There was an issue with this form (' . $formData['type'] . ')" disabled>';
-				break;
-		}
-		
-		// End the form group
-		$return .= '<div class="form-control-feedback"></div>
-			<small id="' . $formData['id'] . '_HELP" class="form-text text-muted">' . $formData['help_text'] . '</small>
-		</div>';
-		
-		// Return form group
-		return $return;
-	}
-	
-	// -------------------- General Tab Settings -------------------- \\
-	private function tabGeneral($site_settings) {
-		$return = '<div class="row">
-			<div class="col-xl-7">		
-				<p>These are general settings for the site, anything that doesn\'t belong in their own tab.</p>
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['SITE_TITLE']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['MEMBER_REGISTRATION']) . '</div>
-				</div>
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['REQUIRE_LOGIN']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['SITE_USERNAME']) . '</div>
-				</div>
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['TIMEZONE']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['DATE_FORMAT']) . '</div>
-				</div>
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['SITE_LAYOUT']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['SITE_HOME_PAGE']) . '</div>
-				</div>
-				<div class="row">
-					<div class="col-xl-12">' . $this->formGroup($site_settings['PROTECTED_USERNAMES']) . '</div>
-				</div>
-			</div>
-			<div class="col-xl-5">
-				<h6>' . $site_settings['SITE_TITLE']['title'] . '</h6>
-				<p>' . $site_settings['SITE_TITLE']['description'] . '</p>
-				<h6>' . $site_settings['MEMBER_REGISTRATION']['title'] . '</h6>
-				<p>' . $site_settings['MEMBER_REGISTRATION']['description'] . '</p>
-				<h6>' . $site_settings['REQUIRE_LOGIN']['title'] . '</h6>
-				<p>' . $site_settings['REQUIRE_LOGIN']['description'] . '</p>
-				<h6>' . $site_settings['SITE_USERNAME']['title'] . '</h6>
-				<p>' . $site_settings['SITE_USERNAME']['description'] . '</p>
-				<h6>' . $site_settings['TIMEZONE']['title'] . '</h6>
-				<p>' . $site_settings['TIMEZONE']['description'] . '</p>
-				<h6>' . $site_settings['DATE_FORMAT']['title'] . '</h6>
-				<p>' . $site_settings['DATE_FORMAT']['description'] . '</p>
-				<h6>' . $site_settings['SITE_LAYOUT']['title'] . '</h6>
-				<p>' . $site_settings['SITE_LAYOUT']['description'] . '</p>
-				<h6>' . $site_settings['SITE_HOME_PAGE']['title'] . '</h6>
-				<p>' . $site_settings['SITE_HOME_PAGE']['description'] . '</p>
-				<h6>' . $site_settings['PROTECTED_USERNAMES']['title'] . '</h6>
-				<p>' . $site_settings['PROTECTED_USERNAMES']['description'] . '</p>
-			</div>
-		</div>';
-		
-		return $return;
-	}
-	
-	// -------------------- reCaptcha Tab Settings -------------------- \\
-	private function tabCaptcha($site_settings) {
-		$return = '<div class="row">
-			<div class="col-xl-7">		
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['CAPTCHA']) . '</div>
-					<div class="col-xl-6"></div>
-				</div>
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['CAPTCHA_PRIVATE']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['CAPTCHA_PUBLIC']) . '</div>
-				</div>
-				
-			</div>
-			<div class="col-xl-5">
-				<h6>' . $site_settings['CAPTCHA']['title'] . '</h6>
-				<p>' . $site_settings['CAPTCHA']['description'] . '</p>
-				<h6>' . $site_settings['CAPTCHA_PRIVATE']['title'] . '</h6>
-				<p>' . $site_settings['CAPTCHA_PRIVATE']['description'] . '</p>
-				<h6>' . $site_settings['CAPTCHA_PUBLIC']['title'] . '</h6>
-				<p>' . $site_settings['CAPTCHA_PUBLIC']['description'] . '</p>
-			</div>
-		</div>';
-		
-		return $return;
-	}
-	
-	// -------------------- Email Tab Settings -------------------- \\
-	private function tabEmail($site_settings) {
-		// Panel start
-		$return = '<div class="fks-panel tabs mar-bot-0">';
-		
-		// Email tabs
-		$return .= '<div class="header">
-			<ul class="nav nav-tabs">
-				<li class="nav-item">
-					<a class="nav-link active" data-toggle="tab" href="#tab3-1" role="tab" draggable="false"><i class="fa fa-gears fa-fw"></i> General</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" data-toggle="tab" href="#tab3-2" role="tab" draggable="false"><i class="fa fa-handshake-o fa-fw"></i> Verification</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" data-toggle="tab" href="#tab3-3" role="tab" draggable="false"><i class="fa fa-question fa-fw"></i> Forgot Password</a>
-				</li>
-			</ul>
-		</div>';
-		
-		// Email tab bodies
-		$return .= '<div class="body">
-			<div class="tab-content">
-				<div class="tab-pane active" id="tab3-1" role="tabpanel">
-					<div class="row">
-						<div class="col-xl-7">
-							<div class="row">
-								<div class="col-xl-6">' . $this->formGroup($site_settings['EMAIL_AUTH']) . '</div>
-								<div class="col-xl-6"></div>
-							</div>
-							<div class="row">
-								<div class="col-xl-6">' . $this->formGroup($site_settings['EMAIL_USERNAME']) . '</div>
-								<div class="col-xl-6">' . $this->formGroup($site_settings['EMAIL_PASSWORD']) . '</div>
-							</div>
-							<div class="row">
-								<div class="col-xl-6">' . $this->formGroup($site_settings['EMAIL_FROM_ADDRESS']) . '</div>
-								<div class="col-xl-6">' . $this->formGroup($site_settings['EMAIL_REPLY_TO_ADDRESS']) . '</div>
-							</div>
-							<div class="row">
-								<div class="col-xl-6">' . $this->formGroup($site_settings['EMAIL_HOSTNAME']) . '</div>
-								<div class="col-xl-6">' . $this->formGroup($site_settings['EMAIL_PORT']) . '</div>
-							</div>
-							<div class="row">
-								<div class="col-xl-6">' . $this->formGroup($site_settings['EMAIL_SECURE']) . '</div>
-								<div class="col-xl-6"></div>
-							</div>
-							<div class="row">
-								<div class="col-xl-12">
-									<div class="form-group">
-										<button type="button" class="btn fks-btn-info btn-sm test-email-btn"><i class="fa fa-paper-plane-o fa-fw"></i> Send Test Email</button>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col-xl-5">
-							<h6>' . $site_settings['EMAIL_AUTH']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_AUTH']['description'] . '</p>
-							<h6>' . $site_settings['EMAIL_USERNAME']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_USERNAME']['description'] . '</p>
-							<h6>' . $site_settings['EMAIL_PASSWORD']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_PASSWORD']['description'] . '</p>
-							<h6>' . $site_settings['EMAIL_FROM_ADDRESS']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_FROM_ADDRESS']['description'] . '</p>
-							<h6>' . $site_settings['EMAIL_REPLY_TO_ADDRESS']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_REPLY_TO_ADDRESS']['description'] . '</p>
-							<h6>' . $site_settings['EMAIL_HOSTNAME']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_HOSTNAME']['description'] . '</p>
-							<h6>' . $site_settings['EMAIL_PORT']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_PORT']['description'] . '</p>
-							<h6>' . $site_settings['EMAIL_SECURE']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_SECURE']['description'] . '</p>
-						</div>
-					</div>
-				</div>
-				
-				<div class="tab-pane" id="tab3-2" role="tabpanel">
-					<div class="row">
-						<div class="col-xl-7">
-							<div class="row">
-								<div class="col-xl-6">' . $this->formGroup($site_settings['EMAIL_VERIFICATION']) . '</div>
-								<div class="col-xl-6"></div>
-							</div>
-							<div class="row">
-								<div class="col-xl-6">' . $this->formGroup($site_settings['EMAIL_VERIFICATION_FROM_ADDRESS']) . '</div>
-								<div class="col-xl-6">' . $this->formGroup($site_settings['EMAIL_VERIFICATION_REPLY_TO_ADDRESS']) . '</div>
-							</div>
-							<div class="row">
-								<div class="col-xl-12">' . $this->formGroup($site_settings['EMAIL_VERIFICATION_SUBJECT']) . '</div>
-							</div>
-							<div class="row">
-								<div class="col-xl-12">' . $this->formGroup($site_settings['EMAIL_VERIFICATION_TEMPLATE']) . '</div>
-							</div>
-						</div>
-						<div class="col-xl-5">
-							<h6>' . $site_settings['EMAIL_VERIFICATION']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_VERIFICATION']['description'] . '</p>
-							<h6>' . $site_settings['EMAIL_VERIFICATION_FROM_ADDRESS']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_VERIFICATION_FROM_ADDRESS']['description'] . '</p>
-							<h6>' . $site_settings['EMAIL_VERIFICATION_REPLY_TO_ADDRESS']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_VERIFICATION_REPLY_TO_ADDRESS']['description'] . '</p>
-							<h6>' . $site_settings['EMAIL_VERIFICATION_SUBJECT']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_VERIFICATION_SUBJECT']['description'] . '</p>
-							<h6>' . $site_settings['EMAIL_VERIFICATION_TEMPLATE']['title'] . '</h6>
-							<p>' . $site_settings['EMAIL_VERIFICATION_TEMPLATE']['description'] . '</p>
-						</div>
-					</div>
-				</div>
-				
-				<div class="tab-pane" id="tab3-3" role="tabpanel">
-					<div class="row">
-						<div class="col-xl-7">
-							<div class="row">
-								<div class="col-xl-6">' . $this->formGroup($site_settings['FORGOT_PASSWORD']) . '</div>
-								<div class="col-xl-6"></div>
-							</div>
-							<div class="row">
-								<div class="col-xl-6">' . $this->formGroup($site_settings['FORGOT_PASSWORD_FROM_ADDRESS']) . '</div>
-								<div class="col-xl-6">' . $this->formGroup($site_settings['FORGOT_PASSWORD_REPLY_TO_ADDRESS']) . '</div>
-							</div>
-							<div class="row">
-								<div class="col-xl-12">' . $this->formGroup($site_settings['FORGOT_PASSWORD_SUBJECT']) . '</div>
-							</div>
-							<div class="row">
-								<div class="col-xl-12">' . $this->formGroup($site_settings['FORGOT_PASSWORD_TEMPLATE']) . '</div>
-							</div>
-						</div>
-						<div class="col-xl-5">
-							<h6>' . $site_settings['FORGOT_PASSWORD']['title'] . '</h6>
-							<p>' . $site_settings['FORGOT_PASSWORD']['description'] . '</p>
-							<h6>' . $site_settings['FORGOT_PASSWORD_FROM_ADDRESS']['title'] . '</h6>
-							<p>' . $site_settings['FORGOT_PASSWORD_FROM_ADDRESS']['description'] . '</p>
-							<h6>' . $site_settings['FORGOT_PASSWORD_REPLY_TO_ADDRESS']['title'] . '</h6>
-							<p>' . $site_settings['FORGOT_PASSWORD_REPLY_TO_ADDRESS']['description'] . '</p>
-							<h6>' . $site_settings['FORGOT_PASSWORD_SUBJECT']['title'] . '</h6>
-							<p>' . $site_settings['FORGOT_PASSWORD_SUBJECT']['description'] . '</p>
-							<h6>' . $site_settings['FORGOT_PASSWORD_TEMPLATE']['title'] . '</h6>
-							<p>' . $site_settings['FORGOT_PASSWORD_TEMPLATE']['description'] . '</p>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>';
-		
-		// Panel end
-		$return .= '</div>';
-		
-		return $return;
-	}
-	
-	// -------------------- Access Tab Settings -------------------- \\
-	private function tabAccess($site_settings) {
+	// -------------------- Get Access Groups -------------------- \\
+	private function getAccessGroups() {
 		// Set vars
 		$Database = new \Database();
 		$hierarchy = $this->getHierarchy($_SESSION['id']);
-		$access = array(
-			'guest' => array(
-				'options' => '',
-				'values' => explode(',', $this->siteSettings('DEFAULT_ACCESS_GUEST'))
-			),
-			'ldap' => array(
-				'options' => '',
-				'values' => explode(',', $this->siteSettings('DEFAULT_ACCESS_LDAP'))
-			),
-			'local' => array(
-				'options' => '',
-				'values' => explode(',', $this->siteSettings('DEFAULT_ACCESS_LOCAL'))
-			)
-		);
+		$access = array();
 		
 		// Grab all access groups and create options
 		if($Database->Q(array(
 			'assoc' => 'id',
-			'query' => 'SELECT * FROM fks_access_groups WHERE active = 1 AND deleted = 0'
+			'query' => 'SELECT id,title,hierarchy FROM fks_access_groups WHERE active = 1 AND deleted = 0'
 		))) {
-			foreach($Database->r['rows'] as $k => $v) {
-				foreach($access as $ak => $av) {
-					$access[$ak]['options'] .= '<option value="'. $k .'"'. (in_array($k, $access[$ak]['values']) ? ' selected' : '') . ($hierarchy < $v['hierarchy'] ? ' disabled' : '') . '>' . $v['title'] . '</option>';
-				}
+			// Set data
+			$access = $Database->r['rows'];
+			
+			// Loop through and set hierarchy
+			foreach($access as $k => &$v) {
+				$v['disabled'] = ($hierarchy < $v['hierarchy']);
 			}
-		} else {
-			return array('result' => 'failure', 'message' => 'Failed to grab settings from DB!');
 		}
 		
-		// Panel start
-		$return = '<div class="fks-panel tabs mar-bot-0">';
+		// Return access array
+		return $access;
+	}
+	
+	// -------------------- Get Member Data Types -------------------- \\
+	private function getMemberDataTypes() {
+		// Set vars
+		$Database = new \Database();
+		$dataTypes = array();
 		
-		// Email tabs
-		$return .= '<div class="header">
-			<ul class="nav nav-tabs">
-				<li class="nav-item">
-					<a class="nav-link active" data-toggle="tab" href="#tab4-1" role="tab" draggable="false"><i class="fa fa-gears fa-fw"></i> Guest</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" data-toggle="tab" href="#tab4-2" role="tab" draggable="false"><i class="fa fa-handshake-o fa-fw"></i> Local</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" data-toggle="tab" href="#tab4-3" role="tab" draggable="false"><i class="fa fa-question fa-fw"></i> LDAP</a>
-				</li>
-			</ul>
-		</div>';
+		// Grab all access groups and create options
+		if($Database->Q(array(
+			'assoc' => 'constant',
+			'query' => 'SELECT id,constant,title FROM fks_member_data_types WHERE active = 1 AND deleted = 0'
+		))) {
+			// Set data
+			$dataTypes = $Database->r['rows'];
+		}
 		
-		// Email tab bodies
-		$return .= '<div class="body">
-			<div class="tab-content">
-				<div class="tab-pane active" id="tab4-1" role="tabpanel">
-					<div class="row">
-						<div class="col-xl-7">
-							<div class="form-group">
-								<label for="DEFAULT_ACCESS_GUEST" class="form-control-label">Guest Default Access Group</label>
-								<select class="form-control form-control-sm access-lists" id="DEFAULT_ACCESS_GUEST" name="DEFAULT_ACCESS_GUEST" multiple="multiple" aria-describedby="DEFAULT_ACCESS_GUEST_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>
-									' . $access['guest']['options'] . '
-								</select>
-								<div class="form-control-feedback"></div>
-								<small id="DEFAULT_ACCESS_GUEST_HELP" class="form-text text-muted">Default Access Group(s) for accounts that aren\'t logged in.</small>
-							</div>
-						</div>
-						<div class="col-xl-5">
-							<h6>' . $site_settings['DEFAULT_ACCESS_GUEST']['title'] . '</h6>
-							<p>' . $site_settings['DEFAULT_ACCESS_GUEST']['description'] . '</p>
-						</div>
-					</div>
-				</div>
-				<div class="tab-pane" id="tab4-2" role="tabpanel">
-					<div class="row">
-						<div class="col-xl-7">
-							<div class="form-group">
-								<label for="DEFAULT_ACCESS_LOCAL" class="form-control-label">Local Default Access Group</label>
-								<select class="form-control form-control-sm access-lists" id="DEFAULT_ACCESS_LOCAL" name="DEFAULT_ACCESS_LOCAL" multiple="multiple" aria-describedby="DEFAULT_ACCESS_LOCAL_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>
-									' . $access['local']['options'] . '
-								</select>
-								<div class="form-control-feedback"></div>
-								<small id="DEFAULT_ACCESS_LOCAL_HELP" class="form-text text-muted">Default Access Group(s) for accounts that are created through registration.</small>
-							</div>
-						</div>
-						<div class="col-xl-5">
-							<h6>' . $site_settings['DEFAULT_ACCESS_LOCAL']['title'] . '</h6>
-							<p>' . $site_settings['DEFAULT_ACCESS_LOCAL']['description'] . '</p>
-						</div>
-					</div>
-				</div>
-				<div class="tab-pane" id="tab4-3" role="tabpanel">
-					<div class="row">
-						<div class="col-xl-7">
-							<div class="form-group">
-								<label for="DEFAULT_ACCESS_LDAP" class="form-control-label">LDAP Default Access Group</label>
-								<select class="form-control form-control-sm access-lists" id="DEFAULT_ACCESS_LDAP" name="DEFAULT_ACCESS_LDAP" multiple="multiple" aria-describedby="DEFAULT_ACCESS_LDAP_HELP"' . ($this->access == 3 ? '' : ' disabled') . '>
-									' . $access['ldap']['options'] . '
-								</select>
-								<div class="form-control-feedback"></div>
-								<small id="DEFAULT_ACCESS_LDAP_HELP" class="form-text text-muted">Default Access Group(s) for accounts that are created using LDAP.</small>
-							</div>
-						</div>
-						<div class="col-xl-5">
-							<h6>' . $site_settings['DEFAULT_ACCESS_LDAP']['title'] . '</h6>
-							<p>' . $site_settings['DEFAULT_ACCESS_LDAP']['description'] . '</p>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>';
+		//
+		ksort($dataTypes);
 		
-		// Panel end
-		$return .= '</div>';
+		// Return access array
+		return $dataTypes;
+	}
+	
+	// -------------------- Generate Settings Tab -------------------- \\
+	private function settingsTab($input_array = array(), $site_settings = null) {
+		// Return if missing anything
+		if(!is_array($input_array) || count($input_array) == 0 || is_null($site_settings)) { return array('inputs' => 'There was an issue generating inputs...', 'descriptions' => ''); }
 		
-		// Return
-		return $return;
+		// Set return values
+		$inputs = array();
+		$descriptions = '';
+		
+		// loop through each input passed
+		foreach($input_array as $i) {
+			// Continue if data is missing but create a blank col if a number is given
+			if(!isset($site_settings[$i])) {
+				if(is_numeric($i)) { array_push($inputs, array('width' => $i)); }
+				continue;
+			}
+			
+			// Create temporary input array with default values
+			$_input = array(
+				'title' => $site_settings[$i]['title'],
+				'type' => $site_settings[$i]['type'],
+				'name' => $site_settings[$i]['id'],
+				'value' => $site_settings[$i]['data'],
+				'help' => $site_settings[$i]['help_text']
+			);
+			
+			// Explode miscellaneous options
+			$_options = json_decode($site_settings[$i]['misc'], true);
+			
+			// SITE_HOME_PAGE - Get a list of all active site pages
+			if($i == 'SITE_HOME_PAGE') {
+				$_options['options'] = array(array('title' => '-', 'value' => ''));
+				foreach($this->getMenuItemStructures(false, true) as $k => $v) {
+					array_push($_options['options'], array('title' => $v, 'value' => $k));
+				}
+			}
+			
+			// TIMEZONE - Get a list of all time zones
+			if($i == 'TIMEZONE') {
+				$_options['options'] = array(array('title' => 'Use Server (' . date_default_timezone_get() . ')', 'value' => ''));
+				foreach($this->timeZones('ALL')['list'] as $k => $v) {
+					array_push($_options['options'], array('title' => $v, 'value' => $v));
+				}
+			}
+			
+			// ALLOWED_TIME_ZONES - Get a list of all time zones and group them by region
+			if($i == 'ALLOWED_TIME_ZONES') {
+				$_options['options'] = array();
+				foreach($this->timeZones('ALL')['list'] as $k => $v) {
+					$_group = strpos($v, '/') !== false ? explode('/', $v)[0] : $v;
+					array_push($_options['options'], array('title' => $v, 'value' => $v, 'group' => $_group));
+				}
+			}
+			
+			// Access Groups
+			if($i == 'DEFAULT_ACCESS_GUEST' || $i == 'DEFAULT_ACCESS_LDAP' || $i == 'DEFAULT_ACCESS_LOCAL') {
+				$_options['options'] = array();
+				foreach($this->getAccessGroups() as $k => $v) {
+					array_push($_options['options'], array('title' => $v['title'], 'value' => $v['id'], 'disabled' => $v['disabled']));
+				}
+			}
+			
+			// Remote Database - Get a list of all databases
+			if($i == 'REMOTE_DATABASE') {
+				$Databases = new \Database();
+				$_options['options'] = array(array('title' => '-', 'value' => ''));
+				foreach($Databases->db as $k => $v) {
+					if( $k == 'persist' || $k == 'default' || $k == $Databases->db['default'] ){ continue; }
+					array_push($_options['options'], array('title' => $k, 'value' => $k));
+				}
+			}
+			
+			// Add options if a select
+			if($_input['type'] == 'select') {
+				// Skip if options are not set - can't have a select without options
+				if(!isset($_options['options']) || count($_options['options']) == 0) { continue; }
+				
+				// Create the options array
+				$_input['options'] = array();
+				
+				// Loop through options and add them
+				foreach($_options['options'] as $o) {
+					//
+					if(is_string($o)) { $o = array('title' => $o); }
+					
+					// Create temporary option array
+					$_option = array(
+						'title' => $o['title'],
+						'value' => (isset($o['value']) ? $o['value'] : $o['title'])
+					);
+					
+					// Add options if they are set
+					foreach(array('group', 'selected', 'disabled') as $v) {
+						if(isset($o[$v])) { $_option[$v] = $o[$v]; }
+					}
+					
+					// Add option to input
+					array_push($_input['options'], $_option);
+				}
+			}
+			
+			// Loop through optional values and add them if set
+			foreach(array('required', 'width', 'size', 'attributes', 'properties', 'feedback', 'label') as $v) {
+				if(isset($_options[$v])) { $_input[$v] = $_options[$v]; }
+			}
+			
+			// Add input to return array
+			array_push($inputs, $_input);
+			
+			// Add the descriptions
+			$descriptions .= '<h6>' . $site_settings[$i]['title'] . '</h6>';
+			$descriptions .= '<p>' . $site_settings[$i]['description'] . '</p>';
+		}
+		
+		// Return everything
+		return array('inputs' => $inputs, 'descriptions' => $descriptions);
+	}
+	
+	// -------------------- General Tab Settings -------------------- \\
+	private function tabGeneral($site_settings) {
+		// Generate inputs and descriptions
+		$bodies[1] = $this->settingsTab(array('SITE_TITLE','MEMBER_REGISTRATION','REQUIRE_LOGIN','SITE_USERNAME','SITE_LAYOUT','SITE_HOME_PAGE','PROTECTED_USERNAMES'), $site_settings);
+		$bodies[2] = $this->settingsTab(array('TIMEZONE','DATE_FORMAT','ALLOWED_TIME_ZONES'), $site_settings);
+		$bodies[3] = $this->settingsTab(array('SITE_COLORS_SIGNATURE','SITE_FAVICON_URL','SITE_LOGO_LOGIN','SITE_LOGO_MAIN'), $site_settings);
+
+		// Build form groups
+		$bodies[1]['inputs'] = $this->buildFormGroups($bodies[1]['inputs'], array('prefix' => 'SITE'));
+		$bodies[2]['inputs'] = $this->buildFormGroups($bodies[2]['inputs'], array('prefix' => 'SITE'));
+		$bodies[3]['inputs'] = $this->buildFormGroups($bodies[3]['inputs'], array('prefix' => 'SITE'));
+		
+		// Return the generated HTML
+		return '<div class="fks-panel tabs">'
+			. '<div class="header"><ul class="nav nav-tabs">'
+				. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab1-1" role="tab" draggable="false"><i class="fa fa-gears fa-fw"></i> Settings</a></li>'
+				. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab1-2" role="tab" draggable="false"><i class="fa fa-clock-o fa-fw"></i> Date and Time</a></li>'
+				. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab1-3" role="tab" draggable="false"><i class="fa fa-file-image-o fa-fw"></i> Styling</a></li>'
+			. '</ul></div>'
+			. '<div class="body"><div class="tab-content">'
+				. '<div class="tab-pane" id="tab1-1" role="tabpanel"><div class="row"><div class="col-xl-7">' . $bodies[1]['inputs'] . '</div><div class="col-xl-5">' . $bodies[1]['descriptions'] . '</div></div></div>'
+				. '<div class="tab-pane" id="tab1-2" role="tabpanel"><div class="row"><div class="col-xl-7">' . $bodies[2]['inputs'] . '</div><div class="col-xl-5">' . $bodies[2]['descriptions'] . '</div></div></div>'
+				. '<div class="tab-pane" id="tab1-3" role="tabpanel"><div class="row"><div class="col-xl-7">' . $bodies[3]['inputs'] . '</div><div class="col-xl-5">' . $bodies[3]['descriptions'] . '</div></div></div>'
+			. '</div></div>'
+		. '</div>';
+	}
+	
+	// -------------------- reCaptcha Tab Settings -------------------- \\
+	private function tabCaptcha($site_settings) {
+		// Generate inputs and descriptions
+		$bodies[1] = $this->settingsTab(array('CAPTCHA',6,'CAPTCHA_PRIVATE','CAPTCHA_PUBLIC'), $site_settings);
+		
+		// Build form groups
+		$bodies[1]['inputs'] = $this->buildFormGroups($bodies[1]['inputs']);
+		
+		// Return the generated HTML
+		return '<div class="row"><div class="col-xl-7">' . $bodies[1]['inputs'] . '</div><div class="col-xl-5">' . $bodies[1]['descriptions'] . '</div></div>';
+	}
+	
+	// -------------------- Email Tab Settings -------------------- \\
+	private function tabEmail($site_settings) {
+		// Generate inputs and descriptions
+		$bodies[1] = $this->settingsTab(array('EMAIL_AUTH',6,'EMAIL_USERNAME','EMAIL_PASSWORD','EMAIL_FROM_ADDRESS','EMAIL_REPLY_TO_ADDRESS','EMAIL_HOSTNAME','EMAIL_PORT','EMAIL_SECURE'), $site_settings);
+		$bodies[2] = $this->settingsTab(array('EMAIL_VERIFICATION',6,'EMAIL_VERIFICATION_FROM_ADDRESS','EMAIL_VERIFICATION_REPLY_TO_ADDRESS','EMAIL_VERIFICATION_SUBJECT','EMAIL_VERIFICATION_TEMPLATE'), $site_settings);
+		$bodies[3] = $this->settingsTab(array('FORGOT_PASSWORD',6,'FORGOT_PASSWORD_FROM_ADDRESS','FORGOT_PASSWORD_REPLY_TO_ADDRESS','FORGOT_PASSWORD_SUBJECT','FORGOT_PASSWORD_TEMPLATE'), $site_settings);
+		
+		// Build form groups
+		$bodies[1]['inputs'] = $this->buildFormGroups($bodies[1]['inputs'], array('prefix' => 'SITE'));
+		$bodies[2]['inputs'] = $this->buildFormGroups($bodies[2]['inputs'], array('prefix' => 'SITE'));
+		$bodies[3]['inputs'] = $this->buildFormGroups($bodies[3]['inputs'], array('prefix' => 'SITE'));
+		
+		// Test email button
+		$button = '<div class="row"><div class="col-xl-12"><div class="form-group">'
+			. '<button type="button" class="btn fks-btn-info btn-sm test-email-btn"><i class="fa fa-paper-plane-o fa-fw"></i> Send Test Email</button>'
+		. '</div></div></div>';
+		
+		// Return the generated HTML
+		return '<div class="fks-panel tabs">'
+			. '<div class="header"><ul class="nav nav-tabs">'
+				. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab3-1" role="tab" draggable="false"><i class="fa fa-gears fa-fw"></i> General</a></li>'
+				. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab3-2" role="tab" draggable="false"><i class="fa fa-handshake-o fa-fw"></i> Verification</a></li>'
+				. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab3-3" role="tab" draggable="false"><i class="fa fa-question fa-fw"></i> Forgot Password</a></li>'
+			. '</ul></div>'
+			. '<div class="body"><div class="tab-content">'
+				. '<div class="tab-pane" id="tab3-1" role="tabpanel"><div class="row"><div class="col-xl-7">' . $bodies[1]['inputs'] . $button . '</div><div class="col-xl-5">' . $bodies[1]['descriptions'] . '</div></div></div>'
+				. '<div class="tab-pane" id="tab3-2" role="tabpanel"><div class="row"><div class="col-xl-7">' . $bodies[2]['inputs'] . '</div><div class="col-xl-5">' . $bodies[2]['descriptions'] . '</div></div></div>'
+				. '<div class="tab-pane" id="tab3-3" role="tabpanel"><div class="row"><div class="col-xl-7">' . $bodies[3]['inputs'] . '</div><div class="col-xl-5">' . $bodies[3]['descriptions'] . '</div></div></div>'
+			. '</div></div>'
+		. '</div>';
+	}
+	
+	// -------------------- Access Tab Settings -------------------- \\
+	private function tabAccess($site_settings) {
+		// Generate inputs and descriptions
+		$bodies[1] = $this->settingsTab(array('DEFAULT_ACCESS_GUEST'), $site_settings);
+		$bodies[2] = $this->settingsTab(array('DEFAULT_ACCESS_LOCAL'), $site_settings);
+		$bodies[3] = $this->settingsTab(array('DEFAULT_ACCESS_LDAP'), $site_settings);
+		
+		// Build form groups
+		$bodies[1]['inputs'] = $this->buildFormGroups($bodies[1]['inputs'], array('prefix' => 'SITE'));
+		$bodies[2]['inputs'] = $this->buildFormGroups($bodies[2]['inputs'], array('prefix' => 'SITE'));
+		$bodies[3]['inputs'] = $this->buildFormGroups($bodies[3]['inputs'], array('prefix' => 'SITE'));
+		
+		// Return the generated HTML
+		return '<div class="fks-panel tabs">'
+			. '<div class="header"><ul class="nav nav-tabs">'
+				. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab4-1" role="tab" draggable="false"><i class="fa fa-user fa-fw"></i> Guest</a></li>'
+				. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab4-2" role="tab" draggable="false"><i class="fa fa-database fa-fw"></i> Local</a></li>'
+				. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab4-3" role="tab" draggable="false"><i class="fa fa-exchange fa-fw"></i> LDAP</a></li>'
+			. '</ul></div>'
+			. '<div class="body"><div class="tab-content">'
+				. '<div class="tab-pane" id="tab4-1" role="tabpanel"><div class="row"><div class="col-xl-7">' . $bodies[1]['inputs'] . '</div><div class="col-xl-5">' . $bodies[1]['descriptions'] . '</div></div></div>'
+				. '<div class="tab-pane" id="tab4-2" role="tabpanel"><div class="row"><div class="col-xl-7">' . $bodies[2]['inputs'] . '</div><div class="col-xl-5">' . $bodies[2]['descriptions'] . '</div></div></div>'
+				. '<div class="tab-pane" id="tab4-3" role="tabpanel"><div class="row"><div class="col-xl-7">' . $bodies[3]['inputs'] . '</div><div class="col-xl-5">' . $bodies[3]['descriptions'] . '</div></div></div>'
+			. '</div></div>'
+		. '</div>';
 	}
 	
 	// -------------------- LDAP Tab Settings -------------------- \\
 	private function tabLDAP($site_settings) {
-		$return = '<div class="row">
-			<div class="col-xl-7">		
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['ACTIVE_DIRECTORY']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['AD_LOGIN_SELECTOR']) . '</div>
-				</div>
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['AD_SERVER']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['AD_RDN']) . '</div>
-				</div>
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['AD_BASE_DN']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['AD_ACCOUNT_CREATION']) . '</div>
-				</div>
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['AD_PREFERRED']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['AD_FAILOVER']) . '</div>
-				</div>
-				
-			</div>
-			<div class="col-xl-5">
-				<h6>' . $site_settings['ACTIVE_DIRECTORY']['title'] . '</h6>
-				<p>' . $site_settings['ACTIVE_DIRECTORY']['description'] . '</p>
-				<h6>' . $site_settings['AD_LOGIN_SELECTOR']['title'] . '</h6>
-				<p>' . $site_settings['AD_LOGIN_SELECTOR']['description'] . '</p>
-				<h6>' . $site_settings['AD_SERVER']['title'] . '</h6>
-				<p>' . $site_settings['AD_SERVER']['description'] . '</p>
-				<h6>' . $site_settings['AD_RDN']['title'] . '</h6>
-				<p>' . $site_settings['AD_RDN']['description'] . '</p>
-				<h6>' . $site_settings['AD_BASE_DN']['title'] . '</h6>
-				<p>' . $site_settings['AD_BASE_DN']['description'] . '</p>
-				<h6>' . $site_settings['AD_ACCOUNT_CREATION']['title'] . '</h6>
-				<p>' . $site_settings['AD_ACCOUNT_CREATION']['description'] . '</p>
-				<h6>' . $site_settings['AD_PREFERRED']['title'] . '</h6>
-				<p>' . $site_settings['AD_PREFERRED']['description'] . '</p>
-				<h6>' . $site_settings['AD_FAILOVER']['title'] . '</h6>
-				<p>' . $site_settings['AD_FAILOVER']['description'] . '</p>
-			</div>
-		</div>';
+		// Generate inputs and descriptions
+		$bodies[1] = $this->settingsTab(array('ACTIVE_DIRECTORY','AD_LOGIN_SELECTOR','AD_ACCOUNT_CREATION','AD_PREFERRED','AD_FAILOVER',6,'AD_SERVER','AD_RDN','AD_BASE_DN','AD_FILTER'), $site_settings);
 		
-		// Return
-		return $return;
+		// Build form groups
+		$bodies[1]['inputs'] = $this->buildFormGroups($bodies[1]['inputs']);
+		
+		// Create the list of allowed member data types
+		$options = '';
+		foreach($this->getMemberDataTypes() as $k => $v) {
+			$options .= '<option value="' . $v['constant'] . '">' . $v['constant'] . '</option>';
+		}
+		
+		// Return with no options
+		if(empty($options)) {
+			$options = '<option value="0">-- no valid options found --</option>';
+		}
+		
+		// Table
+		if(isset($site_settings['AD_ATTRIBUTES'])) {
+			$bodies[1]['inputs'] .= '<div class="row"><div class="col-xl-12">
+				<div class="form-group attributes-input">
+					<label for="SITE_AD_ATTRIBUTES" class="form-control-label">' . $site_settings['AD_ATTRIBUTES']['title'] . '</label>
+					<div class="input-group">
+						<select class="form-control" id="SITE_AD_ATTRIBUTES">' . $options . '</select>
+						<input type="text" class="form-control attribute-name" placeholder="attribute name"/>
+						<div class="input-group-append">
+							<button type="button" class="btn btn-sm fks-btn-success add">Add</button>
+						</div>
+					</div>
+					<div class="form-control-feedback"></div>
+					<small name="AD_ATTRIBUTES" class="form-text text-muted">' . $site_settings['AD_ATTRIBUTES']['help_text'] . '</small>
+				</div>
+			</div></div><div class="row"><div class="col-xl-12">
+				<ul class="fks-list-group fks-list-group-sm attributes-list">
+					<li class="list-group-item">Here is the Title<div class="actions"><button type="button" class="btn fks-btn-danger remove"><i class="fa fa-times fa-fw"></i></button></div></li>
+				</ul>
+			</div></div>';
+		}
+		
+		// Return the generated HTML
+		return '<div class="row"><div class="col-xl-7">' . $bodies[1]['inputs'] . '</div><div class="col-xl-5">' . $bodies[1]['descriptions'] . '</div></div>';
 	}
 	
 	// -------------------- Error Tab Settings -------------------- \\
 	private function tabError($site_settings) {
-		$return = '<div class="row">
-			<div class="col-xl-7">		
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['ERROR_TO_DB']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['ERROR_TO_DISK']) . '</div>
-				</div>
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['ERROR_EMAIL']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['ERROR_EMAIL_ADDRESS']) . '</div>
-				</div>
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['ERROR_MESSAGE']) . '</div>
-					<div class="col-xl-6"></div>
-				</div>
-			</div>
-			<div class="col-xl-5">
-				<h6>' . $site_settings['ERROR_TO_DB']['title'] . '</h6>
-				<p>' . $site_settings['ERROR_TO_DB']['description'] . '</p>
-				<h6>' . $site_settings['ERROR_TO_DISK']['title'] . '</h6>
-				<p>' . $site_settings['ERROR_TO_DISK']['description'] . '</p>
-				<h6>' . $site_settings['ERROR_EMAIL']['title'] . '</h6>
-				<p>' . $site_settings['ERROR_EMAIL']['description'] . '</p>
-				<h6>' . $site_settings['ERROR_EMAIL_ADDRESS']['title'] . '</h6>
-				<p>' . $site_settings['ERROR_EMAIL_ADDRESS']['description'] . '</p>
-				<h6>' . $site_settings['ERROR_MESSAGE']['title'] . '</h6>
-				<p>' . $site_settings['ERROR_MESSAGE']['description'] . '</p>
-			</div>
-		</div>';
+		// Generate inputs and descriptions
+		$bodies[1] = $this->settingsTab(array('ERROR_TO_DB','ERROR_TO_DISK','ERROR_EMAIL','ERROR_EMAIL_ADDRESS','ERROR_MESSAGE'), $site_settings);
 		
-		return $return;
+		// Build form groups
+		$bodies[1]['inputs'] = $this->buildFormGroups($bodies[1]['inputs']);
+		
+		// Return the generated HTML
+		return '<div class="row"><div class="col-xl-7">' . $bodies[1]['inputs'] . '</div><div class="col-xl-5">' . $bodies[1]['descriptions'] . '</div></div>';
 	}
 	
 	// -------------------- Remote Site Tab Settings -------------------- \\
 	private function tabRemote($site_settings) {
-		$return = '<div class="row">
-			<div class="col-xl-7">		
-				<div class="row">
-					<div class="col-xl-6">' . $this->formGroup($site_settings['REMOTE_SITE']) . '</div>
-					<div class="col-xl-6">' . $this->formGroup($site_settings['REMOTE_DATABASE']) . '</div>
-				</div>
-				<div class="row remote-validate">
-					<div class="col-xl-6">
-						<div class="form-group">
-							<button type="button" class="btn fks-btn-info btn-sm remote-test-btn" style="width:100%;margin-top:26px;"><i class="fa fa-question fa-fw"></i> Validate</button>
-						</div>
-					</div>
-					<div class="col-xl-6"></div>
-				</div>
-				<div style="display:none;" class="remote-user-search">
-					<div class="row">
-						<div class="col-xl-6">' . $this->buildFormGroup(array('title' => 'Member Search','type' => 'text','id' => 'REMOTE_SEARCH','help' => 'Search for a user on the remote DB.',
-							'group' => array(
-								'after' => '<btn class="input-group-addon" id="icon_preview"><i class="fa fa-search fa-fw"></i></btn>'
-							))) . '</div>
-						<div class="col-xl-6"><button type="button" class="btn fks-btn-info btn-sm remote-search-btn" style="width:100%;margin-top:26px;"><i class="fa fa-search fa-fw"></i> Search</button></div>
-					</div>
-					<div class="row">
-						<div class="col-xl-12">
-							<table class="table table-sm table-striped table-hover remote-admins">
-								<thead class="thead-dark">
-									<tr><th>Username</th><th>First Name</th><th>Last Name</th><th>Access</th><th style="width:50px;text-align:center;padding-right:11px;"><i class="fa fa-trash fa-fw"></i></th></tr>
-								</thead>
-								<tbody></tbody>
-							</table>
-						</div>
-					</div>
-				</div>
+		// Generate inputs and descriptions
+		$bodies[1] = $this->settingsTab(array('REMOTE_SITE','REMOTE_DATABASE'), $site_settings);
+		
+		// Build form groups
+		$bodies[1]['inputs'] = $this->buildFormGroups($bodies[1]['inputs'], array('prefix' => 'SITE'));
+		
+		// Validate button
+		$validate = '<div class="row remote-validate"><div class="col-xl-6"><div class="form-group">'
+			. '<button type="button" class="btn fks-btn-info btn-sm remote-test-btn" style="width:100%;margin-top:26px;"><i class="fa fa-question fa-fw"></i> Validate</button>'
+		. '</div></div></div>';
+		
+		//
+		$members = '<div style="display:none;" class="remote-user-search">
+			<div class="row">
+				<div class="col-xl-6">' . $this->buildFormGroup(array('title' => 'Member Search','type' => 'text','name' => 'REMOTE_SEARCH','help' => 'Search for a user on the remote DB.',
+					'group' => array(
+						'after' => '<btn class="input-group-addon" id="icon_preview"><i class="fa fa-search fa-fw"></i></btn>'
+					))) . '</div>
+				<div class="col-xl-6"><button type="button" class="btn fks-btn-info btn-sm remote-search-btn" style="width:100%;margin-top:26px;"><i class="fa fa-search fa-fw"></i> Search</button></div>
 			</div>
-			<div class="col-xl-5">
-				<h6>' . $site_settings['REMOTE_SITE']['title'] . '</h6>
-				<p>' . $site_settings['REMOTE_SITE']['description'] . '</p>
-				<h6>' . $site_settings['REMOTE_DATABASE']['title'] . '</h6>
-				<p>' . $site_settings['REMOTE_DATABASE']['description'] . '</p>
+			<div class="row">
+				<div class="col-xl-12">
+					<div class="form-group">
+						<label for="REMOTE_ADMINS" class="form-control-label">Remote Admins</label>
+						<table class="table table-sm table-striped table-hover remote-admins mb-0" style="color:initial;">
+							<thead class="thead-dark">
+								<tr><th>Username</th><th>First Name</th><th>Last Name</th><th>Access</th><th style="width:50px;text-align:center;padding-right:11px;"><i class="fa fa-trash fa-fw"></i></th></tr>
+							</thead>
+							<tbody></tbody>
+						</table>
+						<div class="form-control-feedback" name="REMOTE_ADMINS" style="display:none;margin-top:5px;"></div>
+					</div>
+				</div>
 			</div>
 		</div>';
 		
+		// Return the generated HTML
+		return '<div class="row"><div class="col-xl-7">' . $bodies[1]['inputs'] . $validate . $members . '</div><div class="col-xl-5">' . $bodies[1]['descriptions'] . '</div></div>';
+	}
+	
+	// -------------------- Reset Local Tables -------------------- \\
+	private function resetLocalTables() {
+		// Set variables
+		$Database = new \Database();
+		$return = true;
+		
+		// Clear member_data table
+		if(!$Database->Q('DELETE FROM fks_member_data')){
+			$this->createError($Database->r);
+			$return = false;
+		}
+		
+		// Reset member_data table auto increment
+		if(!$Database->Q('ALTER TABLE fks_member_data AUTO_INCREMENT = 1')){
+			$this->createError($Database->r);
+			$return = false;
+		}
+		
+		// Clear member_logs table
+		if(!$Database->Q('DELETE FROM fks_member_logs')){
+			$this->createError($Database->r);
+			$return = false;
+		}
+		
+		// Reset member_logs table auto increment
+		if(!$Database->Q('ALTER TABLE fks_member_logs AUTO_INCREMENT = 1')){
+			$this->createError($Database->r);
+			$return = false;
+		}
+		
+		// Return
 		return $return;
 	}
 	
@@ -659,59 +446,34 @@ class PageFunctions extends CoreFunctions {
 		if(!empty($d['EMAIL_PASSWORD']['data'])) {$d['EMAIL_PASSWORD']['data'] = '-[NOCHANGE]-';}
 		
 		// Tabs
-		$tabs = '<ul class="nav nav-tabs">
-			<li class="nav-item">
-				<a class="nav-link active" data-toggle="tab" href="#tab1-1" role="tab" draggable="false"><i class="fa fa-gears fa-fw"></i> General</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" data-toggle="tab" href="#tab1-2" role="tab" draggable="false"><i class="fa fa-google fa-fw"></i> reCaptcha</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" data-toggle="tab" href="#tab1-3" role="tab" draggable="false"><i class="fa fa-envelope fa-fw"></i> Email</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" data-toggle="tab" href="#tab1-4" role="tab" draggable="false"><i class="fa fa-lock fa-fw"></i> Access</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" data-toggle="tab" href="#tab1-5" role="tab" draggable="false"><i class="fa fa-address-card-o fa-fw"></i> Active Directory</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" data-toggle="tab" href="#tab1-6" role="tab" draggable="false"><i class="fa fa-exclamation-triangle fa-fw"></i> Error</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" data-toggle="tab" href="#tab1-7" role="tab" draggable="false"><i class="fa fa-link fa-fw"></i> Remote Site</a>
-			</li>
-		</ul>';
+		$tabs = '<ul class="nav nav-tabs">'
+			. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab1" role="tab" draggable="false"><i class="fa fa-gears fa-fw"></i> General</a></li>'
+			. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab2" role="tab" draggable="false"><i class="fa fa-google fa-fw"></i> reCaptcha</a></li>'
+			. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab3" role="tab" draggable="false"><i class="fa fa-envelope fa-fw"></i> Email</a></li>'
+			. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab4" role="tab" draggable="false"><i class="fa fa-lock fa-fw"></i> Access</a></li>'
+			. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab5" role="tab" draggable="false"><i class="fa fa-address-card-o fa-fw"></i> Active Directory</a></li>'
+			. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab6" role="tab" draggable="false"><i class="fa fa-exclamation-triangle fa-fw"></i> Error</a></li>'
+			. '<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab7" role="tab" draggable="false"><i class="fa fa-link fa-fw"></i> Remote Site</a></li>'
+		. '</ul>';
 		
 		// Tab Content
-		$body = '<form id="editSiteSettingsForm" class="fks-form fks-form-sm" role="form" action="javascript:void(0);" autocomplete="off">
-			<div class="tab-content">
-				<div class="tab-pane active" id="tab1-1" role="tabpanel">
-					' . $this->tabGeneral($d) . '
-				</div>
-				<div class="tab-pane" id="tab1-2" role="tabpanel">
-					' . $this->tabCaptcha($d) . '
-				</div>
-				<div class="tab-pane" id="tab1-3" role="tabpanel">
-					' . $this->tabEmail($d) . '
-				</div>
-				<div class="tab-pane" id="tab1-4" role="tabpanel">
-					' . $this->tabAccess($d) . '
-				</div>
-				<div class="tab-pane" id="tab1-5" role="tabpanel">
-					' . $this->tabLDAP($d) . '
-				</div>
-				<div class="tab-pane" id="tab1-6" role="tabpanel">
-					' . $this->tabError($d) . '
-				</div>
-				<div class="tab-pane" id="tab1-7" role="tabpanel">
-					' . $this->tabRemote($d) . '
-				</div>
-			</div>
-		</form>';
+		$body = '<form id="editSiteSettingsForm" class="fks-form fks-form-sm" role="form" action="javascript:void(0);" autocomplete="off"><div class="tab-content">'
+			. '<div class="tab-pane" id="tab1" role="tabpanel">' . $this->tabGeneral($d) . '</div>'
+			. '<div class="tab-pane" id="tab2" role="tabpanel">' . $this->tabCaptcha($d) . '</div>'
+			. '<div class="tab-pane" id="tab3" role="tabpanel">' . $this->tabEmail($d) . '</div>'
+			. '<div class="tab-pane" id="tab4" role="tabpanel">' . $this->tabAccess($d) . '</div>'
+			. '<div class="tab-pane" id="tab5" role="tabpanel">' . $this->tabLDAP($d) . '</div>'
+			. '<div class="tab-pane" id="tab6" role="tabpanel">' . $this->tabError($d) . '</div>'
+			. '<div class="tab-pane" id="tab7" role="tabpanel">' . $this->tabRemote($d) . '</div>'
+		. '</div></form>';
+		
+		$email_auth = array(
+			'title' => 'Email Authentication',
+			'description' => 'Turn this on if your SMTP server requires outgoing authentication. If this setting is enabled you need to fill out the Username and Password fields below.'
+		);
 		
 		// Return form
-		return array('result' => 'success', 'tabs' => $tabs, 'body' => $body);
+		return array('result' => 'success', 'tabs' => $tabs, 'body' => $body, 'AD_ATTRIBUTES' => $d['AD_ATTRIBUTES']['data'], 'form_descriptions' => array('editSiteSettingsForm' => array('EMAIL_AUTH' => $email_auth)));
 	}
 	
 	// -------------------- Save Site Settings -------------------- \\
@@ -719,130 +481,117 @@ class PageFunctions extends CoreFunctions {
 		// Check for write access
 		if($this->access < 2) { return array('result' => 'failure', 'message' => 'Access Denied!'); }
 		
-		// Decode Summernote Values
-		$data['EMAIL_VERIFICATION_TEMPLATE'] = str_replace('&plus;', '+', urldecode($data['EMAIL_VERIFICATION_TEMPLATE']));
-		$data['FORGOT_PASSWORD_TEMPLATE'] = str_replace('&plus;', '+', urldecode($data['FORGOT_PASSWORD_TEMPLATE']));
-		
-		// Remove "blank" Summernote values
-		if($data['EMAIL_VERIFICATION_TEMPLATE'] == '<p><br></p>') {$data['EMAIL_VERIFICATION_TEMPLATE'] = '';}
-		if($data['FORGOT_PASSWORD_TEMPLATE'] == '<p><br></p>') {$data['FORGOT_PASSWORD_TEMPLATE'] = '';}
-		
-		// Decode email password
-		$data['EMAIL_PASSWORD'] = base64_decode($data['EMAIL_PASSWORD']);
-		
 		// Set variables
-		$Validator = new \Validator($data);
 		$Database = new \Database();
-		$failed = array();
+		$validation = array();
 		$updated = array();
-		$connections = array();
-		$do_log = true;							// Whether we create a member log when saving
+		$create_log = true;
+		$set_colors = false;
+		$allowed = array(
+			'access_groups' => array(),
+			'time_zones' => array(),
+			'databases' => array(),
+			'attributes' => array()
+		);
 		
-		// Get allowed connections
-		foreach($Database->db as $k => $v) {
-			if( $k != 'persist' && $k != 'default' && $k != $Database->db['default'] ){ array_push($connections, $k); }
-		}
-
-        // Grab Current Settings
-        if($Database->Q(array(
+		// Grab all site settings
+		if($Database->Q(array(
             'assoc' => 'id',
             'query' => 'SELECT * FROM fks_site_settings'
-        ))){
-            $site_settings = $Database->r['rows'];
-        }else{
+        ))) {
+            // Set settings value
+			$site_settings = $Database->r['rows'];
+        } else {
             // Return error message with error code
 			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
         }
 		
+		// Get all allowed access groups
+		foreach($this->getAccessGroups() as $k => $v) {
+			if( !$v['disabled'] ) { array_push($allowed['access_groups'], $v['id']); }
+		}
+		
+		// Get all allowed time zones
+		foreach($this->timeZones('ALL')['list'] as $k => $v) {
+			array_push($allowed['time_zones'], $v);
+		}
+		
+		// Get all allowed databases
+		foreach($Database->db as $k => $v) {
+			if( $k == 'persist' || $k == 'default' || $k == $Database->db['default'] ){ continue; }
+			array_push($allowed['databases'], $k);
+		}
+		
+		// Get allowed member data types for LDAP
+		foreach($this->getMemberDataTypes() as $k => $v) {
+			array_push($allowed['attributes'], $k);
+		}
+		
+		// Loop through each setting and add to the validation array
+		foreach($site_settings as $k => $v) {
+			// Set initial validation array
+			$validation[$k] = json_decode($v['validation'], true);
+			
+			// Add required option if missing
+			if(!isset($validation[$k]['required'])) { $validation[$k]['required'] = true; }
+		}
+		
+		// AD_PREFERRED - Can only choose LDAP if AD is enabled
+		$validation['AD_PREFERRED']['values'] = ($data['ACTIVE_DIRECTORY'] ? array('LDAP', 'Local') : array('Local'));
+		
+		// AD_ATTRIBUTES - Can only choose LDAP if AD is enabled
+		$data['AD_ATTRIBUTES'] = isset($data['AD_ATTRIBUTES']) ? $data['AD_ATTRIBUTES'] : array();
+		$validation['AD_ATTRIBUTES']['values'] = $allowed['attributes'];
+		$ad_attributes = $data['AD_ATTRIBUTES'];
+		if(is_array($data['AD_ATTRIBUTES'])) {$data['AD_ATTRIBUTES'] = array_keys($data['AD_ATTRIBUTES']);}
+		
+		// Default access groups
+		$validation['DEFAULT_ACCESS_GUEST']['values_csv'] = $allowed['access_groups'];
+		$validation['DEFAULT_ACCESS_LDAP']['values_csv'] = $allowed['access_groups'];
+		$validation['DEFAULT_ACCESS_LOCAL']['values_csv'] = $allowed['access_groups'];
+		
+		// Allowed time zones
+		$validation['ALLOWED_TIME_ZONES']['values_csv'] = $allowed['time_zones'];
+		
+		// Remote database
+		$validation['REMOTE_DATABASE']['values_csv'] = $allowed['databases'];
+		
+		// Remote admins
+		$validation['REMOTE_ADMINS'] = array('required' => array('REMOTE_SITE' => 'Secondary'), 'not_empty' => true);
+		
 		// Validation
-		$Validator->validate('SITE_HOME_PAGE', array('required' => false));
-		$Validator->validate('SITE_LAYOUT', array('required' => true, 'values' => json_decode($site_settings['SITE_LAYOUT']['misc'], true)['options']));
-		$Validator->validate('SITE_TITLE', array('required' => true, 'min_length' => 3, 'max_length' => 15));
-		$Validator->validate('SITE_USERNAME', array('required' => true));
-		
-		$Validator->validate('MEMBER_REGISTRATION', array('required' => true, 'bool' => true));
-		$Validator->validate('REQUIRE_LOGIN', array('required' => true, 'bool' => true));
-		$Validator->validate('TIMEZONE', array('timezone' => true));
-		$Validator->validate('DATE_FORMAT', array('required' => true));
-		$Validator->validate('PROTECTED_USERNAMES', array('max_length' => 255));
-		
-		$Validator->validate('CAPTCHA', array('required' => true, 'bool' => true));
-		$Validator->validate('CAPTCHA_PRIVATE', array('required' => ($data['CAPTCHA'] == 1), 'max_length' => 100));
-		$Validator->validate('CAPTCHA_PUBLIC', array('required' => ($data['CAPTCHA'] == 1), 'max_length' => 100));
-
-        $Validator->validate('EMAIL_AUTH', array('required' => true, 'bool' => true));
-        $Validator->validate('EMAIL_USERNAME', array('required' => ($data['EMAIL_AUTH'] == 1)));
-        $Validator->validate('EMAIL_PASSWORD', array('required' => ($data['EMAIL_AUTH'] == 1)));
-        $Validator->validate('EMAIL_HOSTNAME', array('min_length' => 3, 'required' => ($data['EMAIL_AUTH'] == 1 || $data['EMAIL_VERIFICATION'] == 1 || $data['FORGOT_PASSWORD'] == 1)));
-        $Validator->validate('EMAIL_PORT', array('number' => true));
-        $Validator->validate('EMAIL_SECURE', array('required' => true, 'values' => json_decode($site_settings['EMAIL_SECURE']['misc'], true)['options']));
-        $Validator->validate('EMAIL_FROM_ADDRESS', array('email' => true));
-        $Validator->validate('EMAIL_REPLY_TO_ADDRESS', array('email' => true));
-
-		$Validator->validate('EMAIL_VERIFICATION', array('required' => true, 'bool' => true));
-		$Validator->validate('EMAIL_VERIFICATION_FROM_ADDRESS', array('required' => ($data['EMAIL_VERIFICATION'] == 1 && empty($data['EMAIL_FROM_ADDRESS'])), 'email' => true));
-		$Validator->validate('EMAIL_VERIFICATION_REPLY_TO_ADDRESS', array('email' => true));
-		$Validator->validate('EMAIL_VERIFICATION_SUBJECT', array('required' => ($data['EMAIL_VERIFICATION'] == 1)));
-		$Validator->validate('EMAIL_VERIFICATION_TEMPLATE', array('required' => ($data['EMAIL_VERIFICATION'] == 1), 'min_length' => 15));
-
-        $Validator->validate('ERROR_EMAIL', array('required' => true, 'bool' => true));
-        $Validator->validate('ERROR_EMAIL_ADDRESS', array('required' => ($data['ERROR_EMAIL'] == 1), 'email' => true));
-        $Validator->validate('ERROR_MESSAGE', array('required' => true));
-        $Validator->validate('ERROR_TO_DB', array('required' => true, 'bool' => true));
-        $Validator->validate('ERROR_TO_DISK', array('required' => true, 'values' => json_decode($site_settings['ERROR_TO_DISK']['misc'], true)['options']));
-		
-        $Validator->validate('FORGOT_PASSWORD', array('required' => true, 'bool' => true));
-        $Validator->validate('FORGOT_PASSWORD_FROM_ADDRESS', array('required' => ($data['FORGOT_PASSWORD'] == 1 && empty($data['EMAIL_FROM_ADDRESS'])), 'email' => true));
-        $Validator->validate('FORGOT_PASSWORD_REPLY_TO_ADDRESS', array('email' => true));
-		
-		$Validator->validate('DEFAULT_ACCESS_GUEST', array('required' => true));
-		$Validator->validate('DEFAULT_ACCESS_LOCAL', array('required' => true));
-		$Validator->validate('DEFAULT_ACCESS_LDAP', array('required' => true));
-		
-		$Validator->validate('REMOTE_SITE', array('required' => true, 'values' => json_decode($site_settings['REMOTE_SITE']['misc'], true)['options']));
-		$Validator->validate('REMOTE_DATABASE', array('required' => ($data['REMOTE_SITE'] == 'Secondary'), 'values' => $connections));
-		$Validator->validate('REMOTE_ADMINS', array('required' => ($data['REMOTE_SITE'] == 'Secondary')));
-		
-		$Validator->validate('ACTIVE_DIRECTORY', array('required' => true, 'bool' => true));
-		$Validator->validate('AD_ACCOUNT_CREATION', array('required' => true, 'bool' => true));
-		$Validator->validate('AD_FAILOVER', array('required' => true, 'bool' => true));
-		$Validator->validate('AD_LOGIN_SELECTOR', array('required' => true, 'values' => ($data['ACTIVE_DIRECTORY'] ? array(0,1) : array(0) )));
-		$Validator->validate('AD_PREFERRED', array('required' => true, 'values' => ($data['ACTIVE_DIRECTORY'] ? array('LDAP', 'Local') : array('Local'))));
-		$Validator->validate('AD_RDN', array('required' => ($data['ACTIVE_DIRECTORY'] == 1), 'min_length' => 1));
-		$Validator->validate('AD_SERVER', array('required' => ($data['ACTIVE_DIRECTORY'] == 1), 'min_length' => 1));
-		$Validator->validate('AD_BASE_DN', array('required' => ($data['ACTIVE_DIRECTORY'] == 1), 'min_length' => 1));
-		
-		if( !$Validator->getResult() ){ return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => $Validator->getOutput()); }
-		
+		$Validator = new \Validator($data);
+		@$Validator->validate($validation);
+		if(!$Validator->getResult()) { return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => $Validator->getOutput(), 'data' => $data); }	
 		$form = $Validator->getForm();
 		
-		// Unset email password if no change
-		if($form['EMAIL_PASSWORD'] == '-[NOCHANGE]-') {
-			unset($form['EMAIL_PASSWORD']);
-		} else {
-			if( !empty($form['EMAIL_PASSWORD']) ) {
-				$Crypter = new \Crypter();
-				$form['EMAIL_PASSWORD'] = $Crypter->toRJ256($form['EMAIL_PASSWORD']);
-			}
-		}
-		
 		// Return failure if Remote Site AND Active Directory is enabled
-		if($form['ACTIVE_DIRECTORY'] == 1 && $form['REMOTE_SITE'] != 'disabled') {
-			return array('result' => 'failure', 'message' => 'You can not have both Active Directory and Remote Site enabled!');
+		if($form['ACTIVE_DIRECTORY'] == 1 && $form['REMOTE_SITE'] != 'Disabled') {
+			return array('result' => 'validate', 'validation' => array(
+				'ACTIVE_DIRECTORY' => array('set' => 'This can\'t be enabled if Remote Site is enabled!'),
+				'REMOTE_SITE' => array('set' => 'This can\'t be enabled if Active Directory is enabled!')
+			));
 		}
 		
-		// TESTING the activation of Remote Site settings
+		// JSON Encode AD Attributes
+		$form['AD_ATTRIBUTES'] = json_encode($ad_attributes);
+		
+		// Set REMOTE_ID - TODO - set tables auto increment back to 1 ?????
+		if($form['REMOTE_SITE'] == 'Primary'){$form['REMOTE_ID'] = 0;}
+		if($form['REMOTE_SITE'] == 'Disabled'){$form['REMOTE_ID'] = null;}
+		
+		// If remote site was 'Disabled' or 'Primary' and we are changing to 'Secondary'
 		if(($site_settings['REMOTE_SITE']['data'] == 'Disabled' || $site_settings['REMOTE_SITE']['data'] == 'Primary') && $form['REMOTE_SITE'] == 'Secondary') {
-			// We do not want to create a member log
-			$do_log = false;
-
+			// We do not want to create a member log since members will be removed
+			$create_log = false;
+			
 			// Connect to Primary site to generate an ID
 			if($Database->Q(array(
 				'db' => $form['REMOTE_DATABASE'],
 				'query' => 'SELECT data FROM fks_site_settings WHERE id = "REMOTE_SITE_IDS"'
 			))){
 				// Check for the record
-				if($Database->r['found'] == 0){
+				if($Database->r['found'] == 0) {
 					// Return error message with error code
 					return array('result' => 'failure', 'title' => 'Database Error', 'message' => 'Remote database is missing data!');
 				}
@@ -851,9 +600,9 @@ class PageFunctions extends CoreFunctions {
 				$_ids = is_null($Database->r['row']['data']) ? array() : explode(',', $Database->r['row']['data']);
 				
 				// Loop through known ID's and generate a new one
-				while(true){
+				while(true) {
 					$_key = $this->makeKey(4);
-					if(!in_array($_key, $_ids)){break;}
+					if(!in_array($_key, $_ids)){ break; }
 				}
 				
 				// Add key to the known list
@@ -863,7 +612,7 @@ class PageFunctions extends CoreFunctions {
 				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 			}
 			
-			// Update remote sites list of ID's
+			// Update Primary site's list of ID's
 			if(!$Database->Q(array(
 				'db' => $form['REMOTE_DATABASE'],
 				'params' => array(
@@ -905,106 +654,83 @@ class PageFunctions extends CoreFunctions {
 					// Return error message with error code
 					return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 				}
-			}
+			} 
 			
-			// Do not save this data
-			unset($form['REMOTE_ADMINS']);
-			
-			// Log out current user
+			// Log out the current user
 			$this->Session->destroy();
 		}
 		
-		// Set the Remote ID if setting REMOTE_SITE to Primary
-		if($form['REMOTE_SITE'] == 'Primary') {
-			if(!$Database->Q('UPDATE fks_site_settings SET data = 0 WHERE id = "REMOTE_ID"')){
-				$failed['REMOTE_SITE'] = 'Could not save to the DB!';
-				unset($form['REMOTE_SITE']);
-				
-				// TODO - set tables auto increment back to 1?
-			}
-		}
+		// Unset Remote Admins if set
+		if(array_key_exists('REMOTE_ADMINS', $form)) { unset($form['REMOTE_ADMINS']); }
 		
-		// Set the Remote ID if setting REMOTE_SITE to Disabled
-		if($form['REMOTE_SITE'] == 'Disabled') {
-			if(!$Database->Q('UPDATE fks_site_settings SET data = NULL WHERE id = "REMOTE_ID"')){
-				$failed['REMOTE_SITE'] = 'Could not save to the DB!';
-				unset($form['REMOTE_SITE']);
-				
-				// TODO - set tables auto increment back to 1?
-			}
-		}
+		// Set signature color if null
+		if($form['SITE_COLORS_SIGNATURE'] == null) { $form['SITE_COLORS_SIGNATURE'] = '#36e3fd'; }
 		
-		// Check For Changes/Failures
+		// Setup DataHandler if we need to check seperate Diffs
+		$DataHandler = new \DataHandler(array(
+			'fks_site_settings' => array(
+				'base' => 'fks_site_settings',
+				'log_actions' => array('modified' => \Enums\LogActions::SITE_SETTINGS_MODIFIED)
+			)
+		));
+		
+		// Loop through the data to figure out what was changed
 		foreach($form as $k => $v) {
-			// Change blank values to NULL
-		    if($v == ''){$v = NULL;}
+			// Skip if there is no change
+			if($v === $site_settings[$k]['data']) { continue; }
+			
+			// Create log
+			$log = array($site_settings[$k]['data'], $v);
+			
+			// If JSON diff
+			if($site_settings[$k]['type'] == 'json') {
+				$v = $v == '[]' ? '{}' : $v;
+				
+				$new_data = array(
+					'columns' => array(
+						'data' => $v
+					),
+					'data' => false
+				);
+				
+				$tst = $DataHandler->diff('local', 'fks_site_settings', $k, $new_data, array(), array('columns' => array('data')));
+				
+				// Skip if no change
+				if(!$tst){ continue; }
+				
+				$tst['log_misc'] = json_decode($tst['log_misc'], true);
+				$log = $tst['log_misc']['data'];
+			}
 
-		    // Ignore values that have not changed
-			if($v == $site_settings[$k]['data']){continue;}
-
-			// Update the value in the DB
+			// Update the field
 			if(!$Database->Q(array(
 				'params' => array(
 					':id' => $k,
 					':data' => $v
 				),
 				'query' => 'UPDATE fks_site_settings SET data = :data WHERE id = :id'
-			))){
-				$failed[$k] = 'Could not save to the DB!';
-			}else{
-				$updated[$k] = array($site_settings[$k]['data'], $v);
+			))) {
+				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 			}
+			
+			// Add member log
+			$updated[$k] = $log;
 		}
 		
-		// Add Member Log
-		if(count($updated) > 0 && $do_log) {
+		// Set colors if changed
+		if(array_key_exists('SITE_COLORS_SIGNATURE', $updated)) {
+			$set_colors = true;
+			$this->setColors();
+		}
+		
+		// Create member log
+		if(count($updated) > 0 && $create_log) {
 			$MemberLog = new \MemberLog(\Enums\LogActions::SITE_SETTINGS_MODIFIED, $_SESSION['id'], NULL, json_encode($updated));
+			return array('result' => 'success', 'message' => 'Settings have been updated!', 'updated' => $updated, 'do_log' => $create_log, 'set_colors' => $set_colors);
 		}
 		
-		// Return Status
-		if(count($failed) > 0) {
-			return array('result' => 'validate', 'message' => 'Some settings were not saved!', 'validation' => $failed, 'do_log' => $do_log);
-		} else {
-		    if( count($updated) > 0 ) {
-                return array('result' => 'success', 'message' => 'Settings have been updated!', 'updated_count' => count($updated), 'reload' => (isset($updated['SITE_LAYOUT']) ? 'true' : 'false'), 'do_log' => $do_log);
-            } else {
-                return array('result' => 'info', 'message' => 'No changes detected!', 'updated_count' => count($updated), 'do_log' => $do_log);
-            }
-		}
-	}
-	
-	// -------------------- Reset Locak Tables -------------------- \\
-	private function resetLocalTables() {
-		// Set variables
-		$Database = new \Database();
-		$return = true;
-		
-		// Clear member_data table
-		if(!$Database->Q('DELETE FROM fks_member_data')){
-			$this->createError($Database->r);
-			$return = false;
-		}
-		
-		// Reset member_data table auto increment
-		if(!$Database->Q('ALTER TABLE fks_member_data AUTO_INCREMENT = 1')){
-			$this->createError($Database->r);
-			$return = false;
-		}
-		
-		// Clear member_logs table
-		if(!$Database->Q('DELETE FROM fks_member_logs')){
-			$this->createError($Database->r);
-			$return = false;
-		}
-		
-		// Reset member_logs table auto increment
-		if(!$Database->Q('ALTER TABLE fks_member_logs AUTO_INCREMENT = 1')){
-			$this->createError($Database->r);
-			$return = false;
-		}
-		
-		// Return
-		return $return;
+		// Return no changes
+		return array('result' => 'info', 'message' => 'No changes detected!', 'do_log' => $create_log);
 	}
 	
 	// -------------------- Load Site Settings History -------------------- \\
@@ -1142,6 +868,64 @@ class PageFunctions extends CoreFunctions {
 				'footer' => '<button class="btn fks-btn-danger btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> Close</button>'
 			)
 		);
+	}
+	
+	// -------------------- Set Colors -------------------- \\
+	public function setColors($colors = array()) {
+		$fks_folder = parent::ROOT_DIR . '/scripts/js/plugins/fks/';
+		$fks_colors_file = file_get_contents($fks_folder . 'fks-colors.scss');
+		$fks_colors = array();
+		$out = array();
+		$regex = '/\/\/fks_colors_begin(.+?)\/\/fks_colors_end/s';
+		
+		// Get colors from database if empty
+		if(empty($colors)) {
+			$Database = new \Database;
+			if($Database->Q('
+					SELECT
+						id, data
+					FROM
+						fks_site_settings
+					WHERE
+						id = "SITE_COLORS_SIGNATURE"
+			')) {
+				foreach($Database->r['rows'] as $row) {
+					if($row['id'] == 'SITE_COLORS_SIGNATURE') { $colors['signature'] = $row['data']; }
+				}
+			}
+		}
+		
+		// Get all colors from file
+		preg_match_all($regex, preg_replace("/\r|\n|\t|\s/", "", $fks_colors_file), $matches, PREG_SET_ORDER, 0);
+		
+		// Stop if no matches found
+		if(empty($matches)) { return false; }
+		
+		// Loop through matches and set colors array
+		foreach(explode(',', $matches[0][1]) as $color) {
+			$parts = explode(':', $color);
+			$fks_colors[str_replace('\'', '', $parts[0])] = $parts[1];
+		}
+		
+		// Change colors
+		foreach($colors as $k => $v) {
+			if(!array_key_exists($k, $fks_colors)) { continue; }
+			$fks_colors[$k] = $v;
+		}
+		
+		// Loop through colors and build out array
+		foreach($fks_colors as $k => $v) {
+			array_push($out, "\t'" . $k . "': " . $v);
+		}
+		
+		// Create new colors
+		$new_fks_colors = preg_replace($regex, "//fks_colors_begin\r\n" . implode(",\r\n", $out) . "\r\n//fks_colors_end", $fks_colors_file);
+
+		// Save scss file
+		file_put_contents($fks_folder . 'fks-colors.scss', $new_fks_colors);
+		
+		// Rebuild the CSS file
+		$this->rebuildCSS($fks_folder, 'fks');
 	}
 }
 ?>

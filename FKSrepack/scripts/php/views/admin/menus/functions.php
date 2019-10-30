@@ -86,30 +86,45 @@ class PageFunctions extends CoreFunctions {
 			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 		}
 		
-		// Create modal body
-		$body = '<form id="editMenuForm" role="form" action="javascript:void(0);">
-			<input type="hidden" name="id" value="' . (isset($m['id']) ? $m['id'] : '+') . '"/>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="title" class="form-control-label">Title</label>
-						<input type="text" class="form-control form-control-sm" id="title" name="title" aria-describedby="title_help" value="' . (isset($m['title']) ? $m['title'] : '') . '"' . ($readonly ? ' disabled' : '') . '>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="title_help" class="form-text text-muted">The title of this menu.</small>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="active" class="form-control-label">Status</label>
-						<select class="form-control form-control-sm" id="active" name="active" aria-describedby="active_help"' . ($readonly ? ' disabled' : '') . '>
-							<option value="0"' . (isset($m['active']) && $m['active'] == 0 ? ' selected' : '') . '>Disabled</option>
-							<option value="1"' . ((isset($m['active']) && $m['active'] == 1) || !isset($m['active']) ? ' selected' : '') . '>Active</option>
-						</select>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="active_help" class="form-text text-muted">The status of this menu.</small>
-					</div>
-				</div>
-			</div>
+		// Configure form groups
+		$form_groups = array(
+			array(
+				'type' => 'hidden',
+				'name' => 'id',
+				'value' => (isset($m['id']) ? $m['id'] : '+')
+			),
+			array(
+				'title' => 'Title',
+				'type' => 'text',
+				'name' => 'title',
+				'value' => (isset($m['title']) ? $m['title'] : ''),
+				'help' => 'The title of this menu.',
+				'required' => true
+			),
+			array(
+				'title' => 'Status',
+				'type' => 'select',
+				'name' => 'active',
+				'value' => (isset($m['active']) ? $m['active'] : 1),
+				'help' => 'The status of this menu.',
+				'options' => array(
+					array('title' => 'Disabled', 'value' => 0),
+					array('title' => 'Active', 'value' => 1)
+				)
+			)
+		);
+		
+		// Set inputs to disabled if readonly
+		if($readonly) {
+			foreach($form_groups as &$input) {
+				if(!array_key_exists('properties', $input)) { $input['properties'] = array(); }
+				array_push($input['properties'], 'disabled');
+			}
+		}
+		
+		// Create the body
+		$body = '<form id="editMenuForm" class="fks-form fks-form-sm" role="form" action="javascript:void(0);">
+			' . $this->buildFormGroups($form_groups, array('width' => 6)) . '
 		</form>';
 		
 		// Return modal parts
@@ -137,9 +152,11 @@ class PageFunctions extends CoreFunctions {
 		$Validator = new \Validator($data);
 		
 		// Pre-Validate
-		$Validator->validate('id', array('required' => true));
-		$Validator->validate('title', array('required' => true, 'max_length' => 40));
-		$Validator->validate('active', array('required' => true, 'bool' => true));
+		$Validator->validate(array(
+			'id' => array('required' => true),
+			'title' => array('required' => true, 'not_empty' => true, 'max_length' => 40),
+			'active' => array('required' => true, 'bool' => true)
+		));
 		
 		// Check for failures
 		if(!$Validator->getResult()) { return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => $Validator->getOutput()); }
@@ -147,95 +164,37 @@ class PageFunctions extends CoreFunctions {
 		// Get updated form
 		$form = $Validator->getForm();
 		
-		// See if the menu exists
-		if($Database->Q(array(
-			'params' => array(
-				'id' => $form['id']
-			),
-			'query' => 'SELECT id FROM fks_menus WHERE id = :id'
-		))) {
-			if($Database->r['found'] == 1) {
-			// Found menu
-				// Check Diffs
-				$diff = $this->compareQueryArray($form['id'], 'fks_menus', $form, false);
-				
-				if($diff) {
-					// Update menu
-					if(!$Database->Q(array(
-						'params' => array(
-							':id' => $form['id'],
-							':title' => $form['title'],
-							':active' => $form['active'],
-							':date_modified' => gmdate('Y-m-d H:i:s'),
-							':modified_by' => $_SESSION['id']
-						),
-						'query' => '
-							UPDATE
-								fks_menus
-							
-							SET
-								title = :title,
-								active = :active,
-								date_modified = :date_modified,
-								modified_by = :modified_by
-							
-							WHERE
-								id = :id
-						'
-					))) {
-						$diff = false;
-					}
-				}
-				
-				// Save member log
-				if($diff && !empty($diff)) {
-					$MemberLog = new \MemberLog(\Enums\LogActions::MENU_MODIFIED, $_SESSION['id'], $form['id'], json_encode($diff));
-				} else {
-					// Return No Changes
-					return array('result' => 'info', 'title' => 'No Changes Detected', 'message' => 'Nothing was saved.', 'diff' => $diff);
-				}
-				
-				return array('result' => 'success', 'title' => 'Menu Updated', 'message' => '\'' . $form['title'] . '\' has been updated.');
-			} else {
-			// Create new menu
-				// Save new menu to database
-				if(!$Database->Q(array(
-					'params' => array(
-						':title' => $form['title'],
-						':date_created' => gmdate('Y-m-d H:i:s'),
-						':created_by' => $_SESSION['id'],
-						':active' => $form['active']
-					),
-					'query' => '
-						INSERT INTO
-							fks_menus
-							
-						SET
-							title = :title,
-							date_created = :date_created,
-							created_by = :created_by,
-							active = :active
-					'
-				))) {
-					// Return error message with error code
-					return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
-				}
-				
-				$last_id = $Database->r['last_id'];
-				
-				// Prepare member log
-				unset($form['id']);
-				
-				// Save member log
-				if($form && !empty($form)) {
-					$MemberLog = new \MemberLog(\Enums\LogActions::MENU_CREATED, $_SESSION['id'], $last_id, json_encode($form));
-				}
-				
+		// Create Data Handler
+		$DataHandler = new \DataHandler(array(
+			'fks_menus' => array(
+				'base' => 'fks_menus',
+				'log_actions' => array(
+					'created' => \Enums\LogActions::MENU_CREATED,
+					'modified' => \Enums\LogActions::MENU_MODIFIED
+				)
+			)
+		));
+		
+		// Diff, Set, Log
+		$DSL = $DataHandler->DSL(array(
+			'type' => 'local',
+			'table' => 'fks_menus',
+			'target_id' => $form['id'],
+			'values' => array(
+				'columns' => $form,
+				'data' => false
+			)
+		));
+
+		// Return
+		if($DSL['result'] == 'success') {
+			if($DSL['diff']['log_type'] == 'created') {
 				return array('result' => 'success', 'title' => 'Menu Created', 'message' => '\'' . $form['title'] . '\' has been created.');
+			} else {
+				return array('result' => 'success', 'title' => 'Menu Updated', 'message' => '\'' . $form['title'] . '\' has been updated.');
 			}
 		} else {
-			// Return error message with error code
-			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+			return $DSL;
 		}
 	}
 	
@@ -248,7 +207,6 @@ class PageFunctions extends CoreFunctions {
 		$readonly = ($this->access == 1);
 		$admin = ($this->access == 3);
 		$Database = new \Database();
-		$DataTypes = new \DataTypes();
 		$del = $this->access < 3 ? ' WHERE mi.deleted = 0' : '';
 		
 		// Grab menu items
@@ -383,11 +341,10 @@ class PageFunctions extends CoreFunctions {
 			'query' => 'SELECT * FROM fks_menus WHERE deleted = 0'
 		))) {
 			$menus = $Database->r['rows'];
-			$menus_options = '';
+			$menus_options = array();
 			
 			foreach($menus as $k => $v){
-				$selected = (isset($menu_item) && $k == $menu_item['menu_id']) ? ' selected' : '';
-				$menus_options .= '<option value="' . $k . '"' . $selected . '>' . $v['title'] . '</option>';
+				array_push($menus_options, array('title' => $v['title'], 'value' => $k));
 			}
 		} else {
 			// Return error message with error code
@@ -431,163 +388,159 @@ class PageFunctions extends CoreFunctions {
 		
 		$current_icon = (isset($menu_item['icon']) ? $menu_item['icon'] : '');
 		
-		$body = '<form id="editMenuItemForm" role="form" action="javascript:void(0);">
-			<input type="hidden" name="id" value="' . (isset($menu_item['id']) ? $menu_item['id'] : '+') . '"/>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="title" class="form-control-label">Title</label>
-						<input type="text" class="form-control form-control-sm" id="title" name="title" aria-describedby="title_help" value="' . (isset($menu_item['title']) ? $menu_item['title'] : '') . '"' . ($readonly ? ' disabled' : '') . '>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="title_help" class="form-text text-muted">The title is displayed in the menu for this item.</small>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="icon" class="form-control-label">Icon</label>
-						<div class="input-group input-group-sm">
-							<div class="input-group-addon" id="icon_preview"><i class="fa fa-' . $current_icon . ' fa-fw"></i></div>
-							<select class="form-control form-control-sm select2" id="icon" name="icon" aria-describedby="icon_help"' . ($readonly ? ' disabled' : '') . '>
-								<option value="">-</option>
-							</select>
-						</div>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="icon_help" class="form-text text-muted">The icon is displayed next to the  title in the menu.</small>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="title_data" class="form-control-label">Title Data</label>
-						<input type="text" class="form-control form-control-sm" id="title_data" name="title_data" aria-describedby="title_data_help" value="' . (isset($menu_item['title_data']) ? $menu_item['title_data'] : '') . '"' . ($readonly ? ' disabled' : '') . '>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="title_data_help" class="form-text text-muted">If you want to display DB data.</small>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="has_separator" class="form-control-label">Separator</label>
-						<select class="form-control form-control-sm" id="has_separator" name="has_separator" aria-describedby="has_separator_help"' . ($readonly ? ' disabled' : '') . '>
-							<option value="0"' . ((isset($menu_item['has_separator']) && $menu_item['has_separator'] == 0) || !isset($menu_item['has_separator']) ? ' selected' : '') . '>Disabled</option>
-							<option value="1"' . (isset($menu_item['has_separator']) && $menu_item['has_separator'] == 1 ? ' selected' : '') . '>Before</option>
-							<option value="2"' . (isset($menu_item['has_separator']) && $menu_item['has_separator'] == 2 ? ' selected' : '') . '>After</option>
-							<option value="3"' . (isset($menu_item['has_separator']) && $menu_item['has_separator'] == 3 ? ' selected' : '') . '>Before & After</option>
-						</select>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="has_separator_help" class="form-text text-muted">For creating a separator around this item.</small>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="url" class="form-control-label">URL</label>
-						<input type="text" class="form-control form-control-sm" id="url" name="url" aria-describedby="url_help" value="' . (isset($menu_item['url']) ? $menu_item['url'] : '') . '"' . ($readonly ? ' disabled' : '') . '>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="url_help" class="form-text text-muted">What the URL will display as while on this page.</small>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="label" class="form-control-label">Label</label>
-						<input type="text" class="form-control form-control-sm" id="label" name="label" aria-describedby="label_help" value="' . (isset($menu_item['label']) ? $menu_item['label'] : '') . '"' . ($readonly ? ' disabled' : '') . '>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="label_help" class="form-text text-muted">Unique identifier used for page access.</small>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="menu_id" class="form-control-label">Menu</label>
-						<select class="form-control form-control-sm select2" id="menu_id" name="menu_id" aria-describedby="menu_id_help"' . ($readonly ? ' disabled' : '') . '>
-							' . $menus_options . '
-						</select>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="menu_id_help" class="form-text text-muted">The menu item\'s menu container.</small>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="parent_id" class="form-control-label">Parent</label>
-						<select class="form-control form-control-sm select2" id="parent_id" name="parent_id" aria-describedby="parent_id_help"' . ($readonly ? ' disabled' : '') . '>
-						</select>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="parent_id_help" class="form-text text-muted">The menu item\'s parent item.</small>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="is_parent" class="form-control-label">Has Children</label>
-						<select class="form-control form-control-sm" id="is_parent" name="is_parent" aria-describedby="is_parent_help"' . ($readonly ? ' disabled' : '') . '>
-							<option value="0"' . ((isset($menu_item['is_parent']) && $menu_item['is_parent'] == 0) || !isset($menu_item['is_parent']) ? ' selected' : '') . '>No</option>
-							<option value="1"' . (isset($menu_item['is_parent']) && $menu_item['is_parent'] == 1 ? ' selected' : '') . '>Yes</option>
-						</select>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="is_parent_help" class="form-text text-muted">Menu item has children items.</small>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="is_external" class="form-control-label">External Link</label>
-						<select class="form-control form-control-sm" id="is_external" name="is_external" aria-describedby="is_external_help"' . ($readonly ? ' disabled' : '') . '>
-							<option value="0"' . ((isset($menu_item['is_external']) && $menu_item['is_external'] == 0) || !isset($menu_item['is_external']) ? ' selected' : '') . '>No</option>
-							<option value="1"' . (isset($menu_item['is_external']) && $menu_item['is_external'] == 1 ? ' selected' : '') . '>Yes</option>
-						</select>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="is_external_help" class="form-text text-muted">URL links to an external site.</small>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="has_content" class="form-control-label">Has Content</label>
-						<select class="form-control form-control-sm" id="has_content" name="has_content" aria-describedby="has_content_help"' . ($readonly ? ' disabled' : '') . '>
-							<option value="1"' . (isset($menu_item['has_content']) && $menu_item['has_content'] == 1 ? ' selected' : '') . '>Yes</option>
-							<option value="0"' . ((isset($menu_item['has_content']) && $menu_item['has_content'] == 0) ? ' selected' : '') . '>No</option>
-						</select>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="has_content_help" class="form-text text-muted">Whether or not the menu item should have content pages.</small>
-					</div>
-				</div>
-
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="pos" class="form-control-label">Position</label>
-						<input type="number" class="form-control form-control-sm" id="pos" name="pos" aria-describedby="pos_help" value="' . (isset($menu_item['pos']) ? $menu_item['pos'] : '0') . '"' . ($readonly ? ' disabled' : '') . '>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="pos_help" class="form-text text-muted">The position of this menu item in its menu container.</small>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="hidden" class="form-control-label">Display</label>
-						<select class="form-control form-control-sm" id="hidden" name="hidden" aria-describedby="hidden_help"' . ($readonly ? ' disabled' : '') . '>
-							<option value="0"' . ((isset($menu_item['hidden']) && $menu_item['hidden'] == 0) || !isset($menu_item['hidden']) ? ' selected' : '') . '>Visible</option>
-							<option value="1"' . (isset($menu_item['hidden']) && $menu_item['hidden'] == 1 ? ' selected' : '') . '>Hidden</option>
-						</select>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="hidden_help" class="form-text text-muted">The display state of this menu item.</small>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label for="active" class="form-control-label">Status</label>
-						<select class="form-control form-control-sm" id="active" name="active" aria-describedby="active_help"' . ($readonly ? ' disabled' : '') . '>
-							<option value="0"' . (isset($menu_item['active']) && $menu_item['active'] == 0 ? ' selected' : '') . '>Disabled</option>
-							<option value="1"' . ((isset($menu_item['active']) && $menu_item['active'] == 1) || !isset($menu_item['active']) ? ' selected' : '') . '>Active</option>
-						</select>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="active_help" class="form-text text-muted">The status of this menu item.</small>
-					</div>
-				</div>
-			</div>
+		// Configure form groups
+		$form_groups = array(
+			array(
+				'type' => 'hidden',
+				'name' => 'id',
+				'value' => (isset($menu_item['id']) ? $menu_item['id'] : '+')
+			),
+			array(
+				'title' => 'Title',
+				'type' => 'text',
+				'name' => 'title',
+				'value' => (isset($menu_item['title']) ? $menu_item['title'] : ''),
+				'help' => 'The title is displayed in the menu for this item.',
+				'required' => true
+			),
+			array(
+				'title' => 'Icon',
+				'type' => 'select',
+				'name' => 'icon',
+				'value' => (isset($menu_item['title']) ? $menu_item['title'] : ''),
+				'help' => 'The icon is displayed next to the title in the menu.',
+				'attributes' => array('class' => 'select2'),
+				'group' => array('before' => '<div class="input-group-addon" id="icon_preview"><i class="fa fa-' . $current_icon . ' fa-fw"></i></div>'),
+				'options' => array(array('title' => '-', 'value' => ''))
+			),
+			array(
+				'title' => 'Title Data',
+				'type' => 'text',
+				'name' => 'title_data',
+				'value' => (isset($menu_item['title_data']) ? $menu_item['title_data'] : ''),
+				'help' => 'If you want to display DB data.'
+			),
+			array(
+				'title' => 'Separator',
+				'type' => 'select',
+				'name' => 'has_separator',
+				'value' => (isset($menu_item['has_separator']) ? $menu_item['has_separator'] : 0),
+				'help' => 'For creating a separator around this item.',
+				'options' => array(
+					array('title' => 'Disabled', 'value' => 0),
+					array('title' => 'Before', 'value' => 1),
+					array('title' => 'After', 'value' => 2),
+					array('title' => 'Before & After', 'value' => 3)
+				)
+			),
+			array(
+				'title' => 'URL',
+				'type' => 'text',
+				'name' => 'url',
+				'value' => (isset($menu_item['url']) ? $menu_item['url'] : ''),
+				'help' => 'What the URL will display as while on this page.',
+				'group' => array('after' => '<div class="input-group-append"><button type="button" class="btn btn-sm fks-btn-info gen-url"><i class="fa fa-hashtag fa-fw"></i></button></div>')
+			),
+			array(
+				'title' => 'Label',
+				'type' => 'text',
+				'name' => 'label',
+				'value' => (isset($menu_item['label']) ? $menu_item['label'] : ''),
+				'help' => 'Unique identifier used for page access.',
+				'group' => array('after' => '<div class="input-group-append"><button type="button" class="btn btn-sm fks-btn-info gen-label"><i class="fa fa-hashtag fa-fw"></i></button></div>'),
+				'required' => true
+			),
+			array(
+				'title' => 'Menu',
+				'type' => 'select',
+				'name' => 'menu_id',
+				'value' => (isset($menu_item['menu_id']) ? $menu_item['menu_id'] : 0),
+				'help' => 'The menu item\'s menu container.',
+				'attributes' => array('class' => 'select2'),
+				'options' => $menus_options
+			),
+			array(
+				'title' => 'Parent',
+				'type' => 'select',
+				'name' => 'parent_id',
+				'help' => 'The menu item\'s parent item.',
+				'attributes' => array('class' => 'select2')
+			),
+			array(
+				'title' => 'Has Children',
+				'type' => 'select',
+				'name' => 'is_parent',
+				'value' => (isset($menu_item['is_parent']) ? $menu_item['is_parent'] : 0),
+				'help' => 'Menu item has children items.',
+				'options' => array(
+					array('title' => 'No', 'value' => 0),
+					array('title' => 'Yes', 'value' => 1)
+				)
+			),
+			array(
+				'title' => 'External Link',
+				'type' => 'select',
+				'name' => 'is_external',
+				'value' => (isset($menu_item['is_external']) ? $menu_item['is_external'] : 0),
+				'help' => 'URL links to an external site.',
+				'options' => array(
+					array('title' => 'No', 'value' => 0),
+					array('title' => 'Yes', 'value' => 1)
+				)
+			),
+			array(
+				'title' => 'Has Content',
+				'type' => 'select',
+				'name' => 'has_content',
+				'value' => (isset($menu_item['has_content']) ? $menu_item['has_content'] : 1),
+				'help' => 'Whether or not the menu item should have content pages.',
+				'options' => array(
+					array('title' => 'No', 'value' => 0),
+					array('title' => 'Yes', 'value' => 1)
+				)
+			),
+			array(
+				'title' => 'Position',
+				'type' => 'text',
+				'name' => 'pos',
+				'value' => (isset($menu_item['pos']) ? $menu_item['pos'] : 0),
+				'help' => 'The position of this menu item in its menu container.'
+			),
+			array(
+				'title' => 'Display',
+				'type' => 'select',
+				'name' => 'hidden',
+				'value' => (isset($menu_item['hidden']) ? $menu_item['hidden'] : 0),
+				'help' => 'The display state of this menu item.',
+				'options' => array(
+					array('title' => 'Visible', 'value' => 0),
+					array('title' => 'Hidden', 'value' => 1)
+				)
+			),
+			array(
+				'title' => 'Status',
+				'type' => 'select',
+				'name' => 'active',
+				'value' => (isset($menu_item['active']) ? $menu_item['active'] : 1),
+				'help' => 'The status of this menu.',
+				'options' => array(
+					array('title' => 'Disabled', 'value' => 0),
+					array('title' => 'Active', 'value' => 1)
+				)
+			)
+		);
+		
+		// Set inputs to disabled if readonly
+		if($readonly) {
+			foreach($form_groups as &$input) {
+				if(!array_key_exists('properties', $input)) { $input['properties'] = array(); }
+				array_push($input['properties'], 'disabled');
+			}
+		}
+		
+		// Create the body
+		$body = '<form id="editMenuItemForm" class="fks-form fks-form-sm" role="form" action="javascript:void(0);">
+			' . $this->buildFormGroups($form_groups, array('width' => 6)) . '
 		</form>';
 		
 		$pattern = '/\.(fa-(?:\w+(?:-)?)+):before{content:"(.+?)"}/';
@@ -657,22 +610,27 @@ class PageFunctions extends CoreFunctions {
 		$menu_items = $Database->r['rows'];
 		if($data['id'] != '+') { unset($menu_items[$data['id']]); }
 		
+		// Allow no parent
+		$menu_items[0] = 'None';
+		
 		// Pre-Validate
-		$Validator->validate('id', array('required' => true));
-		$Validator->validate('menu_id', array('required' => true, 'numeric' => true, 'values' => array_keys($menus)));
-		$Validator->validate('parent_id', array('required' => true, 'numeric' => true, 'values' => array_keys($menu_items)));
-		$Validator->validate('pos', array('numeric' => true));
-		$Validator->validate('title', array('required' => true, 'max_length' => 40));
-		$Validator->validate('title_data', array('max_length' => 45));
-		$Validator->validate('has_separator', array('required' => true, 'values' => array(0,1,2,3)));
-		$Validator->validate('is_external', array('bool' => true));
-		$Validator->validate('is_parent', array('bool' => true));
-		$Validator->validate('has_content', array('bool' => true));
-		$Validator->validate('url', array('max_length' => 255, 'required' => true));
-		$Validator->validate('icon', array('max_length' => 20));
-		$Validator->validate('label', array('required' => true, 'max_length' => 40));
-		$Validator->validate('active', array('bool' => true));
-		$Validator->validate('hidden', array('bool' => true));
+		$Validator->validate(array(
+			'id' => array('required' => true),
+			'menu_id' => array('required' => true, 'numeric' => true, 'values' => array_keys($menus)),
+			'parent_id' => array('required' => true, 'numeric' => true, 'values' => array_keys($menu_items)),
+			'pos' => array('numeric' => true),
+			'title' => array('required' => true, 'not_empty' => true, 'max_length' => 40),
+			'title_data' => array('max_length' => 45),
+			'has_separator' => array('required' => true, 'values' => array(0, 1, 2, 3)),
+			'is_external' => array('bool' => true),
+			'is_parent' => array('bool' => true),
+			'has_content' => array('bool' => true),
+			'url' => array('max_length' => 255, 'required' => true),
+			'icon' => array('max_length' => 20),
+			'label' => array('required' => true, 'not_empty' => true, 'max_length' => 40),
+			'active' => array('bool' => true),
+			'hidden' => array('bool' => true)
+		));
 		
 		// Check for failures
 		if(!$Validator->getResult()) { return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => $Validator->getOutput()); }
@@ -680,144 +638,37 @@ class PageFunctions extends CoreFunctions {
 		// Get updated form
 		$form = $Validator->getForm();
 		
-		// See if the menu item exists
-		if($Database->Q(array(
-			'params' => array(
-				'id' => $form['id']
-			),
-			'query' => 'SELECT id FROM fks_menu_items WHERE id = :id'
-		))) {
-			if($Database->r['found'] == 1) {
-			// Found menu item
-				// Check Diffs
-				$diff = $this->compareQueryArray($form['id'], 'fks_menu_items', $form, false);
-				
-				if($diff) {
-					// Update menu item
-					if(!$Database->Q(array(
-						'params' => array(
-							':id' => $form['id'],
-							':menu_id' => $form['menu_id'],
-							':parent_id' => $form['parent_id'],
-							':pos' => $form['pos'],
-							':title' => $form['title'],
-							':title_data' => $form['title_data'],
-							':has_separator' => $form['has_separator'],
-							':is_external' => $form['is_external'],
-							':is_parent' => $form['is_parent'],
-							':has_content' => $form['has_content'],
-							':url' => $form['url'],
-							':icon' => $form['icon'],
-							':label' => $form['label'],
-							':active' => $form['active'],
-							':hidden' => $form['hidden'],
-							':date_modified' => gmdate('Y-m-d H:i:s'),
-							':modified_by' => $_SESSION['id']
-						),
-						'query' => '
-							UPDATE
-								fks_menu_items
-							
-							SET
-								menu_id = :menu_id,
-								parent_id = :parent_id,
-								pos = :pos,
-								title = :title,
-								title_data = :title_data,
-								has_separator = :has_separator,
-								is_external = :is_external,
-								is_parent = :is_parent,
-								has_content = :has_content,
-								url = :url,
-								icon = :icon,
-								label = :label,
-								active = :active,
-								hidden = :hidden,
-								date_modified = :date_modified,
-								modified_by = :modified_by
-							
-							WHERE
-								id = :id
-						'
-					))) {
-						// Return error message with error code
-						return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
-					}
-				}
-				
-				// Save member log
-				if($diff && !empty($diff)) {
-					$MemberLog = new \MemberLog(\Enums\LogActions::MENU_ITEM_MODIFIED, $_SESSION['id'], $form['id'], json_encode($diff));
-				} else {
-					// Return No Changes
-					return array('result' => 'info', 'title' => 'No Changes Detected', 'message' => 'Nothing was saved.', 'diff' => $diff, 'form' => $form);
-				}
-				
-				return array('result' => 'success', 'title' => 'Menu Item Updated', 'message' => '\'' . $form['title'] . '\' has been updated.');
-			} else {
-			// Create new menu item
-				// Save new menu item to database
-				if(!$Database->Q(array(
-					'params' => array(
-						':menu_id' => $form['menu_id'],
-						':parent_id' => $form['parent_id'],
-						':pos' => $form['pos'],
-						':title' => $form['title'],
-						':title_data' => $form['title_data'],
-						':has_separator' => $form['has_separator'],
-						':is_external' => $form['is_external'],
-						':is_parent' => $form['is_parent'],
-						':has_content' => $form['has_content'],
-						':url' => $form['url'],
-						':icon' => $form['icon'],
-						':label' => $form['label'],
-						':active' => $form['active'],
-						':hidden' => $form['hidden'],
-						':date_created' => gmdate('Y-m-d H:i:s'),
-						':created_by' => $_SESSION['id']
-					),
-					'query' => '
-						INSERT INTO
-							fks_menu_items
-							
-						SET
-							menu_id = :menu_id,
-							parent_id = :parent_id,
-							pos = :pos,
-							title = :title,
-							title_data = :title_data,
-							has_separator = :has_separator,
-							is_external = :is_external,
-							is_parent = :is_parent,
-							has_content = :has_content,
-							url = :url,
-							icon = :icon,
-							label = :label,
-							active = :active,
-							hidden = :hidden,
-							date_created = :date_created,
-							created_by = :created_by
-					'
-				))) {
-					// Return error message with error code
-					return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
-				}
-				
-				$last_id = $Database->r['last_id'];
-				
-				// Prepare member log
-				unset($form['id']);
-				
-				// Save member log
-				if($form && !empty($form)) {
-					$MemberLog = new \MemberLog(\Enums\LogActions::MENU_ITEM_CREATED, $_SESSION['id'], $last_id, json_encode($form));
-				}
-				
+		// Create Data Handler
+		$DataHandler = new \DataHandler(array(
+			'fks_menu_items' => array(
+				'base' => 'fks_menu_items',
+				'log_actions' => array(
+					'created' => \Enums\LogActions::MENU_ITEM_CREATED,
+					'modified' => \Enums\LogActions::MENU_ITEM_MODIFIED
+				)
+			)
+		));
+		
+		// Diff, Set, Log
+		$DSL = $DataHandler->DSL(array(
+			'type' => 'local',
+			'table' => 'fks_menu_items',
+			'target_id' => $form['id'],
+			'values' => array(
+				'columns' => $form,
+				'data' => false
+			)
+		));
+
+		// Return
+		if($DSL['result'] == 'success') {
+			if($DSL['diff']['log_type'] == 'created') {
 				return array('result' => 'success', 'title' => 'Menu Item Created', 'message' => '\'' . $form['title'] . '\' has been created.');
+			} else {
+				return array('result' => 'success', 'title' => 'Menu Item Updated', 'message' => '\'' . $form['title'] . '\' has been updated.');
 			}
 		} else {
-			// Return error message with error code
-			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+			return $DSL;
 		}
 	}
 	

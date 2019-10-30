@@ -22,7 +22,7 @@
 </div>
 <div class="fks-page-title">
 	<span class="title">Access Groups</span>
-	<span class="subtitle d-none d-md-inline">set menu access for each group</span>
+	<span class="subtitle d-none d-md-inline">set page access for each group</span>
 </div>
 <div class="row">
 	<div class="col-md-12">

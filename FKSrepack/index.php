@@ -1,6 +1,6 @@
 <?PHP
 	if(is_dir('install')) {
-		header('Location:splash.html');
+		header('Location:splash.php');
 	}
 	require_once(__DIR__ . '/scripts/php/views/manager.php');
 	

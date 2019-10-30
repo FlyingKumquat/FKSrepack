@@ -168,6 +168,7 @@ define([
 			'language': {
 				'emptyTable': tables[0].empty
 			},
+			'dom': fks.data_table_dom,
 			'iDisplayLength': 15,
 			'lengthMenu': [[15, 25, 50, 100, -1], [15, 25, 50, 100, 'All']],
 			'order': [[1, 'desc']],
@@ -239,6 +240,7 @@ define([
 			'language': {
 				'emptyTable': tables[changelog_id].empty
 			},
+			'dom': fks.data_table_dom,
 			'iDisplayLength': 15,
 			'lengthMenu': [[15, 25, 50, 100, -1], [15, 25, 50, 100, 'All']],
 			'order': [[1, 'asc'], [0, 'asc']],
@@ -276,7 +278,6 @@ define([
 	function addChangelog() {
 		fks.editModal({
 			src: page.src,
-			wait: true,
 			action: 'addChangelog',
 			callbacks: {
 				onOpen: function() {
@@ -314,7 +315,6 @@ define([
 	function viewChangelog(changelog_id) {
 		fks.editModal({
 			src: page.src,
-			wait: true,
 			action: 'viewChangelog',
 			action_data: changelog_id
 		});
@@ -433,13 +433,12 @@ define([
 	function editChangelogNote(data) {
 		fks.editModal({
 			src: page.src,
-			wait: true,
 			action: 'addChangelogNote',
 			action_data: data,
 			callbacks: {
 				onOpen: function() {
 					// Create the pages multiselect
-					fks.multiSelect('#modal_pages', {
+					fks.multiSelect('[name="pages"]', {
 						selectableHeader: {text: 'Selectable Pages', style: true},
 						selectionHeader: {text: 'Selected Pages', style: true},
 						selectableFooter: '<button type="button" class="btn btn-block btn-sm fks-btn-success">Select All</button>',

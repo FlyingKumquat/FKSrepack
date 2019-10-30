@@ -82,6 +82,7 @@ define([
 			'language': {
 				'emptyTable': tables[0].empty
 			},
+			'dom': fks.data_table_dom,
 			'iDisplayLength': 15,
 			'lengthMenu': [[15, 25, 50, 100, -1], [15, 25, 50, 100, 'All']],
 			'order': [[0, 'asc']],

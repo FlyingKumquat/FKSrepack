@@ -26,24 +26,34 @@ $RECYCLE.BIN/
 # FKS Specific Files
 # =========================
 
-# Renamed install directory
+# Remove _install directory
 FKSrepack/_install
 
-# Backups directory
-FKSrepack/install/backups
+# Remove backups directory
+FKSrepack/backups
 
 # Remove favicon
 FKSrepack/img/favicon.ico
 
-# Clear all errors
+# Remove all errors
 FKSrepack/errors/**
 
-# Keep .htaccess file
-!FKSrepack/errors/.htaccess
+# Remove all config files
+FKSrepack/scripts/php/config/**
 
-# Remove database connections
-FKSrepack/scripts/php/config/connections.php
+# Remove all autoload files
+FKSrepack/scripts/php/autoload/**
 
-# Remove java scripts
+# Remove js files
 FKSrepack/scripts/js/autoloader.js
 FKSrepack/scripts/js/site.js
+
+# Remove all .bkp files
+FKSrepack/*.bkp
+
+# Keep .htaccess files
+!FKSrepack/.htaccess
+!FKSrepack/**/.htaccess
+
+# Keep config template files
+!FKSrepack/scripts/php/config/_*

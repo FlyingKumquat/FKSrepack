@@ -25,37 +25,24 @@
 	<span class="subtitle d-none d-md-inline">list of all menus and menu items</span>
 </div>
 <div class="row">
-	<div class="col-xl-2">
-		<div class="fks-panel">
-			<div class="body">
-				<ul class="nav panel-nav">
-					<li class="nav-item">
-						<a href="#menus_panel" data-toggle="tab" role="tab"><i class="fa fa-list-ul fa-fw"></i> Menus</a>
-					</li>
-					<li class="nav-item">
-						<a href="#menu_items_panel" class="active" data-toggle="tab" role="tab"><i class="fa fa-cubes fa-fw"></i> Menu Items</a>
-					</li>
-				</ul>
-			</div>
-		</div>
-		<div id="menu_layouts" class="fks-panel" style="display: none;">
+	<div class="col-md-12">
+		<div id="main_panel" class="fks-panel tab-pane" role="tabpanel">
 			<div class="header">
 				<span class="title">
-					Menu Layouts
+					<ul class="nav nav-tabs no-wrap">
+						<li class="nav-item">
+							<a class="nav-link" data-toggle="tab" href="#menus_panel" role="tab" draggable="false" aria-selected="true">
+								<i class="fa fa-list-ul fa-fw"></i> Menus
+							</a>
+						</li>
+						<li class="nav-item">
+							<a class="nav-link active" data-toggle="tab" href="#menu_items_panel" role="tab" draggable="false" aria-selected="false">
+								<i class="fa fa-cubes fa-fw"></i> Menu Items
+							</a>
+						</li>
+					</ul>
 				</span>
-			</div>
-			<div class="body">
-				<i class="fa fa-spinner fa-spin fa-fw"></i> Loading Menus...
-			</div>
-		</div>
-	</div>
-	<div class="col-xl-10 tab-content">
-		<div id="menus_panel" class="fks-panel tab-pane" role="tabpanel">
-			<div class="header">
-				<span class="title">
-					Menus
-				</span>
-				<span class="actions">
+				<span class="actions" tab-actions="menus_panel" style="display: none;">
 					<a class="btn add-table" fks-access="2"><i class="fa fa-plus"></i><span class="d-none d-lg-inline"> Add Menu</span></a>
 					<a class="btn reload-table"><i class="fa fa-refresh"></i><span class="d-none d-lg-inline"> Reload</span></a>
 					<div class="btn-group">
@@ -64,17 +51,7 @@
 					</div>
 					<a class="btn panel-fullscreen" fks-action="panelFullscreen"></a>
 				</span>
-			</div>
-			<div class="body">
-				<table  class="table table-striped table-hover table-border table-sm dataTable no-footer"><thead class="thead-dark"></thead></table>
-			</div>
-		</div>
-		<div id="menu_items_panel" class="fks-panel tab-pane active" role="tabpanel">
-			<div class="header">
-				<span class="title">
-					Menu Items
-				</span>
-				<span class="actions">
+				<span class="actions" tab-actions="menu_items_panel">
 					<a class="btn add-table" fks-access="2"><i class="fa fa-plus"></i><span class="d-none d-lg-inline"> Add Item</span></a>
 					<a class="btn reload-table"><i class="fa fa-refresh"></i><span class="d-none d-lg-inline"> Reload</span></a>
 					<div class="btn-group">
@@ -85,7 +62,14 @@
 				</span>
 			</div>
 			<div class="body">
-				<table  class="table table-striped table-hover table-border table-sm dataTable no-footer"><thead class="thead-dark"></thead></table>
+				<div class="tab-content">
+					<div id="menus_panel" class="tab-pane" role="tabpanel">
+						<table  class="table table-striped table-hover table-border table-sm dataTable no-footer"><thead class="thead-dark"></thead></table>
+					</div>
+					<div id="menu_items_panel" class="tab-pane active" role="tabpanel">
+						<table  class="table table-striped table-hover table-border table-sm dataTable no-footer"><thead class="thead-dark"></thead></table>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>

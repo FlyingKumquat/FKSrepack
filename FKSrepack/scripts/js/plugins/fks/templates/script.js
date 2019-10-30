@@ -9,7 +9,7 @@ define([
 		access: fks.checkAccess('%LABEL%'),
 		params: fks.getParams(),
 		keep_alive: false,
-		debug: true
+		debug: false
 	},
 	self,
 	View = Backbone.View.extend({
@@ -43,11 +43,12 @@ define([
 		self.$el.html(result);
 		if(!fks.pageAccess(result, page)) { return false; }
 		
-		// Bind fks panel actions
+		// Bind fks element actions
 		fks.fksActions([
 			'panelToggle',
 			'panelClose',
-			'panelFullscreen'
+			'panelFullscreen',
+			'cardToggle'
 		]);
 		
 		// Bind fks panel actions
@@ -60,11 +61,16 @@ define([
 	
 	// -------------------- Example Load Table Function -------------------- //
 	function loadExampleTable() {
+		// Create an id for the table
+		var table_id = 0;
+		
 		// Setup table general settings
-		tables[0] = {
+		tables[table_id] = {
+			id: table_id,
 			ele: {
 				block: $('#panel_id_2'),								// Element that you want blocked
 				table: $('#panel_id_2 table:first'),					// The table
+				//form: $('#example_form'),								// Form the table validates (Optional)
 				add: $('#panel_id_2 .actions .add-table'),				// The add button (Optional)
 				reload: $('#panel_id_2 .actions .reload-table'),		// The reload button (Optional)
 				columns: $('#panel_id_2 .actions .column-toggler')		// The column toggler button (Optional)
@@ -76,9 +82,12 @@ define([
 				reload: '<i class="fa fa-refresh fa-spin fa-fw"></i> Reloading Entries...'	// fks.block reloading message
 			},
 			count: 0,							// Column counter (do not touch)
-			action: 'loadExampleTable',			// PHP function for loading data
+			debug: page.debug,					// Add a wait time before loading table (optional, default: true)
+			wait: true,							// Add a wait time before loading table (optional, default: true)
+			action: 'loadExampleTable',			// PHP function name (string) or javascript function for loading data
 			functions: {
 				add: addFunction,				// Called when ele.add is clicked (Optional)
+				//reload: reloadFunction,		// Called when ele.reload is clicked (Optional)
 				edit: editFunction,				// Edit function (Optional)
 				view: viewFunction				// View function (Optional)
 			},
@@ -96,22 +105,23 @@ define([
 		};
 		
 		// Setup table DataTable settings
-		tables[0].dt = $(tables[0].ele.table).DataTable({
+		tables[table_id].dt = $(tables[table_id].ele.table).DataTable({
 			'bAutoWidth': false,
 			'language': {
-				'emptyTable': tables[0].empty
+				'emptyTable': tables[table_id].empty
 			},
+			'dom': fks.data_table_dom,
 			'iDisplayLength': 15,
 			'lengthMenu': [[15, 25, 50, 100, -1], [15, 25, 50, 100, 'All']],
 			'order': [[0, 'asc']],
 			'columnDefs': [
-				{'targets': [tables[0].count++], 'title': 'ID'},
-				{'targets': [tables[0].count++], 'title': 'Title'},
-				{'targets': [tables[0].count++], 'title': 'Date Created', 'type': 'date'},
-				{'targets': [tables[0].count++], 'title': 'Created By'},
-				{'targets': [tables[0].count++], 'title': 'Date Modified', 'type': 'date'},
-				{'targets': [tables[0].count++], 'title': 'Modified By'},
-				{'targets': [tables[0].count++], 'title': 'Tools', 'className': 'icon-3', 'sortable': false, 'toggleable': false, 'responsivePriority': 1}
+				{'targets': [tables[table_id].count++], 'title': 'ID'},
+				{'targets': [tables[table_id].count++], 'title': 'Title'},
+				{'targets': [tables[table_id].count++], 'title': 'Date Created', 'type': 'date'},
+				{'targets': [tables[table_id].count++], 'title': 'Created By'},
+				{'targets': [tables[table_id].count++], 'title': 'Date Modified', 'type': 'date'},
+				{'targets': [tables[table_id].count++], 'title': 'Modified By', 'fksDisplay': 'md'},
+				{'targets': [tables[table_id].count++], 'title': 'Tools', 'className': 'icon-3', 'sortable': false, 'toggleable': false, 'responsivePriority': 1}
 			],
 			'columns': [
 				{'data': 'id'},
@@ -127,18 +137,18 @@ define([
 				$(row).data(data);
 				
 				// Bind tool buttons
-				$(row).find('.view').on('click', function() { tables[0].functions.view(data.id); });
-				$(row).find('.edit').on('click', function() { tables[0].functions.edit(data.id); });
+				$(row).find('.view').on('click', function() { tables[table_id].functions.view(data.id); });
+				$(row).find('.edit').on('click', function() { tables[table_id].functions.edit(data.id); });
 				$(row).find('.history').on('click', function() { fks.loadHistory(data.id, 'loadExampleHistory', page.src); });
 			},
 			'drawCallback': function() {
 				// Set fks tooltips inside the table element
-				fks.tooltip({ele: $('[data-toggle="fks-tooltip"]', tables[0].ele.table)});
+				fks.tooltip({ele: $('[data-toggle="fks-tooltip"]', tables[table_id].ele.table)});
 			}
 		});
 		
 		// Load table
-		fks.loadTable(tables[0], page.src);
+		fks.loadTable(tables[table_id], page.src);
 	}
 	
 	// -------------------- Example Callback Function -------------------- //
@@ -153,7 +163,6 @@ define([
 		fks.editModal({
 			debug: page.debug,				// Optional - Whether to spit out returned text in the console. Default: true
 			src: page.src,					// Required - Where to look for the functions.php page.
-			wait: true,						// Optional - Gives the function a minimum of 2 seconds to run. Default: false
 			focus: false,					// Optional - Auto focuses the first VISIBLE ENABLED EDITABLE input. Default: true
 			action: 'addFunction',			// Required - What function to call in PHP.
 			action_data: 'passed_data',		// Optional - What data to pass to the PHP function

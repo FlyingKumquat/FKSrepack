@@ -85,6 +85,7 @@ define([
 			'language': {
 				'emptyTable': tables[0].empty
 			},
+			'dom': fks.data_table_dom,
 			'iDisplayLength': 15,
 			'lengthMenu': [[15, 25, 50, 100, -1], [15, 25, 50, 100, 'All']],
 			'order': [[0, 'asc']],
@@ -135,11 +136,10 @@ define([
 	}
 	
 	// -------------------- Edit Member Modal -------------------- //
-	function editMember( id ) {
-		if(!id){ var id = '+'; }
+	function editMember(id) {
+		if(!id) { var id = '+'; }
 		fks.editModal({
 			src: page.src,
-			wait: true,
 			action: 'editMember', 
 			action_data: id,
 			callbacks: {
@@ -149,14 +149,8 @@ define([
 	}
 	
 	// -------------------- Edit Member Modal Callback -------------------- //
-	function editMemberCallback(){
-		$('#TIMEZONE').select2({
-			containerCssClass: 'fks-sm',
-			dropdownCssClass: 'fks-sm',
-			width: '100%'
-		});
-		
-		fks.multiSelect('#ACCESS_GROUPS', {
+	function editMemberCallback() {
+		fks.multiSelect('[name="ACCESS_GROUPS"]', {
 			selectableHeader: {text: 'Selectable Groups', style: true},
 			selectionHeader: {text: 'Selected Groups', style: true},
 			selectableFooter: '<button type="button" class="btn btn-block btn-sm fks-btn-success">Select All</button>',
@@ -166,12 +160,7 @@ define([
 			height: 340
 		});
 		
-		$('#modalForm').bind('reset:after', function() {
-			$('#TIMEZONE').trigger('change');
-			$('#ACCESS_GROUPS').multiSelect('refresh');
-		});
-		
-		$('#modalForm').submit(function(){
+		$('#modalForm').submit(function() {
 			saveMember(this);
 		});
 	}
@@ -180,10 +169,6 @@ define([
 	function saveMember(form) {
 		// Serialize the form
 		var form_data = fks.superSerialize(form);
-		
-		// Encrypt the password fields
-		form_data.PASSWORD = btoa(form_data.PASSWORD);
-		form_data.PASSWORD2 = btoa(form_data.PASSWORD2);
 		
 		// Send request with form and data
 		fks.ajax({

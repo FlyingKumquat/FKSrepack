@@ -1,9 +1,11 @@
 <?PHP
 /*##############################################
 	Data Handler
-	Version: 1.2.20190301
-	Updated: 03/01/2019
+	Version: 1.5.20191024
+	Updated: 10/24/2019
 ##############################################*/
+
+require_once('Utilities.php');
 
 class DataHandler {
 /*----------------------------------------------
@@ -22,9 +24,9 @@ class DataHandler {
 		'error'	=> false
 	);
 	
+	public $last_id = false;
 	public $error = false;
 	public $modified = array();
-	public $tst = null;
 	
 /*----------------------------------------------
 	Construct
@@ -42,7 +44,7 @@ class DataHandler {
 				'select' => '*',
 				'where' => 'active = 1 AND deleted = 0'
 			),
-			'log_actions' => array(								// Log actions (required if using dif)
+			'log_actions' => array(								// Log actions (required if using diff)
 				'created' => \Enums\LogActions::ITEM_CREATED,
 				'modified' => \Enums\LogActions::ITEM_MODIFIED
 			)
@@ -270,7 +272,8 @@ class DataHandler {
 /*----------------------------------------------
 	Get Data
 ----------------------------------------------*/
-	public function getData($type, $table, $target_id = 0, $data_type_ids = array()) {
+	//public function getData($type, $table, $target_id = 0, $data_type_ids = array(), $assoc_ids = false) {
+	public function getData($type, $table, $target_id = 0, $values = array(), $assoc_ids = false) {
 		// Stop if status is false
 		if(!$this->status()) { return false; }
 		
@@ -289,95 +292,163 @@ class DataHandler {
 		// Set return_ids to blank
 		$return_ids = array();
 		
-		// Set data_type_ids to all types if empty
-		if(empty($data_type_ids)) {
-			$data_type_ids = array_keys($_data_types);
-		} else {
-			// Set return_ids to passed data_type_ids
-			$return_ids = $data_type_ids;
-		}
+		// Set find ids to blank array
+		$find_ids = array();
 		
-		// Convert data_type_ids to array if not already
-		if(!is_array($data_type_ids)) { $data_type_ids = array($data_type_ids); }
-
-		// Check each id to make sure it's valid
-		foreach($data_type_ids as $k => $v) {
-			if(!is_numeric($v) || !in_array($v, array_keys($_data_types))) { return false; }
-		}
+		// Convert values to array if not already
+		if(!is_array($values) || empty($values)) { $values = array('columns' => array(), 'data' => array()); }
+		if(!isset($values['columns'])) { $values['columns'] = array(); }
+		if(!isset($values['data'])) { $values['data'] = array(); }
+		
+		// Set out variable
+		$out = array('columns' => array(), 'data' => array());
 		
 		// Set table_info
 		$table_info = $this->tables[$table];
 		
-		// Set out variable
-		$out = array();
-		
-		// Set rows variable
-		$rows = array();
-
-		if($_database->Q(array(
-			'params' => array(
-				':target_id' => $target_id,
-				':data_type_ids' => implode(',', $data_type_ids)
-			),
-			'query' => '
-				SELECT
-					*
-				
-				FROM
-					' . $table_info['data'] . '
-					
-				WHERE
-					' . (isset($table_info['base_column']) ? $table_info['base_column'] : 'target_id') . ' = :target_id
-						AND
-					FIND_IN_SET(' . (isset($table_info['data_types_column']) ? $table_info['data_types_column'] : 'data_type_id') . ', :data_type_ids)
-			'
-		))) {
-			// Set rows to database rows
-			$rows = $_database->r['rows'];
-		}
-		
-		// Columns to ignore
-		$ignore_columns = array(
-			'date_created',
-			'created_by',
-			'date_modified',
-			'modified_by',
-			'date_deleted',
-			'deleted_by',
-			'active',
-			'deleted'
-		);
-		
-		// Loop through all rows
-		foreach($rows as $row) {
-			$_r = $row[(isset($table_info['data_types_column']) ? $table_info['data_types_column'] : 'data_type_id')];
-			if(!isset($out[$_r])) {
-				$_t = $_data_types[$_r];
-				foreach($_t as $k => $v) {
-					if(!in_array($k, $ignore_columns)) {
-						$out[$_r][$k] = $v;
+		// Do column stuff
+		if(is_array($values['columns'])) {
+			if($type == 'local' && $table == 'members' && $this->Utilities->siteSettings('REMOTE_SITE') == 'Secondary') {
+				// don't grab local member data
+			} else {
+				if($_database->Q(array(
+					'params' => array(
+						':id' => $target_id
+					),
+					'query' => '
+						SELECT
+							*
+						
+						FROM
+							' . $table_info['base'] . '
+							
+						WHERE
+							id = :id
+					'
+				))) {
+					if($_database->r['found'] == 1) {
+						if(empty($values['columns'])) {
+							$out['columns'] = $_database->r['row'];
+						} else {
+							foreach($_database->r['row'] as $column_name => $column_value) {
+								if(in_array($column_name, $values['columns'])) {
+									$out['columns'][$column_name] = $column_value;
+								}
+							}
+						}
 					}
 				}
-				$out[$_r]['value'] = $row['data'];
-			} else {
-				if(!is_array($out[$_r]['value'])) {
-					$out[$_r]['value'] = array($out[$_r]['value']);
-				}
-				array_push($out[$_r]['value'], $row['data']);
 			}
 		}
-		
-		// Add all return_ids as null if missing
-		if(!empty($return_ids)) {
-			foreach($return_ids as $id) {
-				if(!isset($out[$id])) {
+
+		// Do data stuff
+		if(is_array($values['data'])) {
+			// Check each id to make sure it's valid
+			foreach($values['data'] as $k => $v) {
+				if(!is_numeric($v)) {
+					$_found = false;
+					foreach($_data_types as $dtk => $dtv) {
+						if(isset($dtv['constant']) && $dtv['constant'] == $v) {
+							$v = $dtk;
+							$_found = true;
+							break;
+						}
+					}
+					if(!$_found) { return false; }
+				} else if(!in_array($v, array_keys($_data_types))) {
+					return false;
+				}
+				array_push($find_ids, $v);
+			}
+			
+			// Set find_ids to all types if empty
+			if(empty($find_ids)) {
+				$find_ids = array_keys($_data_types);
+			} else {
+				// Set return_ids to find_ids
+				$return_ids = $find_ids;
+			}
+			
+			// Set rows variable
+			$rows = array();
+
+			if($_database->Q(array(
+				'params' => array(
+					':target_id' => $target_id,
+					':data_type_ids' => implode(',', $find_ids)
+				),
+				'query' => '
+					SELECT
+						*
+					
+					FROM
+						' . $table_info['data'] . '
+						
+					WHERE
+						' . (isset($table_info['base_column']) ? $table_info['base_column'] : 'target_id') . ' = :target_id
+							AND
+						FIND_IN_SET(' . (isset($table_info['data_types_column']) ? $table_info['data_types_column'] : 'data_type_id') . ', :data_type_ids)
+				'
+			))) {
+				// Set rows to database rows
+				$rows = $_database->r['rows'];
+			}
+			
+			// Columns to ignore
+			$ignore_columns = array(
+				'date_created',
+				'created_by',
+				'date_modified',
+				'modified_by',
+				'date_deleted',
+				'deleted_by',
+				'active',
+				'deleted'
+			);
+			
+			// Loop through all rows
+			foreach($rows as $row) {
+				$id = $row[(isset($table_info['data_types_column']) ? $table_info['data_types_column'] : 'data_type_id')];
+				$_const = $id;
+				
+				if(!$assoc_ids && isset($_data_types[$id]['constant'])) {
+					$_const = $_data_types[$id]['constant'];
+				}
+				
+				if(!isset($out['data'][$_const])) {
 					$_t = $_data_types[$id];
 					foreach($_t as $k => $v) {
 						if(!in_array($k, $ignore_columns)) {
-							$out[$id][$k] = $v;
+							$out['data'][$_const][$k] = $v;
 						}
 					}
-					$out[$id]['value'] = null;
+					$out['data'][$_const]['value'] = $row['data'];
+				} else {
+					if(!is_array($out['data'][$_const]['value'])) {
+						$out['data'][$_const]['value'] = array($out['data'][$_const]['value']);
+					}
+					array_push($out['data'][$_const]['value'], $row['data']);
+				}
+			}
+			
+			// Add all return_ids as null if missing
+			if(!empty($return_ids)) {
+				foreach($return_ids as $id) {
+					$_const = $id;
+					
+					if(!$assoc_ids && isset($_data_types[$id]['constant'])) {
+						$_const = $_data_types[$id]['constant'];
+					}
+					
+					if(!isset($out['data'][$_const])) {
+						$_t = $_data_types[$id];
+						foreach($_t as $k => $v) {
+							if(!in_array($k, $ignore_columns)) {
+								$out['data'][$_const][$k] = $v;
+							}
+						}
+						$out['data'][$_const]['value'] = null;
+					}
 				}
 			}
 		}
@@ -401,99 +472,198 @@ class DataHandler {
 		// Return false if values is empty
 		if(empty($values)) { return false; }
 		
-		// Return false if any value ids are not numeric
-		foreach($values as $k => $v) { if(!is_numeric($k)) { return false; } }
-
 		// Return false if not server and session is not set or is guest
 		if(!$server && (!isset($_SESSION['guest']) || $_SESSION['guest'])) { return false; }
 		
 		// Configure variables
 		if(is_null($type)) {
+			$_data_types = $this->DataTypes[$table];
 			$_database = $this->Database;
 		} else {
+			$_data_types = $this->DataTypes[$table][$type];
 			$_database = $this->Databases[$type];
 		}
 		
 		// Set table_info
 		$table_info = $this->tables[$table];
 		
+		// Reset error
 		$this->error = false;
-		foreach($values as $data_type_id => $data){
-			$query_ok = false;
-			if(empty($data) && strlen($data) == 0) {
-				$query_ok = $_database->Q(array(
-					'params' => array(
-						':target_id' => $target_id,
-						':data_type_id' => $data_type_id
-					),
-					'query' => '
-						DELETE FROM
-							' . $table_info['data'] . '
-						
-						WHERE
-							' . (isset($table_info['base_column']) ? $table_info['base_column'] : 'target_id') . ' = :target_id
-								AND
-							' . (isset($table_info['data_types_column']) ? $table_info['data_types_column'] : 'data_type_id') . ' = :data_type_id
-					'
-				));
-			} else {
-				$query_ok = $_database->Q(array(
-					'params' => array(
-						':target_id' => $target_id,
-						':data_type_id' => $data_type_id,
-						':data' => $data
-					),
+		
+		// Reset last id
+		$this->last_id = false;
+		
+		// Do column stuff
+		if($target_id == '+' || (isset($values['columns']) && is_array($values['columns']) && !empty($values['columns']))) {
+			$_creating = ($target_id == '+');
+			$_params = array();
+			$_set = array();
+			
+			// Build parameters
+			if(isset($values['columns']) && is_array($values['columns'])) {
+				foreach($values['columns'] as $k => $v) {
+					$_params[':' . $k] = $v;
+				}
+			}
+			
+			// Overwrite parameters
+			$_params[':id'] = $target_id;
+			$_params[':date_modified'] = gmdate('Y-m-d H:i:s');
+			$_params[':modified_by'] = ($server ? 0 : $_SESSION['id']);
+			
+			if($_creating) {
+				$_params[':date_created'] = $_params[':date_modified'];
+				$_params[':created_by'] = $_params[':modified_by'];
+			}
+			
+			// Build set query
+			foreach(array_keys($_params) as $p) {
+				if($p == ':id') { continue; }
+				array_push($_set, str_replace(':', '', $p) . ' = ' . $p);
+			}
+			
+			if($_creating) {
+				unset($_params[':id']);
+				// Create something
+				if(!$_database->Q(array(
+					'params' => $_params,
 					'query' => '
 						INSERT INTO
-							' . $table_info['data'] . '
+							' . $table_info['base'] . '
 						
-						(' . (isset($table_info['base_column']) ? $table_info['base_column'] : 'target_id') . ', ' . (isset($table_info['data_types_column']) ? $table_info['data_types_column'] : 'data_type_id') . ', data)
-							VALUES
-						(:target_id, :data_type_id, :data)
-							
-						ON DUPLICATE KEY UPDATE
-							data = :data
+						SET
+							' . implode(', ', $_set) . '
 					'
-				));
-			}
-			if(
-				$query_ok
-				&& (
-					!empty($data)
-					|| strlen($data) > 0
-					|| (
-						empty($data)
-						&& strlen($data) == 0
-						&& $_database->r['row_count'] > 0
-					)
-				)
-			) {
-				$this->modified[$data_type_id] = $data;
-				$_database->Q(array(
-					'params' => array(
-						':id' => $target_id,
-						':date_modified' => gmdate('Y-m-d H:i:s'),
-						':modified_by' => ($server ? 0 : $_SESSION['id'])
-					),
+				))) {
+					$this->error = $_database->r;
+					return false;
+				}
+				
+				$target_id = $_database->r['last_id'];
+				$this->last_id = $target_id;
+			} else {				
+				// Update something
+				if(!$_database->Q(array(
+					'params' => $_params,
 					'query' => '
 						UPDATE
 							' . $table_info['base'] . '
 						
 						SET
-							date_modified = :date_modified,
-							modified_by = :modified_by
+							' . implode(', ', $_set) . '
 							
 						WHERE
 							id = :id
 					'
-				));
-			} else {
-				$this->error = array(
-					'query_ok' => $query_ok,
-					'data' => $data,
-					'row_count' => isset($_database->r['row_count']) ? $_database->r['row_count'] : null
-				);
-				if(!$query_ok) { return false; }
+				))) {
+					$this->error = $_database->r['error'];
+					return false;
+				}
+			}
+		}
+		
+		// Do data stuff
+		if(isset($values['data']) && is_array($values['data']) && !empty($values['data'])) {
+			// Set actual values to blank array
+			$actual_values = array();
+			
+			// Check all data keys
+			foreach($values['data'] as $k => $v) {
+				if(!is_numeric($k)) {
+					$_found = false;
+					foreach($_data_types as $dtk => $dtv) {
+						if(isset($dtv['constant']) && $dtv['constant'] == $k) {
+							$k = $dtk;
+							$_found = true;
+							break;
+						}
+					}
+					// Return false if constant does not link to id
+					if(!$_found) { return false; }
+				}
+				if(key_exists($k, $_data_types)) {
+					// Add if data id exists in data types
+					$actual_values[$k] = $v;
+				}
+			}
+
+			foreach($actual_values as $data_type_id => $data){
+				$query_ok = false;
+				if(empty($data) && strlen($data) == 0) {
+					$query_ok = $_database->Q(array(
+						'params' => array(
+							':target_id' => $target_id,
+							':data_type_id' => $data_type_id
+						),
+						'query' => '
+							DELETE FROM
+								' . $table_info['data'] . '
+							
+							WHERE
+								' . (isset($table_info['base_column']) ? $table_info['base_column'] : 'target_id') . ' = :target_id
+									AND
+								' . (isset($table_info['data_types_column']) ? $table_info['data_types_column'] : 'data_type_id') . ' = :data_type_id
+						'
+					));
+				} else {
+					$query_ok = $_database->Q(array(
+						'params' => array(
+							':target_id' => $target_id,
+							':data_type_id' => $data_type_id,
+							':data' => $data
+						),
+						'query' => '
+							INSERT INTO
+								' . $table_info['data'] . '
+							
+							(' . (isset($table_info['base_column']) ? $table_info['base_column'] : 'target_id') . ', ' . (isset($table_info['data_types_column']) ? $table_info['data_types_column'] : 'data_type_id') . ', data)
+								VALUES
+							(:target_id, :data_type_id, :data)
+								
+							ON DUPLICATE KEY UPDATE
+								data = :data
+						'
+					));
+				}
+				if(
+					$query_ok
+					&& (
+						!empty($data)
+						|| strlen($data) > 0
+						|| (
+							empty($data)
+							&& strlen($data) == 0
+							&& $_database->r['row_count'] > 0
+						)
+					)
+				) {
+					$this->modified[$data_type_id] = $data;
+					$_database->Q(array(
+						'params' => array(
+							':id' => $target_id,
+							':date_modified' => gmdate('Y-m-d H:i:s'),
+							':modified_by' => ($server ? 0 : $_SESSION['id'])
+						),
+						'query' => '
+							UPDATE
+								' . $table_info['base'] . '
+							
+							SET
+								date_modified = :date_modified,
+								modified_by = :modified_by
+								
+							WHERE
+								id = :id
+						'
+					));
+				} else {
+					$this->error = array(
+						'query_ok' => $query_ok,
+						'data' => $data,
+						'row_count' => isset($_database->r['row_count']) ? $_database->r['row_count'] : null
+					);
+					if(!$query_ok) { return false; }
+				}
 			}
 		}
 		
@@ -501,9 +671,9 @@ class DataHandler {
 	}
 	
 /*----------------------------------------------
-	Set Data
+	Diff
 ----------------------------------------------*/
-	public function diff($type, $table, $target_id, $new, $ignore_columns = array()) {
+	public function diff($type, $table, $target_id, $new, $ignore_columns = array(), $json = array()) {
 		// Stop if status is false
 		if(!$this->status()) { return false; }
 		
@@ -512,33 +682,48 @@ class DataHandler {
 		$diff = array();
 		$log_misc = array();
 		$log_action = $this->tables[$table]['log_actions']['modified'];
+		$log_columns = false;
+		$log_data = false;
+		$log_type = 'modified';
+		
+		// Unwanted columns
+		$ignore_columns = array_unique(array_merge($ignore_columns, array(
+			'id',
+			'date_created',
+			'created_by',
+			'date_modified',
+			'modified_by',
+			'date_deleted',
+			'deleted_by'
+		)));
 		
 		// Return false if table is not listed
 		if(!in_array($table, array_keys($this->tables))) { return false; }
 		
 		// Configure variables
 		if(is_null($type)) {
+			$_data_types = $this->DataTypes[$table];
 			$_database = $this->Database;
 		} else {
+			$_data_types = $this->DataTypes[$table][$type];
 			$_database = $this->Databases[$type];
 		}
 		
 		// Set table_info
 		$table_info = $this->tables[$table];
 		
-		// Get basic data
-		if(!$_database->Q(array(
-			'params' => array(':id' => $target_id),
-			'query' => ' SELECT * FROM ' . $table_info['base'] . ' WHERE id = :id'
-		))) {
-		// Something went wrong, return
-			return false;
-		}
+		// -
+		if(!isset($new['columns'])) { $new['columns'] = array(); }
+		if(!isset($new['data'])) { $new['data'] = array(); }
+		
+		// Get old data
+		if(!$old = $this->getData($type, $table, $target_id, array('columns' => (is_array($new['columns']) ? array() : false), 'data' => (is_array($new['data']) ? array() : false)), true)) { return false; }
 		
 		// Check to see if target was found
-		if($_database->r['found'] == 0) {
+		if(empty($old['columns'])) {
 			// Set log action to created
 			$log_action = $this->tables[$table]['log_actions']['created'];
+			$log_type = 'created';
 			
 			if(!$_database->Q('SHOW COLUMNS FROM ' . $table_info['base'])) {
 			// Something went wrong, return
@@ -546,86 +731,134 @@ class DataHandler {
 			}
 			
 			// Loop through all table columns and set old to null
-			foreach($_database->r['rows'] as $column) { $old[$column['Field']] = null; }
+			foreach($_database->r['rows'] as $column) { $old['columns'][$column['Field']] = null; }
 		} else {
 			// Set found to true
 			$found = true;
-			
-			// Set old to current info
-			$old = $_database->r['row'];
 		}
 		
 		// Unset unwanted columns
-		unset($old['id']);
-		unset($old['date_created']);
-		unset($old['created_by']);
-		unset($old['date_modified']);
-		unset($old['modified_by']);
-		unset($old['date_deleted']);
-		unset($old['deleted_by']);
-		
-		// Unset additional unwanted columns
 		foreach($ignore_columns as $v) {
-			unset($old[$v]);
-		}
-		
-		// Get data of target_id from appropriate data table
-		if(isset($table_info['data_types'])) {
-			$old['data'] = $this->getData($type, $table, $target_id);
-		} else {
-			$old['data'] = array();
+			unset($old['columns'][$v]);
 		}
 		
 		// Convert data to value only
 		foreach($old['data'] as $k => $v) { $old['data'][$k] = $v['value']; }
 		
-		// Convert empty data arrays to empty strings
-		if(empty($old['data'])) { $old['data'] = ''; }
-		if(empty($new['data'])) { $new['data'] = ''; }
-		
-		// Loop through all old values
-		foreach($old as $k => $v) {
-			// Skip if new array does not contain old key
-			if(!key_exists($k, $new)) { continue; }
-			
-			// Check if value is data array
-			if($k == 'data' && !empty($new[$k])) {
-				// Loop through child values as data
-				foreach($new[$k] as $ck => $cv) {					
-					// Data key is not set or data value is not the same as new data value
-					if(!isset($v[$ck]) || $v[$ck] != $cv) {
-						// Skip if old value is not set and new value is null anyways
-						if(!isset($v[$ck]) && $cv == null) { continue; }
-						
-						// Set diff data value to new data value
-						$diff[$k][$ck] = $cv;
-						
-						// UPDATE LOG (data)
-						if($found) {
-							if(!isset($v[$ck])) { $v[$ck] = null; }
-							$log_misc[$k][$ck][0] = (strlen($v[$ck]) == 0 ? null : $v[$ck]);
-							$log_misc[$k][$ck][1] = (strlen($cv) == 0 ? null : $cv);
-						} else {
-							$log_misc[$k][$ck] = (strlen($cv) == 0 ? null : $cv);
+		// Associate new data by id if constant
+		if(!empty($new['data'])) {
+			$_temp_new = array();
+			foreach($new['data'] as $k => $v) {
+				if(!is_numeric($k)) {
+					foreach($_data_types as $dtk => $dtv) {
+						if(isset($dtv['constant']) && $dtv['constant'] == $k) {
+							$k = $dtk;
+							break;
 						}
 					}
 				}
-			} else {
+				$_temp_new[$k] = $v;
+			}
+			$new['data'] = $_temp_new;
+		}
+		
+		// JSON diff function
+		function jsonDiff($json_old, $json_new, &$log_misc) {
+			// Set json arrays
+			$json_old = (strlen($json_old) == 0 ? array() : json_decode($json_old, true));
+			$json_new = (strlen($json_new) == 0 ? array() : json_decode($json_new, true));
+			$json_log = array();
+			
+			// Loop through all new json
+			foreach($json_new as $k => $v) {
+				// Check for existing old data
+				if(key_exists($k, $json_old)) {
+					// See if value is different
+					if($v !== $json_old[$k]) {
+						$json_log[$k] = array($json_old[$k], $v);
+					}
+				} else {
+					$json_log[$k] = array(null, $v);
+				}
+			}
+			
+			// Loop through all old json
+			foreach($json_old as $k => $v) {
+				// Check for missing new data
+				if(!key_exists($k, $json_new)) {
+					$json_log[$k] = array($v, null);
+				}
+			}
+			
+			// Set log misc
+			$log_misc = $json_log;
+			
+			// Return encoded new json data
+			return json_encode($json_new);
+		}
+		
+		// Loop through all old columns
+		if(is_array($new['columns'])) {
+			foreach($old['columns'] as $k => $v) {
+				// Skip if new columns does not contain old column
+				if(!key_exists($k, $new['columns'])) { continue; }
+				
 				// Treat both values as strings
 				$v = (string)$v;
-				$new[$k] = (string)$new[$k];
+				$new['columns'][$k] = (string)$new['columns'][$k];
 				
 				// Set diff if new value is not the same as old
-				if($v != $new[$k]) {
-					$diff[$k] = $new[$k];
+				if($v != $new['columns'][$k]) {
+					// Set to null if empty string
+					$diff['columns'][$k] = (strlen($new['columns'][$k]) == 0 ? null : $new['columns'][$k]);
 					
-					// UPDATE LOG
-					if($found) {
-						$log_misc[$k][0] = (strlen($v) == 0 ? null : $v);
-						$log_misc[$k][1] = (strlen($new[$k]) == 0 ? null : $new[$k]);
+					// Check for json value
+					if(isset($json['columns']) && in_array($k, $json['columns'])) {
+						$diff['columns'][$k] = jsonDiff($v, $new['columns'][$k], $log_misc[$k]);
 					} else {
-						$log_misc[$k] = (strlen($new[$k]) == 0 ? null : $new[$k]);
+						if($found) {
+							$log_misc[$k][0] = (strlen($v) == 0 ? null : $v);
+							$log_misc[$k][1] = $diff['columns'][$k];
+						} else {
+							$log_misc[$k] = $diff['columns'][$k];
+						}
 					}
+					
+					// Changes in columns
+					$log_columns = true;
+				}
+			}
+		}
+		
+		// Loop through all new data
+		if(is_array($new['data'])) {
+			foreach($new['data'] as $k => $v) {
+				// Data key is not set or data value is not the same as new data value
+				if(!isset($old['data'][$k]) || $old['data'][$k] != $v) {
+					// Skip if old value is not set and new value is null anyways
+					if(!isset($old['data'][$k]) && $v == null) { continue; }
+					
+					// Skip if data id does not exist in data types
+					if(!key_exists($k, $_data_types)) { continue; }
+					
+					// Set diff data value to new data value
+					$diff['data'][$k] = $v;
+					
+					// Check for json value
+					if(isset($json['data']) && in_array($k, $json['data'])) {
+						$diff['data'][$k] = jsonDiff($old['data'][$k], $v, $log_misc[$k]);
+					} else {
+						if($found) {
+							if(!isset($old['data'][$k])) { $old['data'][$k] = null; }
+							$log_misc[$k][0] = (strlen($old['data'][$k]) == 0 ? null : $old['data'][$k]);
+							$log_misc[$k][1] = (strlen($v) == 0 ? null : $v);
+						} else {
+							$log_misc[$k] = (strlen($v) == 0 ? null : $v);
+						}
+					}
+					
+					// Changes in data
+					$log_data = true;
 				}
 			}
 		}
@@ -635,8 +868,74 @@ class DataHandler {
 		
 		return array(
 			'log_misc' => json_encode($log_misc),
-			'log_action' => $log_action
+			'log_action' => $log_action,
+			'log_columns' => $log_columns,
+			'log_data' => $log_data,
+			'log_type' => $log_type,
+			'changes' => $diff
 		);
+	}
+
+/*----------------------------------------------
+	DIFF SET LOG
+----------------------------------------------*/
+	/*
+	$args = array(
+		'type' => 'local',				// local / remote
+		'table' => 'table',				// table name
+		'target_id' => 1,				// target id
+		'values' => array(				// values to set
+			'columns' => array(),
+			'data' => array()
+		),
+		'json' => array(				// values to treat as json
+			'columns' => array(),
+			'data' => array()
+		),
+		'ignore_columns' => array(),	// columns to ignore
+		'server' => false				// use server as member id
+	);
+	*/
+	public function DSL($args) {
+		$defaults = array(
+			'values' => array(
+				'columns' => array(),
+				'data' => array()
+			),
+			'json' => array(
+				'columns' => array(),
+				'data' => array()
+			),
+			'ignore_columns' => array(),
+			'server' => false
+		);
+		
+		// Merge args with defaults
+		$args = array_merge($defaults, $args);
+		
+		// Get diff
+		$diff = $this->diff($args['type'], $args['table'], $args['target_id'], $args['values'], $args['ignore_columns'], $args['json']);
+		
+		// Check diff
+		if(!$diff) {
+			// Return no changes
+			return array('result' => 'info', 'title' => 'No Changes Detected', 'message' => 'Nothing was saved.');
+		}
+		
+		// Set data (changes only)
+		if(!$this->setData($args['type'], $args['table'], $args['target_id'], $diff['changes'], $args['server'])) {
+			// Return failure
+			return array('result' => 'failure', 'message' => 'Unable to Set Data.', 'error' => $this->error);
+		}
+		
+		// Check if server is making changes
+		if(!$args['server']) {
+			// Save member log
+			$MemberLog = new \MemberLog($diff['log_action'], $_SESSION['id'], ($this->last_id ? $this->last_id : $args['target_id']), $diff['log_misc']);
+		}
+		
+		// Return success
+		return array('result' => 'success', 'target_id' => ($this->last_id ? $this->last_id : $args['target_id']), 'diff' => $diff);
 	}
 }
 ?>

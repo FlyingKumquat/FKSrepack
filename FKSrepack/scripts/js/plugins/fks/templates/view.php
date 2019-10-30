@@ -29,6 +29,9 @@
 				<span class="title">
 					AJAX
 				</span>
+				<span class="actions">
+					<a class="btn panel-collapse" fks-action="panelToggle"></a>
+				</span>
 			</div>
 			<div class="body"></div>
 		</div>
@@ -39,7 +42,7 @@
 					Edit Modal
 				</span>
 				<span class="actions">
-					<a class="btn tab-modal"><i class="fa fa-plus" fks-access="2"></i><span class="d-none d-lg-inline"> Tabbed</span></a>
+					<a class="btn tab-modal" fks-access="1"><i class="fa fa-plus"></i><span class="d-none d-lg-inline"> Tabbed</span></a>
 				</span>
 			</div>
 			<div class="body">
@@ -55,7 +58,7 @@
 					Datatable
 				</span>
 				<span class="actions">
-					<a class="btn add-table"><i class="fa fa-plus" fks-access="2"></i><span class="d-none d-lg-inline"> Add Button</span></a>
+					<a class="btn add-table" fks-access="2"><i class="fa fa-plus"></i><span class="d-none d-lg-inline"> Add Button</span></a>
 					<a class="btn reload-table"><i class="fa fa-refresh"></i><span class="d-none d-lg-inline"> Reload</span></a>
 					<div class="btn-group">
 						<a class="btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-columns"></i><span class="d-none d-lg-inline"> Columns</span> <i class="fa fa-angle-down"></i></a>

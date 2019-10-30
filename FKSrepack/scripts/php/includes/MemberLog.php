@@ -199,10 +199,10 @@ class MemberLog extends MemberLogX {
 	/*----------------------------------------------------------------------------------------------------
 		Parse Log Misc // Type Formatter
 	----------------------------------------------------------------------------------------------------*/
-	public function formatType($cloumn, $misc) {
-		$out = '<div class="history-title">' . $cloumn['title'] . '</div>';
+	public function formatType($column, $misc) {
+		$out = '<div class="history-title">' . $column['title'] . '</div>';
 		$out .= '<div class="fks-blockquote">';
-		switch($cloumn['type']) {
+		switch($column['type']) {
 			case 'code':
 				if(is_array($misc)) {
 					if($misc[0] == null) { $out .= 'Set to <span class="fks-text-success">' . htmlentities($misc[1]) . '</span>.'; }
@@ -237,32 +237,39 @@ class MemberLog extends MemberLogX {
 			case 'values':
 			case 'bool':
 				if(is_array($misc)) {
-					if($misc[0] == null) { $out .= 'Set to <span class="fks-text-success">' . $cloumn['values'][$misc[1]] . '</span>.'; }
-					else { $out .= 'Changed from <span class="fks-text-success">' . $cloumn['values'][$misc[0]] . '</span> to <span class="fks-text-success">' . $cloumn['values'][$misc[1]] . '</span>.'; }
-				} else { $out .= 'Set to <span class="fks-text-success">' . $cloumn['values'][$misc] . '</span>.'; }
+					if($misc[0] == null) {
+						$out .= 'Set to <span class="fks-text-success">' . $column['values'][$misc[1]] . '</span>.';
+					} else {
+						if($misc[1] == null) {
+							$out .= 'Changed from <span class="fks-text-success">' . $column['values'][$misc[0]] . '</span> to none.';
+						} else {
+							$out .= 'Changed from <span class="fks-text-success">' . $column['values'][$misc[0]] . '</span> to <span class="fks-text-success">' . $column['values'][$misc[1]] . '</span>.';
+						}
+					}
+				} else { $out .= 'Set to <span class="fks-text-success">' . $column['values'][$misc] . '</span>.'; }
 				break;
 				
 			case 'csv':
 				if(is_array($misc)) {
 					if($misc[0] == null) {
 						$exploded = explode(',', $misc[1]);
-						foreach($exploded as $k => $v) { $exploded[$k] = $cloumn['values'][$v]; }
-						$out .= 'Set to <span class="fks-text-success">' . implode(', ', $exploded) . '</span>.';
+						foreach($exploded as $k => $v) { $exploded[$k] = $column['values'][$v]; }
+						$out .= 'Set to <span class="fks-text-success">' . implode('</span>, <span class="fks-text-success">', $exploded) . '</span>.';
 					} else {
 						if(empty($misc[1])) { $misc[1] = 0; }
 						$exploded = array(
 							explode(',', $misc[0]),
 							explode(',', $misc[1])
 						);
-						foreach($exploded[0] as $k => $v) { $exploded[0][$k] = $cloumn['values'][$v]; }
-						foreach($exploded[1] as $k => $v) { $exploded[1][$k] = $cloumn['values'][$v]; }
-						$out .= 'Changed from <span class="fks-text-success">' . implode(', ', $exploded[0]) . '</span> to <span class="fks-text-success">' . implode(', ', $exploded[1]) . '</span>.';
+						foreach($exploded[0] as $k => $v) { $exploded[0][$k] = $column['values'][$v]; }
+						foreach($exploded[1] as $k => $v) { $exploded[1][$k] = $column['values'][$v]; }
+						$out .= 'Changed from <span class="fks-text-success">' . implode('</span>, <span class="fks-text-success">', $exploded[0]) . '</span> to <span class="fks-text-success">' . implode('</span>, <span class="fks-text-success">', $exploded[1]) . '</span>.';
 					}
 				} else {
 					if(empty($misc)) { $misc = 0; }
 					$exploded = explode(',', $misc);
-					foreach($exploded as $k => $v) { $exploded[$k] = $cloumn['values'][$v]; }
-					$out .= 'Set to <span class="fks-text-success">' . implode(', ', $exploded) . '</span>.';
+					foreach($exploded as $k => $v) { $exploded[$k] = $column['values'][$v]; }
+					$out .= 'Set to <span class="fks-text-success">' . implode('</span>, <span class="fks-text-success">', $exploded) . '</span>.';
 				}
 				break;
 
@@ -530,10 +537,14 @@ class MemberLog extends MemberLogX {
 	public function parseMemberCreateModify($out, $log, $simple = false) {
 		$misc = json_decode($log['misc'], true);
 		
-		$data_types = \Enums\DataTypes::flip();
+		$data_types = array();
+		$get = 'SELECT id, title, input_type FROM fks_member_data_types';
+		if(!$this->cacheKeeper($get)) { return __FUNCTION__ . ' - error 1'; }
+		$data_types = $this->logCache['queries'][$get];
+		foreach($data_types as $k => $v) { $data_types[$k] = $v; }
 		
 		$access_groups = array();
-		if(isset($misc[\Enums\DataTypes::ACCESS_GROUPS['id']])) {
+		if(isset($misc[8])) {
 			$get = 'SELECT * FROM fks_access_groups';
 			if(!$this->cacheKeeper($get)) { return __FUNCTION__ . ' - error 2'; }
 			$access_groups = $this->logCache['queries'][$get];
@@ -574,7 +585,7 @@ class MemberLog extends MemberLogX {
 				if($k == 'active') { $temp = 'Status'; }
 				if($k == 'deleted') { $temp = 'Deleted'; }
 				if(isset($data_types[$k])) {
-					$temp = constant("\Enums\DataTypes::$data_types[$k]")['title'];
+					$temp = $data_types[$k]['title'];
 				}
 				if(empty($temp)) { $temp = 'UNKNOWN: ' . $k; }
 				array_push($build, $temp);
@@ -590,7 +601,7 @@ class MemberLog extends MemberLogX {
 			}
 			if(isset($data_types[$k])) {
 				// Don't show password, silly
-				if($k == \Enums\DataTypes::PASSWORD['id']) {
+				if($k == 10) {
 					array_push($build, '
 						<div class="history-title">Password</div>
 						<div class="fks-blockquote">' . (is_array($v) ? 'Changed' : 'Set') . '.</div>
@@ -599,13 +610,20 @@ class MemberLog extends MemberLogX {
 				}
 				
 				$format = array(
-					'title' => constant("\Enums\DataTypes::$data_types[$k]")['title'],
-					'type' => constant("\Enums\DataTypes::$data_types[$k]")['input_type']
+					'title' => $data_types[$k]['title'],
+					'type' => $data_types[$k]['input_type']
 				);
 				
-				if($k == \Enums\DataTypes::ACCESS_GROUPS['id']) {
+				if($k == 8) {
 					$format['type'] = 'csv';
 					$format['values'] = $access_groups;
+				}
+				
+				if($k == 15 && !empty($v)) {
+					if(!isset($this->logCache['utilities'])) { $this->logCache['utilities'] = new \Utilities; }
+					if(!isset($this->logCache['menu_item_structures'])) { $this->logCache['menu_item_structures'] = $this->logCache['utilities']->getMenuItemStructures(); }
+					$format['type'] = 'values';
+					$format['values'] = $this->logCache['menu_item_structures'];
 				}
 				
 				array_push($build, $this->formatType($format, $v));
@@ -797,6 +815,7 @@ class MemberLog extends MemberLogX {
 			'title'				=>		'Title',
 			'data'				=>		'Menu Access',
 			'hierarchy'			=>		'Hierarchy',
+			'home_page'			=>		'Home Page',
 			'active'			=>		'Status'
 		);
 
@@ -860,24 +879,38 @@ class MemberLog extends MemberLogX {
 		
 		$build = array();
 		foreach($misc as $k => $v) {
-			if(isset($columns[$k])){
+			if(isset($columns[$k])) {
 				array_push($build, $this->formatType($columns[$k], $v));
 				continue;
 			}
-			if($k == 'data'){
+			if($k == 'home_page') {
+				if(!isset($this->logCache['utilities'])) { $this->logCache['utilities'] = new \Utilities; }
+				if(!isset($this->logCache['menu_item_structures'])) { $this->logCache['menu_item_structures'] = $this->logCache['utilities']->getMenuItemStructures(); }
+				array_push($build, $this->formatType(array(
+					'title' => 'Home Page',
+					'type' => 'values',
+					'values' => $this->logCache['menu_item_structures']
+				), $v));
+				continue;
+			}
+			if($k == 'data') {
 				$tmp = '<div class="history-title">Menu Access</div>';
 				$tmp .= '<div class="fks-blockquote">';
 				$build_tmp = array();
 				foreach($v as $ck => $cv) {
 					if(is_array($cv)) {
+						if($cv[1] == null) { $cv[1] = 0; }
 						if($cv[0] == null) {
 							array_push($build_tmp, '<span class="fks-text-info">' . $menu_items[$ck] . '</span> set to <span class="fks-text-success">' . $access_types[$cv[1]] . '</span>.');
-						} else {							
+						} else {
 							array_push($build_tmp, '<span class="fks-text-info">' . $menu_items[$ck] . '</span> changed from <span class="fks-text-success">' . $access_types[$cv[0]] . '</span> to <span class="fks-text-success">' . $access_types[$cv[1]] . '</span>.');
 						}
 					} else {
 						array_push($build_tmp, '<span class="fks-text-info">' . $menu_items[$ck] . '</span> set to <span class="fks-text-success">' . $access_types[$cv] . '</span>.');
 					}
+				}
+				if(empty($v)) {
+					array_push($build_tmp, 'Set to none.');
 				}
 				$tmp .= implode('</br>', $build_tmp);
 				$tmp .= '</div>';
@@ -896,24 +929,28 @@ class MemberLog extends MemberLogX {
 	public function parseSiteSettingsModify($out, $log, $simple = false) {
 		$misc = json_decode($log['misc'], true);
 		
+		$site_settings = array();
+		$get = 'SELECT id, title, type, misc FROM fks_site_settings';
+		if(!$this->cacheKeeper($get)) { return __FUNCTION__ . ' - error 1'; }
+		$_ss = $this->logCache['queries'][$get];
+		foreach($_ss as $v) { $site_settings[$v['id']] = $v; }
+		
+		$member_data_types = array();
+		$get = 'SELECT id, constant, title FROM fks_member_data_types';
+		if(!$this->cacheKeeper($get)) { return __FUNCTION__ . ' - error 2'; }
+		$_mdt = $this->logCache['queries'][$get];
+		foreach($_mdt as $v) { $member_data_types[$v['constant']] = $v['title']; }
+		
 		$access_groups = array();
 		$get = 'SELECT * FROM fks_access_groups';
-		if(!$this->cacheKeeper($get)) { return __FUNCTION__ . ' - error 1'; }
+		if(!$this->cacheKeeper($get)) { return __FUNCTION__ . ' - error 3'; }
 		$access_groups = $this->logCache['queries'][$get];
 		foreach($access_groups as $k => $v) { $access_groups[$k] = $v['title']; }
 		$access_groups[0] = '<i>none</i>';
 		
-		$site_settings = array();
-		$get = 'SELECT id, title, type FROM fks_site_settings';
-		if(!$this->cacheKeeper($get)) { return __FUNCTION__ . ' - error 2'; }
-		$_ss = $this->logCache['queries'][$get];
-		foreach($_ss as $v) {
-			$site_settings[$v['id']] = $v;
-		}
-		
 		$menu_items = array();
 		$get = 'SELECT id, parent_id, url FROM fks_menu_items';
-		if(!$this->cacheKeeper($get)) { return __FUNCTION__ . ' - error 3'; }
+		if(!$this->cacheKeeper($get)) { return __FUNCTION__ . ' - error 4'; }
 		$_mi = $this->logCache['queries'][$get];
 		$menu_items[0] = '<i>none</i>';
 		
@@ -959,15 +996,31 @@ class MemberLog extends MemberLogX {
 			);
 			
 			switch($_setting['type']) {
-				case 'bool':
-					$_part['type'] = 'bool';
-					$_part['values'] = array(
-						0 => 'Disabled',
-						1 => 'Enabled'
-					);
-					break;
+				case 'select':
+					$_misc = json_decode($_setting['misc'], true);
+					$_options = array();
 					
-				case 'number':
+					if(array_key_exists('options', $_misc) && is_array($_misc['options'])) {
+						foreach($_misc['options'] as $o) {
+							if(is_array($o)) {
+								if(array_key_exists('value', $o)) {
+									$_options[$o['value']] = $o['title'];
+								} else {
+									$_options[$o['title']] = $o['title'];
+								}
+							} else {
+								$_options[$o] = $o;
+							}
+						}
+					}
+				
+					if(in_array($k, array(
+						'ALLOWED_TIME_ZONES',
+						'REMOTE_DATABASE',
+					))) {
+						break;
+					}
+					
 					if(in_array($k, array(
 						'DEFAULT_ACCESS_GUEST',
 						'DEFAULT_ACCESS_LDAP',
@@ -975,10 +1028,20 @@ class MemberLog extends MemberLogX {
 					))) {
 						$_part['type'] = 'csv';
 						$_part['values'] = $access_groups;
+						break;
 					}
+					
+					if($k == 'SITE_HOME_PAGE') {
+						$_part['type'] = 'values';
+						$_part['values'] = $menu_items;
+						break;
+					}
+					
+					$_part['type'] = 'values';
+					$_part['values'] = $_options;
 					break;
 					
-				case 'div':
+				case 'summernote':
 					$_part['type'] = 'code';
 					break;
 					
@@ -990,9 +1053,43 @@ class MemberLog extends MemberLogX {
 					$_skip = true;
 					break;
 					
-				case 'web_page':
-					$_part['type'] = 'values';
-					$_part['values'] = $menu_items;
+				case 'textarea':
+					if(in_array($k, array(
+						'SITE_LOGO_LOGIN',
+						'SITE_LOGO_MAIN'
+					))) {
+						$_part['type'] = 'code';
+					}
+					break;
+					
+				case 'json':
+					if($k == 'AD_ATTRIBUTES') {
+						$tmp = '<div class="history-title">' . $_setting['title'] . '</div>';
+						$tmp .= '<div class="fks-blockquote">';
+						$build_tmp = array();
+						foreach($v as $ck => $cv) {
+							if(is_array($cv)) {
+								if($cv[0] == null) {
+									array_push($build_tmp, '<span class="fks-text-info">' . $member_data_types[$ck] . '</span> set to <span class="fks-text-success">' . $cv[1] . '</span>.');
+								} else {
+									if($cv[1] == null) {
+										array_push($build_tmp, '<span class="fks-text-info">' . $member_data_types[$ck] . '</span> changed from <span class="fks-text-success">' . $cv[0] . '</span> to none. <span class="fks-text-danger">(removed)</span>');
+									} else {
+										array_push($build_tmp, '<span class="fks-text-info">' . $member_data_types[$ck] . '</span> changed from <span class="fks-text-success">' . $cv[0] . '</span> to <span class="fks-text-success">' . $cv[1] . '</span>.');
+									}
+								}
+							} else {
+								array_push($build_tmp, '<span class="fks-text-info">' . $member_data_types[$ck] . '</span> set to <span class="fks-text-success">' . $cv . '</span>.');
+							}
+						}
+						if(empty($v)) {
+							array_push($build_tmp, 'Set to none.');
+						}
+						$tmp .= implode('</br>', $build_tmp);
+						$tmp .= '</div>';
+						array_push($build, $tmp);
+						$_skip = true;
+					}
 					break;
 			}
 			

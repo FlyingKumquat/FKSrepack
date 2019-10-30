@@ -84,6 +84,7 @@ define([
 			'language': {
 				'emptyTable': tables[0].empty
 			},
+			'dom': fks.data_table_dom,
 			'iDisplayLength': 15,
 			'lengthMenu': [[15, 25, 50, 100, -1], [15, 25, 50, 100, 'All']],
 			'order': [[0, 'asc']],
@@ -133,12 +134,11 @@ define([
 		if(!id){ var id = '+'; }
 		fks.editModal({
 			src: page.src,
-			wait: true,
 			action: 'editAnnouncement', 
 			action_data: id,
 			callbacks: {
 				onOpen: function() {
-					fks.multiSelect('#pages', {
+					fks.multiSelect('[name="pages"]', {
 						selectableHeader: {text: 'Selectable Pages', style: true},
 						selectionHeader: {text: 'Selected Pages', style: true},
 						selectableFooter: '<button type="button" class="btn btn-block btn-sm fks-btn-success">Select All</button>',
@@ -148,7 +148,7 @@ define([
 						height: 312
 					});
 					
-					fks.multiSelect('#access_groups', {
+					fks.multiSelect('[name="access_groups"]', {
 						selectableHeader: {text: 'Selectable Groups', style: true},
 						selectionHeader: {text: 'Selected Groups', style: true},
 						selectableFooter: '<button type="button" class="btn btn-block btn-sm fks-btn-success">Select All</button>',
@@ -158,7 +158,7 @@ define([
 						height: 312
 					});
 					
-					fks.summernote('#announcement', {
+					fks.summernote('[name="announcement"]', {
 						height: 200,
 						minHeight: 100,
 						maxHeight: 500,
@@ -181,20 +181,6 @@ define([
 							indentWithTabs: true,
 							indentUnit: 4
 						}
-					});
-					
-					$('#page_selection').on('change', function() {
-						if($('#page_selection').val() == 'some') {
-							$('#pages_multi_select').show();
-						} else {
-							$('#pages_multi_select').hide();
-						}
-					});
-					
-					$('#editAnnouncementForm').bind('reset:after', function() {
-						$('#pages').multiSelect('refresh');
-						$('#access_groups').multiSelect('refresh');
-						$('#announcement').summernote('reset');
 					});
 					
 					$('#editAnnouncementForm').submit(function() {

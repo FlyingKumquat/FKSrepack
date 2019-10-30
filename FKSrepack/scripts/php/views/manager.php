@@ -20,13 +20,11 @@ class Manager extends CoreFunctions {
 	public function __construct() {
 		parent::__construct();
 
-		// Check fks and site versions
+		// Check site versions
 		if(isset($_SESSION['site_settings'])) {
-			$fks_version_session = $this->siteSettings('FKS_VERSION');
 			$site_version_session = $this->siteSettings('SITE_VERSION');
-			$fks_version_database = $this->siteSettings('FKS_VERSION', true);
 			$site_version_database = $this->siteSettings('SITE_VERSION', true);
-			if(($fks_version_session != $fks_version_database) || ($site_version_session != $site_version_database)) {
+			if($site_version_session != $site_version_database) {
 				$this->Session->destroy();
 			}
 		}

@@ -8,7 +8,7 @@
 		<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 		<meta name="description" content="">
 		<meta name="author" content="FKSrepack">
-		<link rel="icon" href="img/favicon.ico">
+		<link rel="icon" href="<?=(empty($Manager->siteSettings('SITE_FAVICON_URL')) ? 'img/_favicon.ico' : $Manager->siteSettings('SITE_FAVICON_URL'))?>">
 
 		<title><?=$Manager->siteSettings('SITE_TITLE')?> : Login</title>
 
@@ -18,65 +18,104 @@
 		<link href="scripts/js/plugins/iCheck/skins/minimal/_all.css" rel="stylesheet">
 		<link href="scripts/js/plugins/fks/fks.css" rel="stylesheet">
 		
-		<link href="scripts/css/themes/black.css" rel="stylesheet">
+		<?PHP if(is_file(__DIR__ . '/scripts/css/autoloader.css')) { echo '<link href="scripts/css/autoloader.css" rel="stylesheet">';} ?>
 	</head>
 
 	<body class="fks-login">
 		<div class="row justify-content-center title">
-			<img src="img/favicon.ico" /><span><b>FKS</b>repack</span>
+			<?PHP
+				if(empty($Manager->siteSettings('SITE_LOGO_LOGIN'))) {
+					echo '<img src="img/_favicon.ico" /><span><b>FKS</b>repack</span>';
+				} else {
+					echo $Manager->siteSettings('SITE_LOGO_LOGIN');
+				}
+			?>
 		</div>
 		<div class="row justify-content-center">
-			<div class="col-md-6">
-				<!------- Login Panel ------->
+			<div class="col-lg-6">
+				<!------- Account Login Panel ------->
 				<div class="fks-panel login">
 					<div class="header">
 						<span class="title">
 							Account Login
 						</span>
 					</div>
-					<div class="body">
-						<form id="login_form" action="javascript:void(0);">
-							<div class="alert fks-alert-danger" role="alert"></div>
-							<div class="alert fks-alert-info" role="alert"></div>
-							<div class="alert fks-alert-success" role="alert"></div>
-							<button type="submit" style="display: none;"></button>
-							<div class="form-group row">
-								<label for="username" class="col-3 form-control-label">Username</label>
-								<div class="col-9">
-									<input type="text" class="form-control form-control-sm" id="username" name="username" placeholder="Username">
+					<div class="body" style="padding-bottom: 0px;">
+						<?PHP
+							$login_inputs = array(
+								'username' => array(
+									'title' => 'Username',
+									'type' => 'text',
+									'name' => 'username',
+									'attributes' => array(
+										'placeholder' => 'Username'
+									)
+								),
+								'password' => array(
+									'title' => 'Password',
+									'type' => 'password',
+									'name' => 'password',
+									'attributes' => array(
+										'placeholder' => 'Password'
+									)
+								),
+								'verify_code' => array(
+									'title' => 'Verify Code',
+									'type' => 'text',
+									'name' => 'verify_code',
+									'attributes' => array(
+										'placeholder' => '1234'
+									)
+								),
+								'selector' => array(
+									'title' => 'Account Type',
+									'type' => 'select',
+									'name' => 'selector',
+									'options' => array(
+										array('title' => 'Automatic (Default)', 'value' => 'default'),
+										array('title' => 'Active Directory', 'value' => 'ldap'),
+										array('title' => 'Local', 'value' => 'local')
+									)
+								)
+							);
+						
+							$login_form = '
+								<div class="alert fks-alert-danger" role="alert"></div>
+								<div class="alert fks-alert-info" role="alert"></div>
+								<div class="alert fks-alert-success" role="alert"></div>
+								<button type="submit" style="display: none;"></button>
+								<div class="row">
+									<div class="col-md-12">
+										' . $Manager->buildFormGroup($login_inputs['username']) . '
+									</div>
 								</div>
-							</div>
-							<div class="form-group row">
-								<label for="password" class="col-3 form-control-label">Password</label>
-								<div class="col-9">
-									<input type="password" class="form-control form-control-sm" id="password" name="password" placeholder="Password">
+								<div class="row">
+									<div class="col-md-12">
+										' . $Manager->buildFormGroup($login_inputs['password']) . '
+									</div>
 								</div>
-							</div>
-							<div class="form-group row verify-code" style="display:none;">
-								<label for="verify_code" class="col-3 form-control-label">Verify Code</label>
-								<div class="col-9">
-									<input type="number" class="form-control form-control-sm" id="verify_code" name="verify_code" placeholder="1234">
+								<div class="row verify-code" style="display: none;">
+									<div class="col-md-12">
+										' . $Manager->buildFormGroup($login_inputs['verify_code']) . '
+									</div>
 								</div>
-							</div>
-							<?PHP
-								if($Manager->siteSettings('AD_LOGIN_SELECTOR') == 1) {
-								//if($Manager->siteSettings('AD_LOGIN_SELECTOR') == 1 && $Manager->siteSettings('AD_FAILOVER') == 1) {
-									echo '<div class="form-group row">
-										<label for="selector" class="col-3 form-control-label">Account Type</label>
-										<div class="col-9">
-											<select class="form-control form-control-sm" id="selector" name="selector">
-												<option value="default">Automatic (Default)</option>
-												<option value="ldap">Active Directory</option>
-												<option value="local">Local</option>
-											</select>
+							';
+							
+							if($Manager->siteSettings('AD_LOGIN_SELECTOR') == 1) {
+								$login_form .= '
+									<div class="row">
+										<div class="col-md-12">
+											' . $Manager->buildFormGroup($login_inputs['selector']) . '
 										</div>
-									</div>';	
-								}
-							?>
-						</form>
+									</div>
+								';	
+							}
+							
+							echo '<form id="login_form" class="fks-form" action="javascript:void(0);">' . $login_form . '</form>';
+						?>
 					</div>
 					<div class="footer">
-						<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#login_form"><i class="fa fa-sign-in fa-fw"></i> Login</button>
+						<button class="btn fks-btn-success" fks-action="submitForm" fks-target="#login_form"><i class="fa fa-sign-in fa-fw"></i> Login</button>
 						<?PHP
 							if($Manager->siteSettings('MEMBER_REGISTRATION') == 0) {
 								if($Manager->siteSettings('FORGOT_PASSWORD') == 1) {
@@ -89,115 +128,186 @@
 						
 					</div>
 				</div>
-				
-				<!------- Registration Panel ------->
-				<?PHP if($Manager->siteSettings('MEMBER_REGISTRATION') == 0) { goto skipRegistration; } ?>
+
+				<?PHP if($Manager->siteSettings('MEMBER_REGISTRATION') == 0) { goto skipMemberRegistration; } ?>
+				<!------- Member Registration Panel ------->
 				<div class="fks-panel register" style="display: none;">
 					<div class="header">
 						<span class="title">
 							Account Registration
 						</span>
 					</div>
-					<div class="body">
-						<form id="register_form" action="javascript:void(0);">
-							<div class="alert fks-alert-danger" role="alert"></div>
-							<button type="submit" style="display: none;"></button>
-							<div class="form-group row">
-								<label for="username_register" class="col-3 form-control-label">Username</label>
-								<div class="col-9">
-									<input type="text" class="form-control form-control-sm" id="username_register" name="username_register" placeholder="Username">
-									<div class="form-control-feedback" style="display: none;"></div>
+					<div class="body" style="padding-bottom: 0px;">
+						<?PHP
+							$register_inputs = array(
+								'username' => array(
+									'title' => 'Username',
+									'type' => 'text',
+									'name' => 'username_register',
+									'required' => true,
+									'attributes' => array(
+										'placeholder' => 'Username'
+									)
+								),
+								'email' => array(
+									'title' => 'Email',
+									'type' => 'email',
+									'name' => 'email_register',
+									'required' => $Manager->siteSettings('EMAIL_VERIFICATION') == 1,
+									'attributes' => array(
+										'placeholder' => 'Email'
+									)
+								),
+								'password' => array(
+									'title' => 'Password',
+									'type' => 'password',
+									'name' => 'password_register',
+									'required' => true,
+									'attributes' => array(
+										'placeholder' => 'Password'
+									)
+								),
+								'repeat_password' => array(
+									'title' => 'Repeat Password',
+									'type' => 'password',
+									'name' => 'repeat_password_register',
+									'required' => true,
+									'attributes' => array(
+										'placeholder' => 'Repeat Password'
+									)
+								)
+							);
+							
+							$register_form = '
+								<div class="alert fks-alert-danger" role="alert"></div>
+								<button type="submit" style="display: none;"></button>
+								<div class="row">
+									<div class="col-md-12">
+										' . $Manager->buildFormGroup($register_inputs['username']) . '
+									</div>
 								</div>
-							</div>
-							<div class="form-group row">
-								<label for="email_register" class="col-3 form-control-label">Email</label>
-								<div class="col-9">
-									<input type="email" class="form-control form-control-sm" id="email_register" name="email_register" placeholder="Email">
-									<div class="form-control-feedback" style="display: none;"></div>
+								<div class="row">
+									<div class="col-md-12">
+										' . $Manager->buildFormGroup($register_inputs['email']) . '
+									</div>
 								</div>
-							</div>
-							<div class="form-group row">
-								<label for="password_register" class="col-3 form-control-label">Password</label>
-								<div class="col-9">
-									<input type="password" class="form-control form-control-sm" id="password_register" name="password_register" placeholder="Password">
-									<div class="form-control-feedback" style="display: none;"></div>
+								<div class="row">
+									<div class="col-md-12">
+										' . $Manager->buildFormGroup($register_inputs['password']) . '
+									</div>
 								</div>
-							</div>
-							<div class="form-group row">
-								<label for="repeat_password_register" class="col-3 form-control-label">Repeat</label>
-								<div class="col-9">
-									<input type="password" class="form-control form-control-sm" id="repeat_password_register" name="repeat_password_register" placeholder="Repeat Password">
-									<div class="form-control-feedback" style="display: none;"></div>
+								<div class="row">
+									<div class="col-md-12">
+										' . $Manager->buildFormGroup($register_inputs['repeat_password']) . '
+									</div>
 								</div>
-							</div>
-							<?PHP if($Manager->siteSettings('CAPTCHA') == 0) { goto skipCaptcha; } ?>
-							<div class="form-group row">
-								<script src='https://www.google.com/recaptcha/api.js'></script>
-								<label for="g-recaptcha-response" class="col-3 form-control-label">Captcha</label>
-								<div class="col-9">
-									<div class="g-recaptcha" data-sitekey="<?=$Manager->siteSettings('CAPTCHA_PUBLIC')?>"></div>
-									<div class="form-control-feedback" style="display: none;"></div>
-								</div>
-							</div>
-							<?PHP skipCaptcha: ?>
-						</form>
+							';
+							
+							if($Manager->siteSettings('CAPTCHA') == 1) {
+								$register_form .= '
+									<div class="row">
+										<div class="col-md-12">
+											<div class="form-group">
+												<script src="https://www.google.com/recaptcha/api.js"></script>
+												<label for="g-recaptcha-response" class="form-control-label">Captcha</label>
+												<div class="col-12">
+													<div class="g-recaptcha" data-sitekey="' . $Manager->siteSettings('CAPTCHA_PUBLIC') . '"></div>
+													<div class="form-control-feedback"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+								';	
+							}
+							
+							echo '<form id="register_form" class="fks-form" action="javascript:void(0);">' . $register_form . '</form>';
+						?>
 					</div>
 					<div class="footer">
-						<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#register_form"><i class="fa fa-edit fa-fw"></i> Register</button>
+						<button class="btn fks-btn-success" fks-action="submitForm" fks-target="#register_form"><i class="fa fa-edit fa-fw"></i> Register</button>
 						<small><a href="javascript:void(0);" fks-action="toggle-forms" fks-target="login">Login</a></small>
 					</div>
 				</div>
-				<?PHP skipRegistration: ?>
+				<?PHP skipMemberRegistration: ?>
 				
-				<!------- Forgot Panel ------->
+				<?PHP if($Manager->siteSettings('FORGOT_PASSWORD') == 0) { goto skipForgotPassword; } ?>
+				<!------- Forgot Password Panel ------->
 				<div class="fks-panel forgot" style="display: none;">
 					<div class="header">
 						<span class="title">
 							Forgot Password
 						</span>
 					</div>
-					<div class="body">
-						<form id="forgot_form" action="javascript:void(0);">
-							<div class="alert fks-alert-danger" role="alert"></div>
-							<button type="submit" style="display: none;"></button>
-							<div class="form-group row">
-								<label for="email_forgot" class="col-3 form-control-label">Email</label>
-								<div class="col-9">
-									<input type="email" class="form-control form-control-sm" id="email_forgot" name="email_forgot" placeholder="Email">
-									<div class="form-control-feedback" style="display: none;"></div>
+					<div class="body" style="padding-bottom: 0px;">
+						<?PHP
+							$forgot_inputs = array(
+								'email' => array(
+									'title' => 'Email',
+									'type' => 'email',
+									'name' => 'email_register',
+									'attributes' => array(
+										'placeholder' => 'Username'
+									)
+								)
+							);
+							
+							$forgot_form = '
+								<div class="alert fks-alert-danger" role="alert"></div>
+								<button type="submit" style="display: none;"></button>
+								<div class="row">
+									<div class="col-md-12">
+										' . $Manager->buildFormGroup($forgot_inputs['email']) . '
+									</div>
 								</div>
-							</div>
-						</form>
+							';
+							
+							echo '<form id="forgot_form" class="fks-form" action="javascript:void(0);">' . $forgot_form . '</form>';
+						?>
 					</div>
 					<div class="footer">
-						<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#forgot_form"><i class="fa fa-undo fa-fw"></i> Reset</button>
+						<button class="btn fks-btn-success" fks-action="submitForm" fks-target="#forgot_form"><i class="fa fa-undo fa-fw"></i> Reset</button>
 						<small><a href="javascript:void(0);" fks-action="toggle-forms" fks-target="login">Login</a></small>
 					</div>
 				</div>
+				<?PHP skipForgotPassword: ?>
 				
-				<!------- Verification Panel ------->
+				<!------- Add Email Panel ------->
 				<div class="fks-panel add-email" style="display: none;">
 					<div class="header">
 						<span class="title">
 							Add Email Address
 						</span>
 					</div>
-					<div class="body">
-						<form id="email_form" action="javascript:void(0);">
-							<div class="alert fks-alert-danger" role="alert"></div>
-							<div class="alert fks-alert-info" role="alert"></div>
-							<button type="submit" style="display: none;"></button>
-							<div class="form-group row">
-								<label for="email_add" class="col-3 form-control-label">Email</label>
-								<div class="col-9">
-									<input type="email" class="form-control form-control-sm" id="email_add" name="email" placeholder="Email">
-									<div class="form-control-feedback" style="display: none;"></div>
+					<div class="body" style="padding-bottom: 0px;">
+						<?PHP
+							$email_inputs = array(
+								'email' => array(
+									'title' => 'Email',
+									'type' => 'email',
+									'name' => 'email',
+									'attributes' => array(
+										'id' => 'email_add',
+										'placeholder' => 'Username'
+									)
+								)
+							);
+							
+							$email_form = '
+								<div class="alert fks-alert-danger" role="alert"></div>
+								<div class="alert fks-alert-info" role="alert"></div>
+								<button type="submit" style="display: none;"></button>
+								<div class="row">
+									<div class="col-md-12">
+										' . $Manager->buildFormGroup($email_inputs['email']) . '
+									</div>
 								</div>
-							</div>
-						</form>
+							';
+							
+							echo '<form id="email_form" class="fks-form" action="javascript:void(0);">' . $email_form . '</form>';
+						?>
 					</div>
 					<div class="footer">
-						<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#email_form"><i class="fa fa-plus fa-fw"></i> Add</button>
+						<button class="btn fks-btn-success" fks-action="submitForm" fks-target="#email_form"><i class="fa fa-plus fa-fw"></i> Add</button>
 					</div>
 				</div>
 			</div>
@@ -209,11 +319,13 @@
 			$(document).ready(function() {
 				fks.submitForm();
 				
-				fks.debug.ajax = false;
+				fks.debug.ajax = true;
 				
 				$('[fks-action="toggle-forms"]').on('click', function() {
 					togglePanels($(this).attr('fks-target'));
 				});
+				
+				$('#login_form [name="username"]').focus();
 				
 				// ---------- Login Form ---------- //
 				$('#login_form').on('submit', function() {
@@ -225,10 +337,21 @@
 					fks.block( form.parents('.fks-panel') );
 					$.post(fks.handler, {wait: true, action: 'accountLogin', data: data})
 					.done(function(data) {
-						if(fks.debug.ajax) { console.log(data); }
-						try { var response = JSON.parse(data); } catch(e) { $('#login_form .fks-alert-danger').html('Server error!'); return; }
+						// Catch server errors
+						try {
+							var response = JSON.parse(data);
+							if(fks.debug.ajax) { console.log(response); }
+						} catch(e) {
+							if(fks.debug.ajax) { console.log(data); }
+							$('#login_form .fks-alert-danger').html('Server error!');
+							return;
+						}
 						switch(response.result) {
 							case 'success':
+								if(response.alerts.length > 0) {
+									localStorage.setItem('alerts', JSON.stringify(response.alerts));
+								}
+								
 								window.location = '/' + window.location.hash;
 								break;
 								
@@ -266,8 +389,15 @@
 					fks.block( form.parents('.fks-panel') );
 					$.post(fks.handler, {wait: true, action: 'accountAddEmail', data: data})
 					.done(function(data) {
-						if(fks.debug.ajax) { console.log(data); }
-						try { var response = JSON.parse(data); } catch(e) { $('#email_form .fks-alert-danger').html('Server error!'); return; }
+						// Catch server errors
+						try {
+							var response = JSON.parse(data);
+							if(fks.debug.ajax) { console.log(response); }
+						} catch(e) {
+							if(fks.debug.ajax) { console.log(data); }
+							$('#email_form .fks-alert-danger').html('Server error!');
+							return;
+						}
 						switch(response.result) {
 							case 'success':
 								togglePanels('login');
@@ -310,8 +440,15 @@
 					fks.block( form.parents('.fks-panel') );
 					$.post(fks.handler, {wait: true, action: 'accountRegister', data: data})
 					.done(function(data) {
-						if(fks.debug.ajax) { console.log(data); }
-						try { var response = JSON.parse(data); } catch(e) { $('#register_form .fks-alert-danger').html('Server error!'); return; }
+						// Catch server errors
+						try {
+							var response = JSON.parse(data);
+							if(fks.debug.ajax) { console.log(response); }
+						} catch(e) {
+							if(fks.debug.ajax) { console.log(data); }
+							$('#register_form .fks-alert-danger').html('Server error!');
+							return;
+						}
 						switch(response.result) {
 							case 'success':
 								togglePanels('login');
@@ -353,8 +490,15 @@
 					fks.block( form.parents('.fks-panel') );
 					$.post(fks.handler, {wait: true, action: 'forgotPassword', data: data})
 					.done(function(data) {
-						if(fks.debug.ajax) { console.log(data); }
-						try { var response = JSON.parse(data); } catch(e) { form.children('.alert').html('Server error!'); return; }
+						// Catch server errors
+						try {
+							var response = JSON.parse(data);
+							if(fks.debug.ajax) { console.log(response); }
+						} catch(e) {
+							if(fks.debug.ajax) { console.log(data); }
+							form.children('.alert').html('Server error!');
+							return;
+						}
 						switch(response.result) {
 							case 'success':
 								togglePanels('login');
@@ -395,6 +539,8 @@
 				} else {
 					$('.fks-panel.login').show();
 				}
+				
+				$('.fks-panel.' + panel_id + ' [name]:visible:first').focus();
 			}
 		</script>
 	</body>

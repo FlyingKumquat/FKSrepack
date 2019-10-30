@@ -145,10 +145,10 @@ class PageFunctions extends CoreFunctions {
 				'title' => 'View Error',
 				'size' => 'lg',
 				'body' => $body,
-				'footer' => '<div class="btn-container" style="width:100%">'
-					. '<div class="btn-left"><button class="btn fks-btn-danger btn-sm" fks-action="submitForm" fks-target="#modalForm"><i class="fa fa-trash fa-fw"></i> Delete</button></div>'
-					. '<div class="btn-right"><button class="btn fks-btn-signature btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> Close</button></div>'
-				. '</div>'
+				'footer' => array(
+					'<button class="btn fks-btn-warning btn-sm" fks-action="submitForm" fks-target="#modalForm"><i class="fa fa-trash fa-fw"></i> Delete</button>',
+					'<button class="btn fks-btn-danger btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> Close</button>'
+				)
 			)
 		);
 	}

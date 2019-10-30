@@ -1,6 +1,10 @@
 /***********************************************
-	Updated: 02/27/2019
+	Updated: 10/24/2019
 ***********************************************/
+@charset 'UTF-8';
+@import url(https://fonts.googleapis.com/css?family=Roboto);
+@import 'fks-colors';
+
 $top_nav_height: 40px;
 $side_nav_width: 200px;
 $side_nav_width_collapsed: 45px;
@@ -12,25 +16,11 @@ $universal_grey_light: #eceeef;
 $universal_text_rgba: rgba(0, 0, 0, 0.65);
 $universal_text_disabled_rgba: rgba(0, 0, 0, 0.35);
 
-$fks_colors: (
-	'signature':	#36e3fd,	/*	bright cyan (FKS Signature Color)	*/
-	'dark':			#333333,	/*	dark gray							*/
-	'primary':		#0275d8,	/*	blue								*/
-	'secondary':	#ffffff,	/*	white								*/
-	'info':			#5bc0de,	/*	light-blue							*/
-	'success':		#5cb85c,	/*	green								*/
-	'warning':		#f0ad4e,	/*	yellow								*/
-	'danger':		#d9534f,	/*	red									*/
-	'critical':		#e270c8,	/*	magenta								*/
-);
-
 $fks_text_darker:	darken(map-get($fks_colors, signature), 45%);
 $fks_text_dark:		darken(map-get($fks_colors, signature), 30%);
 $fks_text:			darken(map-get($fks_colors, signature), 15%);
 $fks_text_light:	map-get($fks_colors, signature);
 $fks_text_lighter:	lighten(map-get($fks_colors, signature), 15%);
-
-@import url(https://fonts.googleapis.com/css?family=Roboto);
 
 /*-------------------------------------------------------------------
 	Set FKS Text and Buttons Colors
@@ -41,6 +31,9 @@ $fks_text_lighter:	lighten(map-get($fks_colors, signature), 15%);
 	}
 	.fks-border-#{$k} {
 		border-color: $v !important;
+	}
+	.fks-bg-#{$k} {
+		background-color: $v !important;
 	}
 	.fks-badge-#{$k} {
 		color: #fff !important;
@@ -92,6 +85,46 @@ $fks_text_lighter:	lighten(map-get($fks_colors, signature), 15%);
 		background: lighten($v, 33%);
 		border-color: lighten($v, 25%);
 	}
+	.fks-tab-#{$k} {
+		> a {
+			color: $v !important;
+			&.active {
+				border-color: $v !important;
+			}
+			&:hover:not(.active):not(.disabled) {
+				border-color: rgba($v, 0.2) !important;
+			}
+			&:not(:hover):not(.active):not(.disabled) {
+				border-color: rgba($v, 0.1) !important;
+			}
+			&.disabled {
+				color: rgba($v, 0.35) !important;
+				border-color: rgba($v, 0.35) !important;
+			}
+		}
+	}
+	.fks-card-#{$k} {
+		@if $k == 'secondary' {
+			border-color: darken($v, 20%) !important;
+		} @else {
+			border-color: darken($v, 5%) !important;
+		}
+		> .header {
+			@if $k == 'secondary' {
+				color: #292b2c;
+			} @else {
+				color: #fff;
+			}
+			background: $v !important;
+		}
+		> .body-container > .body {
+			@if $k == 'secondary' {
+				border-color: darken($v, 20%) !important;
+			} @else {
+				border-color: darken($v, 5%) !important;
+			}
+		}
+	}
 }
 
 /*-------------------------------------------------------------------
@@ -112,6 +145,102 @@ $_tmp: (0, 10, 20, 30, 40, 50);
 @for $i from 1 through 10 {
 	th, td {
 		&.icon-#{$i} { width: #{20 + ($i - 1) * 21}px; }
+	}
+}
+
+/*-------------------------------------------------------------------
+	FKS Card
+-------------------------------------------------------------------*/
+.fks-card {
+	border: 1px solid;
+	border-color: #dfdfdf;
+	background: white;
+	> .header {
+		padding: 10px;
+		background: #f6f6f6;
+		> .title {
+			font-size: 16px;
+			font-weight: bold;
+		}
+	}
+	> .body-container > .body {
+		border-top: 1px solid;
+		border-color: #dfdfdf;
+		padding: 10px;
+		padding-bottom: 0px;
+	}
+}
+
+/*-------------------------------------------------------------------
+	FKS List Group
+-------------------------------------------------------------------*/
+ul.fks-list-group {
+	padding: 0px;
+	margin-bottom: 10px;
+	li.list-group-item {
+		padding: 0px 0px 0px 0.75rem;
+		height: 38px;
+		max-height: 38px;
+		min-height: 38px;
+		line-height: 38px;
+		font-size: 1rem;
+		position: relative;
+		border-color: #dfdfdf;
+		.actions {
+			display: inline-flex;
+			position: absolute;
+			right: 0px;
+			top: 0px;
+			.btn {
+				padding: 0px;
+				width: 30px;
+				height: 30px;
+				font-size: 1rem;
+				margin-right: 3px;
+				margin-top: 3px;
+			}
+		}
+		&:hover {
+			background-color: rgba(0, 0, 0, 0.075);
+		}
+	}
+	&.fks-list-group-sm {
+		li.list-group-item {
+			padding-left: 0.5rem;
+			height: 27px;
+			max-height: 27px;
+			min-height: 27px;
+			line-height: 27px;
+			font-size: 0.875rem;
+			.actions {
+				.btn {
+					width: 21px;
+					height: 21px;
+					font-size: 0.875rem;
+					margin-right: 2px;
+					margin-top: 2px;
+				}
+			}
+		}
+	}
+	&.fks-list-group-lg {
+		li.list-group-item {
+			padding-left: 1.5rem;
+			height: 51px;
+			max-height: 51px;
+			min-height: 51px;
+			line-height: 51px;
+			font-size: 1.25rem;
+			.actions {
+				.btn {
+					width: 41px;
+					height: 41px;
+					font-size: 1.25rem;
+					margin-right: 4px;
+					margin-top: 4px;
+				}
+			}
+		}
 	}
 }
 
@@ -195,6 +324,10 @@ h1, h2, h3, h4, h5, h6 {
 
 body {
 	overflow: hidden;
+}
+
+.dropdown-menu {
+	z-index: 2000;
 }
 
 /*-------------------------------------------------------------------
@@ -327,7 +460,7 @@ input, select {
 						font-size: 14px;
 						font-family: FontAwesome;
 						height: auto;
-						content: "\f107";
+						content: "\f104";
 						font-weight: 300;
 						text-shadow: none;
 					}
@@ -365,11 +498,21 @@ input, select {
 						&.active {
 							background: rgba(255, 255, 255, 0.1);
 						}
-						&:hover:not(.active) {
+						&:hover:not(.active):not(.open)  {
 							background: rgba(255, 255, 255, 0.1);
 						}
 						&:first-child {
 							margin-top: 0px;
+						}
+						&.open {
+							> a > .arrow:before {
+								content: "\f107";
+							}
+							> .sub-menu {
+								display: block;
+								overflow: visible;
+							}
+							background: rgba(255, 255, 255, 0.05);
 						}
 					}
 					&.notifier-content {
@@ -428,10 +571,9 @@ input, select {
 					}
 				}
 				&.active {
-					> a {
-						color: white;
-					}
 					background: #353535;
+					border-top: 1px solid $fks_text_lighter;
+					margin-top: 0px;
 				}
 				&:hover:not(.open):not(.active) {
 					background: rgba(255, 255, 255, 0.05);
@@ -441,6 +583,13 @@ input, select {
 					line-height: $top_nav_height;
 					background: #353535;
 					border-color: #191919;
+					> a > .arrow:before {
+						content: "\f107";
+					}
+					&.active {
+						border-top: 1px solid $fks_text_lighter;
+						line-height: $top_nav_height - 1px;
+					}
 					> .sub-menu {
 						display: block;
 						overflow: visible;
@@ -571,7 +720,6 @@ input, select {
 			}
 			> .nav-item.active > a {
 				border-color: $fks_text_lighter;
-				color: rgba(255, 255, 255, 1);
 			}
 			.sub-menu .nav-item.selected > a .selected {
 				display: block;
@@ -584,6 +732,12 @@ input, select {
 				border-right: 8px solid $fks_text_lighter;
 			}
 		}
+	}
+}
+
+#top_nav, #side_nav {
+	[fks-menu] > .nav-list .nav-item.active > a {
+		color: white;
 	}
 }
 
@@ -835,7 +989,7 @@ body.collapsed {
 	#top_nav {
 		> .site-logo {
 			> span {
-				display: none;
+				display: none !important;
 			}
 		}
 		> .actions {
@@ -1323,8 +1477,14 @@ fieldset {
 .input-group-sm > .input-group-addon,
 .input-group-sm > .input-group-btn > .btn {
 	font-size: .875rem;
-	padding: .25rem .5rem;
+	padding: .25rem;
 	min-height: 27px;
+	&:not(select) {
+		padding: .25rem .5rem;
+	}
+	&[multiple] {
+		padding: .36rem;
+	}
 	&:not([multiple]):not(textarea)	{
 		height: 27px !important;
 		max-height: 27px;
@@ -1336,8 +1496,14 @@ fieldset {
 .input-group-md > .input-group-addon,
 .input-group-md > .input-group-btn > .btn {
 	font-size: 1rem;
-	padding: .5rem .75rem;
+	padding: .5rem;
 	min-height: 38px;
+	&:not(select) {
+		padding: .5rem .75rem;
+	}
+	&[multiple] {
+		padding: .61rem;
+	}
 	&:not([multiple]):not(textarea) {
 		height: 38px !important;
 		max-height: 38px;
@@ -1349,8 +1515,14 @@ fieldset {
 .input-group-lg > .input-group-addon,
 .input-group-lg > .input-group-btn > .btn {
 	font-size: 1.25rem;
-	padding: .75rem 1.5rem;
+	padding: .75rem;
 	min-height: 51px;
+	&:not(select) {
+		padding: .75rem 1.5rem;
+	}
+	&[multiple] {
+		padding: 1.36rem;
+	}
 	&:not([multiple]):not(textarea) {
 		height: 51px !important;
 		max-height: 51px;
@@ -1375,6 +1547,30 @@ fieldset {
 	}
 }
 
+.form-radio {
+	display: block;
+	line-height: 36px;
+	font-weight: bold;
+	padding: 0px .75rem;
+	margin-bottom: 0px;
+	border: 1px solid #dfdfdf;
+	cursor: pointer;
+	.iradio_minimal {
+		margin-top: -1px;
+		margin-right: 7px;
+		background-color: white;
+		border-radius: 10px !important;
+	}
+	&:hover {
+		background-color: rgba(0,0,0,0.075);
+	}
+}
+
+.fks-color-preview {
+	width: 38px;
+	cursor: pointer;
+}
+
 /*-------------------------------------------------------------------
 	FKS Custom Form Class
 -------------------------------------------------------------------*/
@@ -1384,33 +1580,47 @@ form.fks-form {
 	.input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon,
 	.input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn {
 		font-size: 1rem;
-		padding: .5rem .75rem;
+		padding: .5rem;
 		min-height: 38px;
+		&:not(select) {
+			padding: .5rem .75rem;
+		}
+		&[multiple] {
+			padding: .61rem;
+		}
 		&:not([multiple]):not(textarea) {
 			height: 38px !important;
 			max-height: 38px;
 		}
 	}
 	
-	
-
 	&.fks-form-sm {
 		.form-control:not(.form-control-md):not(.form-control-lg),
 		.input-group:not(.input-group-md):not(.input-group-lg) > .form-control,
 		.input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon,
 		.input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn {
 			font-size: .875rem;
-			padding: .25rem .5rem;
+			padding: .25rem;
 			min-height: 27px;
+			&:not(select) {
+				padding: .25rem .5rem;
+			}
+			&[multiple] {
+				padding: .36rem;
+			}
 			&:not([multiple]):not(textarea)	{
 				height: 27px !important;
 				max-height: 27px;
 			}
 		}
 		
-		.form-checkbox {
+		.form-checkbox, .form-radio {
 			line-height: 25px;
 			padding: 0px .5rem;
+		}
+		
+		.fks-color-preview {
+			width: 27px;
 		}
 	}
 	
@@ -1420,18 +1630,34 @@ form.fks-form {
 		.input-group:not(.input-group-sm):not(.input-group-md) > .input-group-addon,
 		.input-group:not(.input-group-sm):not(.input-group-md) > .input-group-btn > .btn {
 			font-size: 1.25rem;
-			padding: .75rem 1.5rem;
+			padding: .75rem;
 			min-height: 51px;
+			&:not(select) {
+				padding: .75rem 1.5rem;
+			}
+			&[multiple] {
+				padding: 1.36rem;
+			}
 			&:not([multiple]):not(textarea) {
 				height: 51px !important;
 				max-height: 51px;
 			}
 		}
 		
-		.form-checkbox {
+		.form-checkbox, .form-radio {
 			line-height: 49px;
 			padding: 0px 1.5rem;
 		}
+		
+		.fks-color-preview {
+			width: 51px;
+		}
+	}
+}
+
+.fks-form-description {
+	> i.fa {
+		cursor: pointer;
 	}
 }
 
@@ -1646,6 +1872,31 @@ body.has-panel-fullscreen {
 -------------------------------------------------------------------*/
 .daterangepicker {
 	font-size: 14px;
+	&.dropdown-menu {
+		padding: 5px;
+		.daterangepicker_input {
+			> input {
+				@extend .form-control-sm;
+				padding-left: 1.4rem !important;
+			}
+			> i.fa {
+				top: 6px;
+				left: 6px;
+			}
+		}
+		.ranges {
+			> .range_inputs {
+				> .btn {
+					&.applyBtn {
+						@extend .fks-btn-success;
+					}
+					&.cancelBtn {
+						@extend .fks-btn-danger;
+					}
+				}
+			}
+		}
+	}
 }
 
 /*-------------------------------------------------------------------
@@ -1799,11 +2050,11 @@ body.has-panel-fullscreen {
 			-webkit-text-stroke: 1px black;
 			&.jstree-er:before {
 				content: "\f00d";
-				color: #d9534f;
+				color: map-get($fks_colors, danger);
 			}
 			&.jstree-ok:before {
 				content: "\f00c";
-				color: #5cb85c;
+				color: map-get($fks_colors, success);
 			}
 		}
 	}
@@ -2184,16 +2435,16 @@ table.table {
 				background-color: #fff;
 			}
 			&.progress-success::-webkit-progress-value {
-				background-color: #5cb85c;
+				background-color: map-get($fks_colors, success);
 			}
 			&.progress-info::-webkit-progress-value {
-				background-color: #5bc0de;
+				background-color: map-get($fks_colors, info);
 			}
 			&.progress-warning::-webkit-progress-value {
-				background-color: #f0ad4e;
+				background-color: map-get($fks_colors, warning);
 			}
 			&.progress-danger::-webkit-progress-value {
-				background-color: #d9534f;
+				background-color: map-get($fks_colors, danger);
 			}
 		}
 		div.progress {
@@ -2267,7 +2518,6 @@ table.table {
 				color: $universal_text_rgba;
 				text-align: center;
 				&.active {
-					/*border-color: rgba(0, 0, 0, 0.65);*/
 					border-color: $fks_text;
 					color: rgba(0, 0, 0, 1);
 					&:before {
@@ -2283,7 +2533,6 @@ table.table {
 					}
 				}
 				&:hover:not(.active):not(.disabled) {
-					/*border-color: rgba(0, 0, 0, 0.2);*/
 					border-color: rgba($fks_text_dark, 0.2);
 					color: rgba(0, 0, 0, 0.75);
 				}
@@ -2295,6 +2544,14 @@ table.table {
 		&.no-wrap {
 			> .nav-item {
 				white-space: nowrap;
+			}
+		}
+		&.tabs-fill {
+			width: 100%;
+			> li {
+				-ms-flex: 1 1 auto;
+				flex: 1 1 auto;
+				text-align: center;
 			}
 		}
 	}
@@ -2325,12 +2582,12 @@ table.table {
 			line-height: 35px;
 			border-left: 4px solid transparent;
 			&.active {
-				border-color: rgba(0, 0, 0, 0.65);
+				border-color: $fks_text;
 				background-color: rgba(0, 0, 0, 0.05);
 				color: rgba(0, 0, 0, 1);
 			}
 			&:hover:not(.active):not(.disabled) {
-				border-color: rgba(0, 0, 0, 0.2);
+				border-color: rgba($fks_text_dark, 0.2);
 				background-color: rgba(0, 0, 0, 0.025);
 				color: rgba(0, 0, 0, 0.75);
 			}
@@ -2666,7 +2923,6 @@ table.table {
 			> .actions {
 				.btn {
 					&.panel-collapse {
-						padding-left: 2px;
 						&:before {
 							content: "\f2d0";
 						}
@@ -2737,6 +2993,126 @@ table.table {
 		}
 	}
 }
+/*-------------------------------------------------------------------
+	Calendar Page
+-------------------------------------------------------------------*/
+table.table-calendar {
+	width: 100%;
+	table-layout: fixed;
+	tr {
+		th {
+			text-align: center;
+		}
+		td {
+			border: 1px solid #32383e;
+			height: 120px;
+			position: relative;
+			vertical-align: top;
+			div {
+				&.day {
+					position: absolute;
+					top: 0px;
+					right: 0px;
+					border: 1px solid #32383e;
+					border-top: none;
+					border-right: none;
+					height: 20px;
+					width: 20px;
+					line-height: 20px;
+					text-align: center;
+					font-size: 12px;
+					background: white;
+				}
+			}
+			.event-list {
+				.event {
+					position: relative;
+					font-size: 14px;
+					border: 1px solid #32383e;
+					background: white;
+					padding: 2px;
+					.event-bar {
+						margin: -2px -2px 2px -2px;
+						height: 3px;
+						opacity: 0.75;
+					}
+					.event-title {
+						font-weight: bold;
+					}
+					.event-body {
+						.event-footer {
+							font-size: 12px;
+							font-style: italic;
+						}
+					}
+					&:not(:last-child) {
+						margin-bottom: 5px;
+					}
+					&.hover {
+						background: rgb(245, 245, 245);
+						border: 1px solid black;
+						cursor: pointer;
+						.event-bar {
+							opacity: 1;
+						}
+					}
+				}
+			}
+			&.empty {
+				background: #ccc;
+			}
+			&.today {
+				background: #ccf;
+			}
+		}
+	}
+}
+
+div.list-calendar {
+	> .row:not(:last-child) {
+		margin-bottom: 10px;
+	}
+	div.day {
+		border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+		margin-bottom: 5px;
+		font-weight: bold;
+	}
+	.event-list {
+		padding: 0 5px;
+		.event {
+			position: relative;
+			font-size: 14px;
+			border: 1px solid #32383e;
+			background: white;
+			padding: 5px;
+			.event-bar {
+				margin: -5px -5px 5px -5px;
+				height: 3px;
+				opacity: 0.75;
+			}
+			.event-title {
+				font-weight: bold;
+			}
+			.event-body {
+				.event-footer {
+					font-size: 12px;
+					font-style: italic;
+				}
+			}
+			&:not(:last-child) {
+				margin-bottom: 5px;
+			}
+			&.hover {
+				background: rgb(245, 245, 245);
+				border: 1px solid black;
+				cursor: pointer;
+				.event-bar {
+					opacity: 1;
+				}
+			}
+		}
+	}
+}
 
 /*-------------------------------------------------------------------
 	Login Page
@@ -2774,7 +3150,7 @@ body.fks-login {
 				.footer {
 					text-align: right;
 					> small {
-						line-height: 27px;
+						line-height: 34px;
 						float: left;
 					}
 				}

@@ -122,8 +122,8 @@ class PageFunctions extends CoreFunctions {
 				'body_after' => '</form>',																// Optional - Gets put after the body text, useful for forms
 				'footer' => ''																			// Optional - Footer text. Defaults to a Cancel and Save button
 					. '<button class="btn fks-btn-danger btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> Close</button>'
-					. '<button class="btn fks-btn-warning btn-sm" fks-action="resetForm" fks-target="#blockModalForm"><i class="fa fa-undo fa-fw"></i> Reset</button>'
-					. '<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#blockModalForm"><i class="fa fa-plus fa-fw"></i> Add/Update</button>'
+					. '<button class="btn fks-btn-warning btn-sm" fks-action="resetForm" fks-target="#modalForm"><i class="fa fa-undo fa-fw"></i> Reset</button>'
+					. '<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#modalForm"><i class="fa fa-plus fa-fw"></i> Add/Update</button>'
 			)
 		);
 	}
@@ -178,13 +178,13 @@ class PageFunctions extends CoreFunctions {
 			'parts' => array(
 				'title' => array('<i class="fa fa-cogs"></i> Tab 1', '<i class="fa fa-list"></i> Tab 2'),	// Array of all the tab titles
 				'size' => 'md',
-				'body_before' => '<form id="blockModalForm" role="form" action="javascript:void(0);">',
+				'body_before' => '<form id="modalForm" role="form" action="javascript:void(0);">',
 				'body' => array($body1, $body2),															// Array of all the tab bodies
 				'body_after' => '</form>',
 				'footer' => ''
 					. '<button class="btn fks-btn-danger btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> Close</button>'
-					. '<button class="btn fks-btn-warning btn-sm" fks-action="resetForm" fks-target="#blockModalForm"><i class="fa fa-undo fa-fw"></i> Reset</button>'
-					. '<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#blockModalForm"><i class="fa fa-plus fa-fw"></i> Add/Update</button>'
+					. '<button class="btn fks-btn-warning btn-sm" fks-action="resetForm" fks-target="#modalForm"><i class="fa fa-undo fa-fw"></i> Reset</button>'
+					. '<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#modalForm"><i class="fa fa-plus fa-fw"></i> Add/Update</button>'
 			)
 		);
 	}

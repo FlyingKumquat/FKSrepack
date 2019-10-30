@@ -47,6 +47,11 @@ class PageFunctions extends CoreFunctions {
 		))) {
 			// Format and store rows
 			$data = $this->formatTableRows($Database->r['rows'], $this->access);
+			
+			// Additional formatting
+			foreach($data as &$row) {
+				$row['sticky'] = ($row['sticky'] == 0 ? '<span class="fks-text-danger">No</span>' : '<span class="fks-text-success">Yes</span>');
+			}
 		} else {
 			// Return error message with error code
 			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
@@ -87,8 +92,7 @@ class PageFunctions extends CoreFunctions {
 		// Set vars
 		$readonly = ($this->access == 1);
 		$Database = new \Database();
-		$access_group_options = '';
-		$content_pages_options = '';
+		$content_pages_options = array();
 		$menus = array();
 		$menu_items = array();
 		
@@ -116,19 +120,9 @@ class PageFunctions extends CoreFunctions {
 		
 		// Grab All Access Groups
 		if($Database->Q(array(
-			'assoc' => 'id',
-			'query' => 'SELECT * FROM fks_access_groups WHERE active = 1 AND deleted = 0 ORDER BY title ASC'
+			'query' => 'SELECT id AS value, title FROM fks_access_groups WHERE active = 1 AND deleted = 0 ORDER BY title ASC'
 		))) {
 			$access_groups = $Database->r['rows'];
-			
-			foreach($access_groups as $k => $v) {
-				if(isset($announcement) && in_array($k, explode(',', $announcement['access_groups']))) {
-					$selected = ' selected';
-				} else {
-					$selected = '';
-				}
-				$access_group_options .= '<option value="' . $v['id'] . '"' . $selected . ($readonly ? ' disabled' : '') . '>' . $v['title'] . '</option>';
-			}
 		} else {
 			// Return error message with error code
 			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
@@ -176,119 +170,127 @@ class PageFunctions extends CoreFunctions {
 		// Loop through all menus
 		foreach($menus as $menu) {
 			// Loop though all menu items
-			$menu_content = '';
 			foreach($menu_items as $item) {
 				// Skip if not active or is deleted or doesn't have content or doesn't belong in this menu
 				if($item['active'] == 0 || $item['deleted'] == 1 || $item['has_content'] == 0 || $item['menu_id'] != $menu['id']) { continue; }
-				
-				if(isset($announcement) && in_array($item['id'], explode(',', $announcement['pages']))) {
-					$selected = ' selected';
-				} else {
-					$selected = '';
-				}
-				
-				$menu_content .= '<option value="' . $item['id'] . '"' . $selected . ($readonly ? ' disabled' : '') . '>' . $item['full_url'] . '</option>';
+
+				array_push($content_pages_options, array(
+					'title' => $item['full_url'],
+					'value' => $item['id'],
+					'group' => $menu['title']
+				));
 			}
-			if(!empty($menu_content)) {
-				$content_pages_options .= '<optgroup label="' . $menu['title'] . '">' . $menu_content . '</optgroup>';
+		}
+		
+		// Configure form groups
+		$form_groups = array(
+			'id' => array(
+				'type' => 'hidden',
+				'name' => 'id',
+				'value' => (isset($announcement['id']) ? $announcement['id'] : '+')
+			),
+			'title' => array(
+				'title' => 'Title',
+				'type' => 'text',
+				'name' => 'title',
+				'value' => (isset($announcement['title']) ? $announcement['title'] : ''),
+				'help' => 'The title of this announcement.',
+				'required' => true
+			),
+			'sticky' => array(
+				'title' => 'Sticky',
+				'type' => 'select',
+				'name' => 'sticky',
+				'value' => (isset($announcement['sticky']) ? $announcement['sticky'] : 0),
+				'help' => 'Show this announcement to new members.',
+				'options' => array(
+					array('title' => 'No', 'value' => 0),
+					array('title' => 'Yes', 'value' => 1)
+				)
+			),
+			'active' => array(
+				'title' => 'Status',
+				'type' => 'select',
+				'name' => 'active',
+				'value' => (isset($announcement['active']) ? $announcement['active'] : 1),
+				'help' => 'The status of this announcement.',
+				'options' => array(
+					array('title' => 'Disabled', 'value' => 0),
+					array('title' => 'Active', 'value' => 1)
+				)
+			),
+			'announcement' => array(
+				'title' => 'Body',
+				'type' => 'summernote',
+				'name' => 'announcement',
+				'value' => (isset($announcement['announcement']) ? $announcement['announcement'] : ''),
+				'help' => 'The body of this announcement.',
+				'required' => true
+			),
+			'pages' => array(
+				'title' => 'Content Pages',
+				'type' => 'select',
+				'name' => 'pages',
+				'value' => (isset($announcement['pages']) ? $announcement['pages'] : ''),
+				'help' => 'Select what pages this announcement should show up on. Leave blank for all.',
+				'options' => $content_pages_options,
+				'properties' => array('multiple')
+			),
+			'access_groups' => array(
+				'title' => 'Access Groups',
+				'type' => 'select',
+				'name' => 'access_groups',
+				'value' => (isset($announcement['access_groups']) ? $announcement['access_groups'] : ''),
+				'help' => 'Access Groups to restrict this announcement to. Leave blank for all.',
+				'options' => $access_groups,
+				'properties' => array('multiple')
+			)
+		);
+		
+		// Set inputs to disabled if readonly
+		if($readonly) {
+			foreach($form_groups as &$input) {
+				if(!array_key_exists('properties', $input)) { $input['properties'] = array(); }
+				array_push($input['properties'], 'disabled');
 			}
 		}
 		
 		// Create modal title
-		$title = '<ul class="nav nav-tabs">
-			<li class="nav-item">
-				<a class="nav-link active" data-toggle="tab" href="#modal_tab_1" role="tab" draggable="false"><i class="fa fa-gears fa-fw"></i> Settings</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" data-toggle="tab" href="#modal_tab_2" role="tab" draggable="false"><i class="fa fa-list-ul fa-fw"></i> Page Access</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" data-toggle="tab" href="#modal_tab_3" role="tab" draggable="false"><i class="fa fa-lock fa-fw"></i> Access Groups</a>
-			</li>
-		</ul>';
+		$title = array(
+			'<i class="fa fa-gears fa-fw"></i> Settings',
+			'<i class="fa fa-list-ul fa-fw"></i> Page Access',
+			'<i class="fa fa-lock fa-fw"></i> Access Groups'
+		);
 		
 		// Create modal body
-		$body = '<form id="editAnnouncementForm" role="form" action="javascript:void(0);"><div class="tab-content">
-			<input type="hidden" name="id" value="' . (isset($announcement['id']) ? $announcement['id'] : '+') . '"/>
-			<div class="tab-pane active" id="modal_tab_1" role="tabpanel">
-				<div class="row">
-					<div class="col-md-6">
-						<div class="form-group">
-							<label for="title" class="form-control-label">Title</label>
-							<input type="text" class="form-control form-control-sm" id="title" name="title" aria-describedby="title_help" value="' . (isset($announcement['title']) ? $announcement['title'] : '') . '"' . ($readonly ? ' disabled' : '') . '>
-							<div class="form-control-feedback" style="display: none;"></div>
-							<small id="title_help" class="form-text text-muted">The title of this announcement.</small>
-						</div>
-					</div>
-					<div class="col-md-6">
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-6">
-						<div class="form-group">
-							<label for="sticky" class="form-control-label">Sticky</label>
-							<select class="form-control form-control-sm" id="sticky" name="sticky" aria-describedby="sticky_help"' . ($readonly ? ' disabled' : '') . '>
-								<option value="0"' . ((isset($announcement['sticky']) && $announcement['sticky'] == 0) || !isset($announcement['sticky']) ? ' selected' : '') . '>No</option>
-								<option value="1"' . (isset($announcement['sticky']) && $announcement['sticky'] == 1 ? ' selected' : '') . '>Yes</option>
-							</select>
-							<div class="form-control-feedback" style="display: none;"></div>
-							<small id="sticky_help" class="form-text text-muted">Show this announcement to new members.</small>
-						</div>
-					</div>
-					<div class="col-md-6">
-						<div class="form-group">
-							<label for="active" class="form-control-label">Status</label>
-							<select class="form-control form-control-sm" id="active" name="active" aria-describedby="active_help"' . ($readonly ? ' disabled' : '') . '>
-								<option value="0"' . (isset($announcement['active']) && $announcement['active'] == 0 ? ' selected' : '') . '>Disabled</option>
-								<option value="1"' . ((isset($announcement['active']) && $announcement['active'] == 1) || !isset($announcement['active']) ? ' selected' : '') . '>Active</option>
-							</select>
-							<div class="form-control-feedback" style="display: none;"></div>
-							<small id="active_help" class="form-text text-muted">The status of this announcement.</small>
-						</div>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<div class="form-group">
-							<label for="announcement" class="form-control-label">Body</label>
-							<div id="announcement">' . (isset($announcement['announcement']) ? $announcement['announcement'] : '') . '</div>
-							<div class="form-control-feedback" style="display: none;"></div>
-							<small id="announcement_help" class="form-text text-muted">The body of this announcement.</small>
-						</div>
-					</div>
-				</div>
+		$body = array();
+		
+		$body[0] = '
+			' . $this->buildFormGroup($form_groups['id']) . '
+			<div class="row">
+				<div class="col-md-6">' . $this->buildFormGroup($form_groups['title']) . '</div>
+				<div class="col-md-6"></div>
 			</div>
-			
-			<div class="tab-pane" id="modal_tab_2" role="tabpanel">
-				<div class="row">
-					<div class="col-md-12">
-						<div class="form-group">
-							<label for="pages" class="form-control-label">Content Pages</label>
-							<select class="form-control form-control-sm" id="pages" name="pages" multiple="multiple" aria-describedby="pages_help"' . ($readonly ? ' disabled' : '') . '>
-								' . $content_pages_options . '
-							</select>
-							<div class="form-control-feedback" style="display: none;"></div>
-							<small id="pages_help" class="form-text text-muted">Select what pages this announcement should show up on. Leave blank for all.</small>
-						</div>
-					</div>
-				</div>
+			<div class="row">
+				<div class="col-md-6">' . $this->buildFormGroup($form_groups['sticky']) . '</div>
+				<div class="col-md-6">' . $this->buildFormGroup($form_groups['active']) . '</div>
 			</div>
-			
-			<div class="tab-pane" id="modal_tab_3" role="tabpanel">
-				<div class="row">
-					<div class="col-md-12">
-						<div class="form-group">
-							<label for="access_groups" class="form-control-label">Access Groups</label>
-							<select class="form-control form-control-sm" id="access_groups" name="access_groups" multiple="multiple" aria-describedby="access_groups_help"' . ($readonly ? ' disabled' : '') . '>
-								' . $access_group_options . '
-							</select>
-							<div class="form-control-feedback" style="display: none;"></div>
-							<small id="access_groups_help" class="form-text text-muted">Access Groups to restrict this announcement to. Leave blank for all.</small>
-						</div>
-					</div>
-				</div>
+			<div class="row">
+				<div class="col-md-12">' . $this->buildFormGroup($form_groups['announcement']) . '</div>
 			</div>
-		</div></form>';
+		';
+		
+		$body[1] = '
+			<div class="row">
+				<div class="col-md-12">' . $this->buildFormGroup($form_groups['pages']) . '</div>
+			</div>
+		';
+		
+		$body[2] = '
+			<div class="row">
+				<div class="col-md-12">' . $this->buildFormGroup($form_groups['access_groups']) . '</div>
+			</div>
+		';
 		
 		// Return modal parts
 		return array(
@@ -296,7 +298,9 @@ class PageFunctions extends CoreFunctions {
 			'parts' => array(
 				'title' => $title,
 				'size' => 'lg',
+				'body_before' => '<form id="editAnnouncementForm" class="fks-form fks-form-sm" action="javascript:void(0);">',
 				'body' => $body,
+				'body_after' => '</form>',
 				'footer' => ''
 					. '<button class="btn fks-btn-danger btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> ' . ($readonly ? 'Close' : 'Cancel') . '</button>'
 					. ($readonly ? '' : '<button class="btn fks-btn-warning btn-sm" fks-action="resetForm" fks-target="#editAnnouncementForm"><i class="fa fa-undo fa-fw"></i> Reset</button>')
@@ -348,13 +352,15 @@ class PageFunctions extends CoreFunctions {
 		}
 		
 		// Pre-Validate
-		$Validator->validate('id', array('required' => true));
-		$Validator->validate('title', array('required' => true, 'max_length' => 45));
-		$Validator->validate('announcement', array('required' => true));
-		$Validator->validate('sticky', array('required' => true, 'bool' => true));
-		$Validator->validate('access_groups', array('required' => false, 'values_csv' => array_keys($access_groups)));
-		$Validator->validate('pages', array('required' => false, 'values_csv' => array_keys($content_pages)));
-		$Validator->validate('active', array('required' => true, 'bool' => true));
+		$Validator->validate(array(
+			'id' => array('required' => true),
+			'title' => array('required' => true, 'not_empty' => true, 'max_length' => 45),
+			'announcement' => array('required' => true, 'not_empty' => true, 'urldecode' => true),
+			'sticky' => array('required' => true, 'bool' => true),
+			'access_groups' => array('required' => false, 'values_csv' => array_keys($access_groups)),
+			'pages' => array('required' => false, 'values_csv' => array_keys($content_pages)),
+			'active' => array('required' => true, 'bool' => true)
+		));
 		
 		// Check for failures
 		if(!$Validator->getResult()) { return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => $Validator->getOutput()); }	
@@ -362,111 +368,37 @@ class PageFunctions extends CoreFunctions {
 		// Get updated form
 		$form = $Validator->getForm();
 		
-		// See if the announcement exists
-		if($Database->Q(array(
-			'params' => array(
-				'id' => $form['id']
-			),
-			'query' => 'SELECT id FROM fks_announcements WHERE id = :id'
-		))) {
-			if($Database->r['found'] == 1) {
-			// Found announcement
-				// Check Diffs
-				$diff = $this->compareQueryArray($form['id'], 'fks_announcements', $form, false);
-				
-				if($diff) {
-					// Update announcement
-					if(!$Database->Q(array(
-						'params' => array(
-							':id' => $form['id'],
-							':title' => $form['title'],
-							':sticky' => $form['sticky'],
-							':announcement' => $form['announcement'],
-							':access_groups' => $form['access_groups'],
-							':pages' => $form['pages'],
-							':active' => $form['active'],
-							':date_modified' => gmdate('Y-m-d H:i:s'),
-							':modified_by' => $_SESSION['id']
-						),
-						'query' => '
-							UPDATE
-								fks_announcements
-							
-							SET
-								title = :title,
-								sticky = :sticky,
-								announcement = :announcement,
-								access_groups = :access_groups,
-								pages = :pages,
-								active = :active,
-								date_modified = :date_modified,
-								modified_by = :modified_by
-							
-							WHERE
-								id = :id
-						'
-					))) {
-						$diff = false;
-					}
-				}
-				
-				// Save member log
-				if($diff && !empty($diff)) {
-					$MemberLog = new \MemberLog(\Enums\LogActions::ANNOUNCEMENT_MODIFIED, $_SESSION['id'], $form['id'], json_encode($diff));
-				} else {
-					// Return No Changes
-					return array('result' => 'info', 'title' => 'No Changes Detected', 'message' => 'Nothing was saved.', 'diff' => $diff);
-				}
-				
-				return array('result' => 'success', 'title' => 'Announcement Updated', 'message' => '\'' . $form['title'] . '\' has been updated.');
-			} else {
-			// Create new announcement
-				// Save new announcement to database
-				if(!$Database->Q(array(
-					'params' => array(
-						':title' => $form['title'],
-						':sticky' => $form['sticky'],
-						':announcement' => $form['announcement'],
-						':access_groups' => $form['access_groups'],
-						':pages' => $form['pages'],
-						':date_created' => gmdate('Y-m-d H:i:s'),
-						':created_by' => $_SESSION['id'],
-						':active' => $form['active']
-					),
-					'query' => '
-						INSERT INTO
-							fks_announcements
-							
-						SET
-							title = :title,
-							sticky = :sticky,
-							announcement = :announcement,
-							access_groups = :access_groups,
-							pages = :pages,
-							date_created = :date_created,
-							created_by = :created_by,
-							active = :active
-					'
-				))) {
-					// Return error message with error code
-					return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
-				}
-				
-				// Prepare member log
-				$last_id = $Database->r['last_id'];
-				unset($form['id']);
-				
-				// Save member log
-				if($form && !empty($form)) {
-					$MemberLog = new \MemberLog(\Enums\LogActions::ANNOUNCEMENT_CREATED, $_SESSION['id'], $last_id, json_encode($form));
-				}
-				
-				// Return success
+		// Create Data Handler
+		$DataHandler = new \DataHandler(array(
+			'fks_announcements' => array(
+				'base' => 'fks_announcements',
+				'log_actions' => array(
+					'created' => \Enums\LogActions::ANNOUNCEMENT_CREATED,
+					'modified' => \Enums\LogActions::ANNOUNCEMENT_MODIFIED
+				)
+			)
+		));
+		
+		// Diff, Set, Log
+		$DSL = $DataHandler->DSL(array(
+			'type' => 'local',
+			'table' => 'fks_announcements',
+			'target_id' => $form['id'],
+			'values' => array(
+				'columns' => $form,
+				'data' => false
+			)
+		));
+
+		// Return
+		if($DSL['result'] == 'success') {
+			if($DSL['diff']['log_type'] == 'created') {
 				return array('result' => 'success', 'title' => 'Announcement Created', 'message' => '\'' . $form['title'] . '\' has been created.');
+			} else {
+				return array('result' => 'success', 'title' => 'Announcement Updated', 'message' => '\'' . $form['title'] . '\' has been updated.');
 			}
 		} else {
-			// Return error message with error code
-			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+			return $DSL;
 		}
 	}
 	

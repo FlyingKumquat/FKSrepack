@@ -55,26 +55,44 @@ class PageFunctions extends CoreFunctions {
 			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 		}
 		
+		// Get all pages
+		$pages = $this->getMenuItemStructures();
+		
 		// Loop through all access groups
 		foreach($data as $k => &$v) {
-			if(!empty($v['data'])) {
-				$types = array(0, 0, 0, 0);
-				$temp_data = json_decode($v['data'], true);
-				foreach($temp_data as $permission) {
-					$types[$permission]++;
+			// Decode data
+			$_data = json_decode($v['data'], true);
+			$_types = array(0, 0, 0, 0);
+
+			if(!empty($_data)) {
+				// Loop through all pages
+				foreach($pages as $pk => $pv) {
+					// See if page is in data
+					if(key_exists($pk, $_data)) {
+						// Increase type count
+						$_types[$_data[$pk]]++;
+					} else {
+						// Increase none count
+						$_types[0]++;
+					}
 				}
-				$v['data_none'] = $types[0];
-				$v['data_read'] = $types[1];
-				$v['data_write'] = $types[2];
-				$v['data_admin'] = $types[3];
+			} else {
+				// Set all to none
+				$_types[0] = count($pages);
 			}
+			
+			// Set all types
+			$v['data_none'] = $_types[0];
+			$v['data_read'] = $_types[1];
+			$v['data_write'] = $_types[2];
+			$v['data_admin'] = $_types[3];
 		}
 		
 		// Format rows
 		$data = $this->formatTableRows($data, $this->access);
 		
 		// Return success
-		return array('result' => 'success', 'data' => $data, 'access' => $this->access);
+		return array('result' => 'success', 'data' => $data, 'pages' => $pages);
 	}
 	
 	// -------------------- Edit Access Group -------------------- \\
@@ -97,12 +115,10 @@ class PageFunctions extends CoreFunctions {
 			if($Database->r['found'] == 1 ) {
 				// Editing
 				$group = $Database->r['row'];
-				$title = ($readonly ? 'View' : 'Edit') . ' Group: ' . $group['title'];
 				$button = 'Update Group';
 				$access = json_decode($group['data'], true);
 			} else {
 				// Creating
-				$title = 'Add Group';
 				$button = 'Add Group';
 			}
 		} else {	
@@ -133,62 +149,112 @@ class PageFunctions extends CoreFunctions {
 			}
 		}
 		
-		// Create modal body
-		$body = '<form id="editGroupForm" role="form" action="javascript:void(0);">
-			<input type="hidden" name="id" value="' . (isset($group['id']) ? $group['id'] : '+') . '"/>
+		// Get pages
+		$pages = $this->getMenuItemStructures(false, true);
+		
+		// Set home page options
+		$home_page_options = array(
+			array(
+				'title' => 'Use Default (' . (empty($this->siteSettings('SITE_HOME_PAGE')) ? 'home' : $pages[$this->siteSettings('SITE_HOME_PAGE')]) . ')',
+				'value' => ''
+			)
+		);
+		
+		// Home page options
+		foreach($pages as $k => $v) {
+			array_push($home_page_options, array('title' => $v, 'value' => $k));
+		}
+		
+		// Configure form groups
+		$form_groups = array(
+			array(
+				'type' => 'hidden',
+				'name' => 'id',
+				'value' => (isset($group['id']) ? $group['id'] : '+')
+			),
+			array(
+				'title' => 'Title',
+				'type' => 'text',
+				'name' => 'title',
+				'value' => (isset($group['title']) ? $group['title'] : ''),
+				'help' => 'The title of this group.',
+				'required' => true
+			),
+			array(
+				'title' => 'Hierarchy',
+				'type' => 'number',
+				'name' => 'hierarchy',
+				'value' => (isset($group['hierarchy']) ? $group['hierarchy'] : 0),
+				'help' => 'The hierarchy of this group.',
+				'required' => true
+			),
+			array(
+				'title' => 'Home Page',
+				'type' => 'select',
+				'name' => 'home_page',
+				'value' => (isset($group['home_page']) ? $group['home_page'] : ''),
+				'help' => 'The home page for this group.',
+				'options' => $home_page_options,
+				'attributes' => array(
+					'class' => 'fks-select2'
+				)
+			),
+			array(
+				'title' => 'Status',
+				'type' => 'select',
+				'name' => 'active',
+				'value' => (isset($group['active']) ? $group['active'] : 1),
+				'help' => 'The status of this group.',
+				'options' => array(
+					array('title' => 'Disabled', 'value' => 0),
+					array('title' => 'Active', 'value' => 1)
+				)
+			)
+		);
+		
+		// Set inputs to disabled if readonly
+		if($readonly) {
+			foreach($form_groups as &$input) {
+				if(!array_key_exists('properties', $input)) { $input['properties'] = array(); }
+				array_push($input['properties'], 'disabled');
+			}
+		}
+		
+		// Set title tabs
+		$title = array(
+			'<i class="fa fa-cogs fa-fw"></i> Settings',
+			'<i class="fa fa-lock fa-fw"></i> Page Access',
+		);
+		
+		// Set body content
+		$body = array(
+			$this->buildFormGroups($form_groups),
+			'
 			<div class="row">
-				<div class="col-md-4">
-					<div class="form-group">
-						<label for="title" class="form-control-label">Title</label>
-						<input type="text" class="form-control form-control-sm" id="title" name="title" aria-describedby="title_help" value="' . (isset($group['title']) ? $group['title'] : '') . '"' . ($readonly ? ' disabled' : '') . '>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="title_help" class="form-text text-muted">The title of this group.</small>
-					</div>
+				<div class="col-sm-7">
+					<input type="text" id="access_group_tree_q" value="" class="form-control" placeholder="Search">
 				</div>
-				<div class="col-md-4">
+				<div class="col-sm-5" align="right">
 					<div class="form-group">
-						<label for="hierarchy" class="form-control-label">Hierarchy</label>
-						<input type="number" class="form-control form-control-sm" id="hierarchy" name="hierarchy" aria-describedby="title_help" value="' . (isset($group['hierarchy']) ? $group['hierarchy'] : '0') . '"' . ($readonly ? ' disabled' : '') . '>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="title_help" class="form-text text-muted">The hierarchy of this group.</small>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="form-group">
-						<label for="active" class="form-control-label">Status</label>
-						<select class="form-control form-control-sm" id="active" name="active" aria-describedby="active_help"' . ($readonly ? ' disabled' : '') . '>
-							<option value="0"' . (isset($group['active']) && $group['active'] == 0 ? ' selected' : '') . '>Disabled</option>
-							<option value="1"' . ((isset($group['active']) && $group['active'] == 1) || !isset($group['active']) ? ' selected' : '') . '>Active</option>
-						</select>
-						<div class="form-control-feedback" style="display: none;"></div>
-						<small id="active_help" class="form-text text-muted">The status of this group.</small>
-					</div>
-				</div>
-			</div>
-			<hr style="margin: 10px 0px;">
-			<div class="row">
-				<div class="col-sm-8">
-					<div class="form-group">
-						<label class="form-control-label">Menu Access</label>
-						<span style="margin-left: 10px; font-size: 14px; line-height: 27px;">
+						<span style="font-size: 14px; line-height: 27px;">
 							<a href="javascript:void(0);" fks-action="expandAll">expand all</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="javascript:void(0);" fks-action="collapseAll">collapse all</a>
 						</span>
 					</div>
 				</div>
-				<div class="col-sm-4" align="right">
-					<input type="text" id="access_group_tree_q" value="" class="form-control form-control-sm" placeholder="Search">
-				</div>
 			</div>
 			<div id="access_group_tree"></div>
-		</form>';
+			'
+		);
 		
 		// Return modal parts
 		return array(
 			'result' => 'success',
 			'parts' => array(
 				'title' => $title,
-				'size' => 'lg',
+				'size' => 'md',
+				'body_before' => '<form id="editGroupForm" class="fks-form fks-form-sm" action="javascript:void(0);">',
 				'body' => $body,
+				'body_after' => '</form>',
 				'footer' => ''
 					. '<button class="btn fks-btn-danger btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> ' . ($readonly ? 'Close' : 'Cancel') . '</button>'
 					. ($readonly ? '' : '<button class="btn fks-btn-warning btn-sm" fks-action="resetForm" fks-target="#editGroupForm"><i class="fa fa-undo fa-fw"></i> Reset</button>')
@@ -218,11 +284,14 @@ class PageFunctions extends CoreFunctions {
 		$Validator = new \Validator($data);
 		
 		// Pre-Validate
-		$Validator->validate('id', array('required' => true));
-		$Validator->validate('title', array('required' => true, 'max_length' => 45));
-		$Validator->validate('hierarchy', array('required' => true, 'numeric' => true));
-		$Validator->validate('data', array('required' => true));
-		$Validator->validate('active', array('required' => true, 'bool' => true));
+		$Validator->validate(array(
+			'id' => array('required' => true),
+			'title' => array('required' => true, 'not_empty' => true, 'max_length' => 45),
+			'hierarchy' => array('required' => true, 'not_empty' => true, 'numeric' => true, 'min_value' => 0),
+			'home_page' => array('required' => false, 'values' => array_keys($this->getMenuItemStructures(false, true))),
+			'data' => array('required' => true),
+			'active' => array('required' => true, 'bool' => true)
+		));
 		
 		// Check for failures
 		if(!$Validator->getResult()) { return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => $Validator->getOutput()); }
@@ -232,121 +301,55 @@ class PageFunctions extends CoreFunctions {
 		
 		// Check hierarchy
 		if($form['hierarchy'] > $this->getHierarchy($_SESSION['id'])) {
-			return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => array('hierarchy' => 'Value must not be higher than your own.'));
+			return array('result' => 'validate', 'message' => 'There were issues with the form.', 'validation' => array('hierarchy' => array('Value must not be higher than your own.')));
 		}
 		
 		// Convert values to numeric
-		foreach($form['data'] as $k => $v) {
-			$form['data'][$k] = $v * 1;
+		foreach($form['data'] as $k => &$v) {
+			$v = $v * 1;
+			// Remove empty/unknown values
+			if($v < 1 || $v > 3) { unset($form['data'][$k]); }
 		}
 		
-		// See if the group exists
-		if($Database->Q(array(
-			'params' => array(
-				'id' => $form['id']
+		// JSON encode form data for diff check
+		$form['data'] = json_encode($form['data']);
+		
+		// Create Data Handler
+		$DataHandler = new \DataHandler(array(
+			'fks_access_groups' => array(
+				'base' => 'fks_access_groups',
+				'log_actions' => array(
+					'created' => \Enums\LogActions::ACCESS_GROUP_CREATED,
+					'modified' => \Enums\LogActions::ACCESS_GROUP_MODIFIED
+				)
+			)
+		));
+		
+		// Diff, Set, Log
+		$DSL = $DataHandler->DSL(array(
+			'type' => 'local',
+			'table' => 'fks_access_groups',
+			'target_id' => $form['id'],
+			'values' => array(
+				'columns' => $form,
+				'data' => false
 			),
-			'query' => 'SELECT id, hierarchy FROM fks_access_groups WHERE id = :id'
-		))) {
-			if($Database->r['found'] == 1) {
-			// Found group
-				// Check hierarchy
-				if($Database->r['row']['hierarchy'] > $this->getHierarchy($_SESSION['id'])) {
-					return array('result' => 'failure', 'message' => 'Access Denied!');
-				}
-				
-				// JSON encode form data for diff check
-				$form['data'] = json_encode($form['data']);
-			
-				// Check Diffs
-				$diff = $this->compareQueryArray($form['id'], 'fks_access_groups', $form, array('data'));
-				
-				if($diff) {
-					// Update group
-					if(!$Database->Q(array(
-						'params' => array(
-							':id' => $form['id'],
-							':title' => $form['title'],
-							':hierarchy' => $form['hierarchy'],
-							':data' => $form['data'],
-							':active' => $form['active'],
-							':date_modified' => gmdate('Y-m-d H:i:s'),
-							':modified_by' => $_SESSION['id']
-						),
-						'query' => '
-							UPDATE
-								fks_access_groups
-							
-							SET
-								title = :title,
-								hierarchy = :hierarchy,
-								data = :data,
-								active = :active,
-								date_modified = :date_modified,
-								modified_by = :modified_by
-							
-							WHERE
-								id = :id
-						'
-					))) {
-						$diff = false;
-					}
-				}
-				
-				// Save member log
-				if($diff && !empty($diff)) {
-					$MemberLog = new \MemberLog(\Enums\LogActions::ACCESS_GROUP_MODIFIED, $_SESSION['id'], $form['id'], json_encode($diff));
-				} else {
-					// Return No Changes
-					return array('result' => 'info', 'title' => 'No Changes Detected', 'message' => 'Nothing was saved.', 'diff' => $diff);
-				}
-				
-				// Return success
-				return array('result' => 'success', 'title' => 'Group Updated', 'message' => '\'' . $form['title'] . '\' has been updated.');
-			} else {
-			// Create new group
-				// Save new group to database
-				if(!$Database->Q(array(
-					'params' => array(
-						':title' => $form['title'],
-						':hierarchy' => $form['hierarchy'],
-						':data' => json_encode($form['data']),
-						':active' => $form['active'],
-						':date_created' => gmdate('Y-m-d H:i:s'),
-						':created_by' => $_SESSION['id']
-					),
-					'query' => '
-						INSERT INTO
-							fks_access_groups
-							
-						SET
-							title = :title,
-							hierarchy = :hierarchy,
-							data = :data,
-							active = :active,
-							date_created = :date_created,
-							created_by = :created_by
-					'
-				))) {
-					// Return error message with error code
-					return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
-				}
-				
-				$last_id = $Database->r['last_id'];
-				
-				// Prepare member log
-				unset($form['id']);
-				
-				// Save member log
-				if($form && !empty($form)) {
-					$MemberLog = new \MemberLog(\Enums\LogActions::ACCESS_GROUP_CREATED, $_SESSION['id'], $last_id, json_encode($form));
-				}
-				
-				// Return success
+			'json' => array(
+				'columns' => array(
+					'data'
+				)
+			)
+		));
+
+		// Return
+		if($DSL['result'] == 'success') {
+			if($DSL['diff']['log_type'] == 'created') {
 				return array('result' => 'success', 'title' => 'Group Created', 'message' => '\'' . $form['title'] . '\' has been created.');
+			} else {
+				return array('result' => 'success', 'title' => 'Group Updated', 'message' => '\'' . $form['title'] . '\' has been updated.');
 			}
 		} else {
-			// Return error message with error code
-			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+			return $DSL;
 		}
 	}
 	

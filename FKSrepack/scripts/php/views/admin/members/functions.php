@@ -84,25 +84,30 @@ class PageFunctions extends CoreFunctions {
 		
 		// Loop through each member to grab data
 		foreach($data as $k => &$v) {
-			// First, Last, Email, Access
-			$_r = $DataHandler->getData('remote', 'members', $v['id'], array(2,3,4));
-			$_l = $DataHandler->getData('local', 'members', $v['id'], array(8));
+			// Grab data using DataHandler
+			$_r = $DataHandler->getData('remote', 'members', $v['id'], array('columns' => false, 'data' => array('FIRST_NAME','LAST_NAME','EMAIL_ADDRESS')));
+			$_l = $DataHandler->getData('local', 'members', $v['id'], array('columns' => false, 'data' => array('ACCESS_GROUPS')));
 			$_h = 0;
 			
 			// Convert access group id's to names
-			$_a = explode(',', $_l[8]['value']);
-			if($_a[0] != '-') {
-				foreach($_a as $ak => $av){
-					$_a[$ak] = $access_groups[$av]['title'];
-					if($access_groups[$av]['hierarchy'] > $_h) { $_h = $access_groups[$av]['hierarchy']; }
+			if(!empty($_l['data']['ACCESS_GROUPS']['value'])) {
+				$_a = explode(',', $_l['data']['ACCESS_GROUPS']['value']);
+				if($_a[0] != '-') {
+					foreach($_a as $ak => $av){
+						$_a[$ak] = $access_groups[$av]['title'];
+						if($access_groups[$av]['hierarchy'] > $_h) { $_h = $access_groups[$av]['hierarchy']; }
+					}
 				}
+				$v['access_groups'] = implode(', ', $_a);
+			} else {
+				$v['access_groups'] = '-';
 			}
 			
 			// Datatable columns
-			$v['first_name'] = is_null($_r[2]['value']) ? '-' : $_r[2]['value'];
-			$v['last_name'] = is_null($_r[3]['value']) ? '-' : $_r[3]['value'];
-			$v['email_address'] = is_null($_r[4]['value']) ? '-' : $_r[4]['value'];
-			$v['access_groups'] = implode(', ', $_a);
+			$v['first_name'] = is_null($_r['data']['FIRST_NAME']['value']) ? '-' : $_r['data']['FIRST_NAME']['value'];
+			$v['last_name'] = is_null($_r['data']['LAST_NAME']['value']) ? '-' : $_r['data']['LAST_NAME']['value'];
+			$v['email_address'] = is_null($_r['data']['EMAIL_ADDRESS']['value']) ? '-' : $_r['data']['EMAIL_ADDRESS']['value'];
+			
 			
 			// Tools
 			$v['tools'] = '<span class="pull-right">';
@@ -126,157 +131,294 @@ class PageFunctions extends CoreFunctions {
 		// Check for read access
 		if( $this->access < 1 ){ return array('result' => 'failure', 'message' => 'Access Denied!'); }
 		
-		// Store hierarchy
+		// Set variables
 		$your_hierarchy = $this->getHierarchy($_SESSION['id']);
 		$user_hierarchy = $this->getHierarchy($data);
-		
-		// Set vars
+		$pages = $this->getMenuItemStructures(false, true);
 		$Database = new \Database();
-		$DataTypes = new \DataTypes();
-		$readonly = '';
-		$remote_site = false;
+		$readonly = false;
+		$adding = true;
+		$secondary = $this->siteSettings('REMOTE_SITE') == 'Secondary' ? true : false;
 		
 		// Grab member data
 		if($Database->Q(array(
-			'params' => array(
-				':member_id' => $data
-			),
-			'query' => '
-				SELECT
-					m.*
-				
-				FROM
-					fks_members AS m
-					
-				WHERE
-					m.id = :member_id 
-			'
+			'db' => ($this->siteSettings('REMOTE_SITE') == 'Secondary' ? $this->siteSettings('REMOTE_DATABASE') : $Database->db['default']),
+			'params' => array( ':member_id' => $data ),
+			'query' => 'SELECT m.* FROM fks_members AS m WHERE m.id = :member_id'
 		))){
 			// Check to see if we can find member details
 			if($Database->r['found'] == 1 ) {
 				// Editing
-				$m = $Database->r['row'];
-				$d = $DataTypes->getData(\Enums\DataTypes::constants(), $m['id']);
-				$readonly = $your_hierarchy >= $user_hierarchy ? '' : ' disabled';
-				$button = 'Update Member';
+				$member = $Database->r['row'];
+				$readonly = ($your_hierarchy < $user_hierarchy);
+				$adding = false;
 			} else {
-				// Creating
-				$button = 'Add Member';
-				$d = $DataTypes->getData(\Enums\DataTypes::constants(), 0);
+				$member['id'] = '+';
 			}
 		} else {
 			// Return error message with error code
 			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 		}
 		
-		// Create modal title
-		$title = '<ul class="nav nav-tabs">
-			<li class="nav-item">
-				<a class="nav-link active" data-toggle="tab" href="#modal_tab_1" role="tab" draggable="false"><i class="fa fa-gears fa-fw"></i> Settings</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" data-toggle="tab" href="#modal_tab_2" role="tab" draggable="false"><i class="fa fa-lock fa-fw"></i> Access Groups</a>
-			</li>
-		</ul>';
+		// Create Data Handler for remote site
+		$DataHandler = new \DataHandler(array(
+			'members' => array(
+				'base' => 'fks_members',						// Base Table
+				'data' => 'fks_member_data',					// Data Table
+				'data_types' => 'fks_member_data_types',		// Data Type Table
+				'base_column' => 'member_id',					// Column name (data table link to base table)
+				'data_types_column' => 'id'						// Column name (data table link to data types table)
+			)
+		));
 		
-		// Create modal body
-		$body = '<form id="modalForm" role="form" action="javascript:void(0);"><div class="tab-content">
-			<div class="tab-pane active" id="modal_tab_1" role="tabpanel">
-				<input type="hidden" name="ID" value="' . (isset($m['id']) ? $m['id'] : '+') . '"/>
-				<div class="row">
-					<div class="col-md-6">
-						<div class="form-group">
-							<label for="USERNAME" class="form-control-label">Username</label>
-							<input type="text" class="form-control form-control-sm" id="USERNAME" name="USERNAME" aria-describedby="USERNAME_HELP" value="' . (isset($m['username']) ? $m['username'] : '') . '"' . ($this->access > 2 ? '' : $readonly) . '>
-							<div class="form-control-feedback"></div>
-							<small id="USERNAME_HELP" class="form-text text-muted">This should never be changed.</small>
-						</div>
-					</div>
-					<div class="col-md-6">
-						' . $this->buildFormInputs(\Enums\DataTypes::FULL_NAME, ($d['FULL_NAME'] ? $d['FULL_NAME'] : ''), $readonly != '') . '
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-6">
-						<div class="form-group">
-							<label for="PASSWORD" class="form-control-label">Password 1</label>
-							<input type="password" class="form-control form-control-sm" id="PASSWORD" name="PASSWORD" aria-describedby="PASSWORD_HELP" value="' . ($d['PASSWORD'] ? '-[NOCHANGE]-' : '') . '"' . $readonly . '>
-							<div class="form-control-feedback"></div>
-							<small id="PASSWORD_HELP" class="form-text text-muted">Only change this if you want a new password.</small>
-						</div>
-					</div>
-					<div class="col-md-6">
-						<div class="form-group">
-							<label for="PASSWORD2" class="form-control-label">Password 2</label>
-							<input type="password" class="form-control form-control-sm" id="PASSWORD2" name="PASSWORD2" aria-describedby="PASSWORD2_HELP" value="' . ($d['PASSWORD'] ? '-[NOCHANGE]-' : '') . '"' . $readonly . '>
-							<div class="form-control-feedback"></div>
-							<small id="PASSWORD2_HELP" class="form-text text-muted">Re-type your password.</small>
-						</div>
-					</div>
-				</div>
-				
-				<div class="row">
-					<div class="col-md-6">
-						' . $this->buildFormInputs(\Enums\DataTypes::FIRST_NAME, ($d['FIRST_NAME'] ? $d['FIRST_NAME'] : ''), $readonly != '') . '
-					</div>
-					<div class="col-md-6">
-						' . $this->buildFormInputs(\Enums\DataTypes::LAST_NAME, ($d['LAST_NAME'] ? $d['LAST_NAME'] : ''), $readonly != '') . '
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-6">
-						' . $this->buildFormInputs(\Enums\DataTypes::EMAIL_ADDRESS, ($d['EMAIL_ADDRESS'] ? $d['EMAIL_ADDRESS'] : ''), $readonly != '') . '
-					</div>
-					<div class="col-md-6">
-						<div class="form-group">
-							<label for="ACTIVE" class="form-control-label">Status</label>
-							<select class="form-control form-control-sm" id="ACTIVE" name="ACTIVE" aria-describedby="ACTIVE_HELP"' . $readonly . '>
-								<option value="0"' . (isset($m['active']) && $m['active'] == 0 ? ' selected' : '') . '>Disabled</option>
-								<option value="1"' . ((isset($m['active']) && $m['active'] == 1) || !isset($m['active']) ? ' selected' : '') . '>Active</option>
-							</select>
-							<div class="form-control-feedback"></div>
-							<small id="ACTIVE_HELP" class="form-text text-muted">Whether this member can log in.</small>
-						</div>
-					</div>
-				</div>
-				
-				<div class="row">
-					<div class="col-md-6">
-						' . $this->buildFormInputs(\Enums\DataTypes::TIMEZONE, ($d['TIMEZONE'] ? $d['TIMEZONE'] : ''), $readonly != '') . '
-					</div>
-					<div class="col-md-6">
-						' . $this->buildFormInputs(\Enums\DataTypes::DATE_FORMAT, ($d['DATE_FORMAT'] ? $d['DATE_FORMAT'] : ''), $readonly != '') . '
-					</div>
-				</div>
-				
-				<div class="row">
-					<div class="col-md-6">
-						' . $this->buildFormInputs(\Enums\DataTypes::SITE_LAYOUT, ($d['SITE_LAYOUT'] ? $d['SITE_LAYOUT'] : ''), $readonly != '') . '
-					</div>
-					<div class="col-md-6"></div>
-				</div>
+		// Create an array of member data to grab
+		$data = array(
+			'remote' => array( 'columns' => false, 'data' => array('USERNAME', 'FULL_NAME', 'PASSWORD', 'FIRST_NAME', 'LAST_NAME', 'EMAIL_ADDRESS', 'TIMEZONE', 'DATE_FORMAT')),
+			'local' => array('columns' => false, 'data' => array('SITE_LAYOUT', 'HOME_PAGE', 'ACCESS_GROUPS'))
+		);
+		
+		// Grab local and remote member data
+		if(!$data['remote'] = $DataHandler->getData('remote', 'members', $member['id'], $data['remote'])) { return array('result' => 'failure', 'message' => 'Failed to get remote member data!'); }
+		if(!$data['local'] = $DataHandler->getData('local', 'members', $member['id'], $data['local'])) { return array('result' => 'failure', 'message' => 'Failed to get local member data!'); }
+		
+		// Set up parameters for inputs
+		$input = array(
+			'username' => array(
+				'title' => $data['remote']['data']['USERNAME']['title'],
+				'type' => 'text',
+				'name' => 'USERNAME',
+				'value' => (isset($member['username']) ? $member['username'] : ''),
+				'help' => $data['remote']['data']['USERNAME']['help_text'],
+				'required' => true,
+				'properties' => array()
+			),
+			'fullname' => array(
+				'title' => $data['remote']['data']['FULL_NAME']['title'],
+				'type' => 'text',
+				'name' => 'FULL_NAME',
+				'value' => $data['remote']['data']['FULL_NAME']['value'],
+				'help' => $data['remote']['data']['FULL_NAME']['help_text'],
+				'required' => false,
+				'properties' => array()
+			),
+			'password1' => array(
+				'title' => 'Password 1',
+				'type' => 'password',
+				'name' => 'PASSWORD',
+				'value' => (empty($data['remote']['data']['PASSWORD']['value']) ? '' : '-[NOCHANGE]-'),
+				'help' => 'Only change this if you want a new password.',
+				'required' => false,
+				'properties' => array(),
+				'attributes' => array(
+					'class' => 'fks-base64'
+				)
+			),
+			'password2' => array(
+				'title' => 'Password 2',
+				'type' => 'password',
+				'name' => 'PASSWORD2',
+				'value' => (empty($data['remote']['data']['PASSWORD']['value']) ? '' : '-[NOCHANGE]-'),
+				'help' => 'Re-type your password.',
+				'required' => false,
+				'properties' => array(),
+				'attributes' => array(
+					'class' => 'fks-base64'
+				)
+			),
+			'firstname' => array(
+				'title' => $data['remote']['data']['FIRST_NAME']['title'],
+				'type' => 'text',
+				'name' => 'FIRST_NAME',
+				'value' => $data['remote']['data']['FIRST_NAME']['value'],
+				'help' => $data['remote']['data']['FIRST_NAME']['help_text'],
+				'properties' => array()
+			),
+			'lastname' => array(
+				'title' => $data['remote']['data']['LAST_NAME']['title'],
+				'type' => 'text',
+				'name' => 'LAST_NAME',
+				'value' => $data['remote']['data']['LAST_NAME']['value'],
+				'help' => $data['remote']['data']['LAST_NAME']['help_text'],
+				'required' => false,
+				'properties' => array()
+			),
+			'email' => array(
+				'title' =>  $data['remote']['data']['EMAIL_ADDRESS']['title'],
+				'type' => 'email',
+				'name' => 'EMAIL_ADDRESS',
+				'value' => $data['remote']['data']['EMAIL_ADDRESS']['value'],
+				'help' => $data['remote']['data']['EMAIL_ADDRESS']['help_text'],
+				'required' => false,
+				'properties' => array()
+			),
+			'status' => array(
+				'title' => 'Status',
+				'type' => 'select',
+				'name' => 'ACTIVE',
+				'help' => 'Whether this member can log in.',
+				'required' => true,
+				'properties' => array(),
+				'options' => array(
+					array(
+						'title' => 'Disabled',
+						'value' => '0'
+					),
+					array(
+						'title' => 'Active',
+						'value' => '1',
+						'selected' => ((isset($member['active']) && $member['active'] == 1) || !isset($member['active']))
+					)
+				)
+			),
+			'timezone' => array(
+				'title' => $data['remote']['data']['TIMEZONE']['title'],
+				'type' => 'select',
+				'name' => 'TIMEZONE',
+				'value' => $data['remote']['data']['TIMEZONE']['value'],
+				'help' => $data['remote']['data']['TIMEZONE']['help_text'],
+				'properties' => array(),
+				'options' => array(
+					array(
+						'title' => 'Use Default (' . date_default_timezone_get() . ')',
+						'value' => ''
+					)
+				),
+				'attributes' => array(
+					'class' => 'fks-select2'
+				)
+			),
+			'dateformat' => array(
+				'title' => $data['remote']['data']['DATE_FORMAT']['title'],
+				'type' => 'text',
+				'name' => 'DATE_FORMAT',
+				'value' => '',
+				'help' => $data['remote']['data']['DATE_FORMAT']['help_text'],
+				'required' => false,
+				'properties' => array()
+			),
+			'sitelayout' => array(
+				'title' => $data['local']['data']['SITE_LAYOUT']['title'],
+				'type' => 'select',
+				'name' => 'SITE_LAYOUT',
+				'help' => $data['local']['data']['SITE_LAYOUT']['help_text'],
+				'required' => true,
+				'properties' => array(),
+				'options' => array()
+			),
+			'homepage' => array(
+				'title' => $data['local']['data']['HOME_PAGE']['title'],
+				'type' => 'select',
+				'name' => 'HOME_PAGE',
+				'help' => $data['local']['data']['HOME_PAGE']['help_text'],
+				'properties' => array(),
+				'options' => array(
+					array(
+						'title' => 'Use Default (' . (empty($this->siteSettings('SITE_HOME_PAGE')) ? 'home' : $pages[$this->siteSettings('SITE_HOME_PAGE')]) . ')',
+						'value' => ''
+					)
+				),
+				'attributes' => array(
+					'class' => 'fks-select2'
+				)
+			),
+			'accessgroups' => array(
+				'title' => $data['local']['data']['ACCESS_GROUPS']['title'],
+				'type' => 'select',
+				'name' => 'ACCESS_GROUPS',
+				'help' => $data['local']['data']['ACCESS_GROUPS']['help_text'],
+				'properties' => array('multiple'),
+				'options' => array()
+			)
+		);
+
+		// Generate timezones
+		foreach($this->timeZones()['list'] as $timezone) {
+			array_push($input['timezone']['options'], array('title' => $timezone, 'value' => $timezone, 'selected' => ($timezone == $data['remote']['data']['TIMEZONE']['value'])) );
+		}
+		
+		// Grab site layouts from site settings
+		if($Database->Q('SELECT data,misc FROM fks_site_settings WHERE id = "SITE_LAYOUT"')){
+			array_push($input['sitelayout']['options'], array('title' => 'Use Default (' . $Database->r['row']['data'] . ')', 'value' => '') );
+			foreach(json_decode($Database->r['row']['misc'], true)['options'] as $v) {
+				array_push($input['sitelayout']['options'], array('title' => $v['title'], 'value' => $v['title'], 'selected' => ($v['title'] == $data['local']['data']['SITE_LAYOUT']['value'])) );
+			}
+		} else {
+			// Return error message with error code
+			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+		}
+		
+		// Home page options
+		foreach($pages as $k => $v) {
+			array_push($input['homepage']['options'], array('title' => $v, 'value' => $k, 'selected' => ($k == $data['local']['data']['HOME_PAGE']['value'])) );
+		}
+		
+		// Grab access groups
+		$data['local']['data']['ACCESS_GROUPS']['value'] = explode(',', $data['local']['data']['ACCESS_GROUPS']['value']);
+		if($Database->Q('SELECT id,title,hierarchy FROM fks_access_groups WHERE active = 1 AND deleted = 0 ORDER BY hierarchy')){
+			foreach($Database->r['rows'] as $k => $v) {
+				array_push($input['accessgroups']['options'], array('title' => $v['title'], 'value' => $v['id'], 'selected' => (in_array($v['id'], $data['local']['data']['ACCESS_GROUPS']['value'])), 'disabled' => ($your_hierarchy < $v['hierarchy'])) );
+			}
+		} else {
+			// Return error message with error code
+			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+		}
+		
+		// Set to read only if member only has read access or is lower hierarchy than the editing member
+		if( $this->access == 1 || $readonly || $secondary ) {
+			foreach($input as $k => &$v) {
+				if( $secondary ) {
+					if(!in_array($v['id'], array('SITE_LAYOUT', 'HOME_PAGE', 'ACCESS_GROUPS'))){
+						array_push($v['properties'], 'disabled');
+					}
+				} else {
+					array_push($v['properties'], 'disabled');
+				}
+			}
+		}
+		
+		// Modal tab 1 body
+		$body[0] = '<input type="hidden" name="ID" value="' . (isset($member['id']) ? $member['id'] : '+') . '"/>
+			<div class="row">
+				<div class="col-md-6">' . $this->buildFormGroup($input['username']) . '</div>
+				<div class="col-md-6">' . $this->buildFormGroup($input['fullname']) . '</div>
 			</div>
-			
-			<div class="tab-pane" id="modal_tab_2" role="tabpanel">
-				<div class="row">
-					<div class="col-md-12">
-						' . $this->buildFormInputs(\Enums\DataTypes::ACCESS_GROUPS, ($d['ACCESS_GROUPS'] ? $d['ACCESS_GROUPS'] : ''), $readonly != '') . '
-					</div>
-				</div>
+			<div class="row">
+				<div class="col-md-6">' . $this->buildFormGroup($input['password1']) . '</div>
+				<div class="col-md-6">' . $this->buildFormGroup($input['password2']) . '</div>
 			</div>
-		</div></form>';
+			<div class="row">
+				<div class="col-md-6">' . $this->buildFormGroup($input['firstname']) . '</div>
+				<div class="col-md-6">' . $this->buildFormGroup($input['lastname']) . '</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">' . $this->buildFormGroup($input['email']) . '</div>
+				<div class="col-md-6">' . $this->buildFormGroup($input['status']) . '</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">' . $this->buildFormGroup($input['timezone']) . '</div>
+				<div class="col-md-6">' . $this->buildFormGroup($input['dateformat']) . '</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">' . $this->buildFormGroup($input['sitelayout']) . '</div>
+				<div class="col-md-6">' . $this->buildFormGroup($input['homepage']) . '</div>
+			</div>';
+		
+		// Modal tab 2 body
+		$body[1] = '<div class="row"><div class="col-md-12">' . $this->buildFormGroup($input['accessgroups']) . '</div></div>';
 		
 		// Return modal parts
 		return array(
 			'result' => 'success',
 			'parts' => array(
-				'title' => $title,
+				'title' => array('<i class="fa fa-gears fa-fw"></i> Settings', '<i class="fa fa-lock fa-fw"></i> Access Groups'),
 				'size' => 'lg',
-				'body' => $body,
+				'body_before' => '<form id="modalForm" class="fks-form fks-form-sm" action="javascript:void(0);">',
+				'body' => array($body[0], $body[1]),
+				'body_after' => '</form>',
 				'footer' => ''
-					. '<button class="btn fks-btn-danger btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> ' . ($readonly == '' ? 'Cancel' : 'Close') . '</button>'
-					. ($readonly == '' ? '<button class="btn fks-btn-warning btn-sm" fks-action="resetForm" fks-target="#modalForm"><i class="fa fa-undo fa-fw"></i> Reset</button>' : '')
-					. ($readonly == '' && $this->access > 1 ? '<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#modalForm"><i class="fa fa-save fa-fw"></i> ' . $button . '</button>' : '')
+					. '<button class="btn fks-btn-danger btn-sm" data-dismiss="modal"><i class="fa fa-times fa-fw"></i> ' . (!$readonly ? 'Cancel' : 'Close') . '</button>'
+					. (!$readonly ? '<button class="btn fks-btn-warning btn-sm" fks-action="resetForm" fks-target="#modalForm"><i class="fa fa-undo fa-fw"></i> Reset</button>' : '')
+					. (!$readonly && $this->access > 1 ? '<button class="btn fks-btn-success btn-sm" fks-action="submitForm" fks-target="#modalForm"><i class="fa fa-save fa-fw"></i> ' . ($adding ? 'Add' : 'Update') . ' Member</button>' : '')
 			)
 		);
 	}
@@ -295,11 +437,9 @@ class PageFunctions extends CoreFunctions {
 			if($your_hierarchy < $user_hierarchy){ return array('result' => 'failure', 'message' => 'Access Denied!'); }
 		}
 		
-		// Set Vars
+		// Set variables
 		$Database = new \Database();
-		$DataTypes = new \DataTypes();
 		$Validator = new \Validator( $data );
-		$names = \Enums\DataTypes::flip();
 		$access_groups = array();
 		$form_access_groups = array();
 		$member_access_groups = array();
@@ -307,13 +447,7 @@ class PageFunctions extends CoreFunctions {
 		$member_data = array();
 		$member = array();
 		
-		// Pre-Validate
-		$Validator->validate('ID', array('required' => true));
-		$Validator->validate('ACTIVE', array('bool' => true, 'required' => true));
-		$Validator->validate('USERNAME', array('min_length' => 3, 'alphanumeric' => true, 'no_spaces' => true, 'required' => true));
-		$Validator->validate('PASSWORD', array('match' => 'PASSWORD2'));
-		
-		// Grab All Access Groups
+		// Grab all Access Groups for validation
 		if($Database->Q(array(
 			'assoc' => 'id',
 			'query' => 'SELECT * FROM fks_access_groups'
@@ -325,14 +459,31 @@ class PageFunctions extends CoreFunctions {
 			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 		}
 		
-		foreach($names as $k => $v) {
-			if(isset($data[$v])) {
-				if($k == \Enums\DataTypes::ACCESS_GROUPS['id']) { $Validator->validate($v, array('values_csv' => array_keys($access_groups))); continue;}
-				if($k == \Enums\DataTypes::SITE_LAYOUT['id']) { $Validator->validate($v, array('values_csv' => array('Default','Admin'))); continue;}
-				
-				$Validator->validate($v, constant("\Enums\DataTypes::$v")['validation']);
-			}
+		// Grab all Site Layouts for validation
+		if($Database->Q('SELECT validation FROM fks_site_settings WHERE id = "SITE_LAYOUT"')){
+			// Store site layouts
+			$site_layouts = json_decode($Database->r['row']['validation'], true)['values'];
+		} else {
+			// Return error message with error code
+			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 		}
+		
+		// Validation
+		$Validator->validate(array(
+			'ID' => array('required' => true),
+			'ACTIVE' => array('required' => true, 'bool' => true),
+			'USERNAME' => array('required' => true, 'not_empty' => true, 'min_length' => 3, 'alphanumeric' => true, 'no_spaces' => true),
+			'PASSWORD' => array('match' => 'PASSWORD2'),
+			'ACCESS_GROUPS' => array('values_csv' => array_keys($access_groups)),
+			'SITE_LAYOUT' => array('values' => $site_layouts),
+			'FULL_NAME' => array('min_length' => 3),
+			'FIRST_NAME' => array('min_length' => 3, 'max_length' => 45),
+			'LAST_NAME' => array('min_length' => 3, 'max_length' => 45),
+			'EMAIL_ADDRESS' => array('email' => true),
+			'TIMEZONE' => array('values' => $this->timeZones()['list']),
+			'DATE_FORMAT' => array('required' => false),
+			'HOME_PAGE' => array('required' => false, 'values' => array_keys($this->getMenuItemStructures(false, true)))
+		));
 		
 		// Check for failures
 		if( !$Validator->getResult() ){ return array('result' => 'validate', 'message' => 'There were issues with the form.', 'data' => $data, 'validation' => $Validator->getOutput()); }
@@ -355,14 +506,28 @@ class PageFunctions extends CoreFunctions {
 		
 		// See if the member exists
 		if(!$Database->Q(array(
-			'params' => array(
-				'id' => $form['ID']
-			),
+			'db' => ($this->siteSettings('REMOTE_SITE') == 'Secondary' ? $this->siteSettings('REMOTE_DATABASE') : $Database->db['default']),
+			'params' => array( ':id' => $form['ID'] ),
 			'query' => 'SELECT username FROM fks_members WHERE id = :id'
 		))){
 			// Return error message with error code
 			return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 		}
+		
+		// Create Data Handler for remote site
+		$DataHandler = new \DataHandler(array(
+			'members' => array(
+				'base' => 'fks_members',						// Base Table
+				'data' => 'fks_member_data',					// Data Table
+				'data_types' => 'fks_member_data_types',		// Data Type Table
+				'base_column' => 'member_id',					// Column name (data table link to base table)
+				'data_types_column' => 'id'	,					// Column name (data table link to data types table)
+				'log_actions' => array(							// Log actions (required if using diff)
+					'created' => \Enums\LogActions::MEMBER_CREATED,
+					'modified' => \Enums\LogActions::MEMBER_MODIFIED
+				)
+			)
+		));
 		
 		// Check if member exists
 		if($Database->r['found'] == 1) {
@@ -379,50 +544,47 @@ class PageFunctions extends CoreFunctions {
 				} else {
 				// Check if username is in use
 					if($Database->Q(array(
-						'params' => array(
-							'username' => $form['USERNAME']
-						),
+						'db' => ($this->siteSettings('REMOTE_SITE') == 'Secondary' ? $this->siteSettings('REMOTE_DATABASE') : $Database->db['default']),
+						'params' => array( ':username' => $form['USERNAME'] ),
 						'query' => 'SELECT id FROM fks_members WHERE username = :username'
 					))) {
-					// Query succeeded
+						// Return if the username is in use
 						if($Database->r['found'] != 0) {
-						// Username is already in use
 							return array('result' => 'validate', 'message' => 'There were issues with the form.', 'data' => $data, 'validation' => array('USERNAME' => 'Username is already in use.'));
-						} else {
-						// Username is not in use
 						}
 					} else {
-					// Query failed?...
 						// Return error message with error code
 						return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 					}
 				}
 			}
 			
-			// Check for duplicate data values
-			if( $check = $DataTypes->checkData(array(
-				\Enums\DataTypes::USERNAME['id'] => $form['USERNAME'],
-				\Enums\DataTypes::EMAIL_ADDRESS['id'] => $form['EMAIL_ADDRESS']
-			)) ) {
-				$validation = array();
-				foreach($check as $k => $v) {
-					if($v != false && $v != $form['ID']) { $validation[$names[$k]] = constant("\Enums\DataTypes::$names[$k]")['title'] . ' already in use.'; }
-				}
-				if( count($validation) > 0 ) {
-					return array('result' => 'validate', 'message' => 'There were issues with the form.', 'data' => $data, 'validation' => $validation);
+			// Check for duplicate email address
+			if($Database->Q(array(
+				'db' => ($this->siteSettings('REMOTE_SITE') == 'Secondary' ? $this->siteSettings('REMOTE_DATABASE') : $Database->db['default']),
+				'params' => array( 
+					':id' => 4,
+					':member_id' => $form['ID'],
+					':data' => $form['EMAIL_ADDRESS']
+				),
+				'query' => 'SELECT member_id FROM fks_member_data WHERE id = :id AND data = :data AND member_id != :member_id'
+			))) {
+				// Return if the username is in use
+				if($Database->r['found'] != 0) {
+					return array('result' => 'validate', 'message' => 'There were issues with the form.', 'data' => $data, 'validation' => array('EMAIL_ADDRESS' => 'Email Address is already in use.'));
 				}
 			} else {
-				return array('result' => 'failure', 'title' => 'Failure', 'message' => 'Check Data failed');
-			}
-		
-			// Check for existing access groups
-			if($getData = $DataTypes->getData(array(\Enums\DataTypes::ACCESS_GROUPS), $form['ID'])) {
-			// Member has existings access group(s)
-				$member_access_groups = ($getData['ACCESS_GROUPS'] ? explode(',', $getData['ACCESS_GROUPS']) : array());
-			} else {
-			// Unable to get access groups
 				// Return error message with error code
 				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+			}
+
+			// Check for existing access groups
+			if($getData = $DataHandler->getData('local', 'members', $form['ID'], array('columns' => false, 'data' => array('ACCESS_GROUPS')) )) {
+				// Member has existings access group(s)
+				$member_access_groups = (!empty($getData['data']['ACCESS_GROUPS']['value']) ? explode(',', $getData['data']['ACCESS_GROUPS']['value']) : array());
+			} else {
+				// Unable to get access groups
+				return array('result' => 'failure', 'message' => 'Failed to get Access Groups');
 			}
 			
 			// Convert passed access groups to an array
@@ -450,102 +612,85 @@ class PageFunctions extends CoreFunctions {
 			// Convert form access groups back to csv
 			sort($form_access_groups);
 			$form['ACCESS_GROUPS'] = implode(',', $form_access_groups);
+
+			// Check to see if this is a local or remote connection
+			$connection = $this->siteSettings('REMOTE_SITE') == 'Secondary' ? 'remote' : 'local';
 			
-			// Separate data
+			// Create array for storing changeable data
+			$member = array('columns' => array(), 'data' => array());
+			
+			// Seperate data (email, timezone, date) from member columns (id, username, active, deleted)
 			foreach($form as $k => $v) {
-				if(in_array($k, $names)) {
-					$member_data[constant("\Enums\DataTypes::$k")['id']] = $v;
+				if(in_array($k, array('ID', 'USERNAME', 'ACTIVE'))) {
+					// Only store column data if it is a local connection
+					if($connection == 'local') { $member['columns'][strtolower($k)] = $v; }
 				} else {
-					$member[strtolower($k)] = $v;
+					// Store specific data if it is a remote connection
+					if($connection == 'local') {
+						// Local connection takes everything
+						$member['data'][$k] = $v;
+					} else {
+						if(in_array($k, array('SITE_LAYOUT', 'HOME_PAGE', 'ACCESS_GROUPS'))) {
+							$member['data'][$k] = $v;
+						}
+					}
 				}
 			}
 			
-			// Check Diffs
-			$diff1 = $this->compareQueryArray($form['ID'], 'fks_members', $member_data, false, true);
-			$diff2 = $this->compareQueryArray($form['ID'], 'fks_members', $member, false);
-			
-			// Save member_data
-			if($diff1 && !$DataTypes->setData($member_data, $form['ID'])) {
-				// Failed to save data
-				$diff1 = false;
+			// Do the thing
+			$DSL = $DataHandler->DSL(array(
+				'type' => $connection,
+				'table' => 'members',
+				'target_id' => $form['ID'],
+				'values' => $member,
+				'ignore_columns' => array(),	// Optional
+				'server' => false				// Optional
+			));
+
+			// Return
+			if($DSL['result'] == 'success') {
+				return array('result' => 'success', 'title' => 'Saved Member Settings', 'message' => 'Updated member: ' . $form['USERNAME'], 'reload' => (isset($diff['changes']['data'][13]) ? 'true' : 'false'));
+			} else {
+				return $DSL;
 			}
 
-			// Save member
-			if($diff2) {
-				if(!$Database->Q(array(
-					'params' => array(
-						':id' => $form['ID'],
-						':username' => $form['USERNAME'],
-						':date_modified' => gmdate('Y-m-d H:i:s'),
-						':modified_by' => $_SESSION['id'],
-						':active' => $form['ACTIVE']
-					),
-					'query' => '
-						UPDATE
-							fks_members
-						
-						SET
-							username = :username,
-							date_modified = :date_modified,
-							modified_by = :modified_by,
-							active = :active
-						
-						WHERE
-							id = :id
-					'
-				))) {
-					$diff2 = false;
-				}
-			}
-			
-			// Prepare member log
-			$diff3 = ($diff1 && $diff2 ? $diff1 + $diff2 : ($diff1 ? $diff1 : ($diff2 ? $diff2 : false)));
-			
-			// Save member log
-			if($diff3 && !empty($diff3)) {
-				$MemberLog = new \MemberLog(\Enums\LogActions::MEMBER_MODIFIED, $_SESSION['id'], $form['ID'], json_encode($diff3));
-			} else {
-				// Return No Changes
-				return array('result' => 'info', 'title' => 'No Changes Detected', 'message' => 'Nothing was saved.');
-			}
-			
-			// Return Success
-			return array('result' => 'success', 'title' => 'Saved Member Settings', 'message' => 'Updated member: ' . $form['USERNAME'], 'reload' => (isset($diff3[\Enums\DataTypes::SITE_LAYOUT['id']]) ? 'true' : 'false'));
 		} else {
 		// Create new member
-			
-			// Check for duplicate data values
-			if( $check = $DataTypes->checkData(array(
-				\Enums\DataTypes::USERNAME['id'] => $form['USERNAME'],
-				\Enums\DataTypes::EMAIL_ADDRESS['id'] => $form['EMAIL_ADDRESS']
-			)) ) {
-				$validation = array();
-				foreach($check as $k => $v) {
-					if($v != false && $v != $form['ID']) { $validation[$names[$k]] = constant("\Enums\DataTypes::$names[$k]")['title'] . ' already in use.'; }
-				}
-				if( count($validation) > 0 ) {
-					return array('result' => 'validate', 'message' => 'There were issues with the form.', 'data' => $data, 'validation' => $validation);
-				}
-			} else {
-				return array('result' => 'failure', 'title' => 'Failure', 'message' => 'Check Data failed');
+			// Return failure if set to Secondary Site
+			if( $this->siteSettings('REMOTE_SITE') == 'Secondary' ) {
+				return array('result' => 'failure', 'title' => 'Site Error', 'message' => 'Can not create members on a Secondary Site.');
 			}
-			
+		
 			// Check if username is in use
 			if($Database->Q(array(
-				'params' => array(
-					'username' => $form['USERNAME']
-				),
+				'db' => ($this->siteSettings('REMOTE_SITE') == 'Secondary' ? $this->siteSettings('REMOTE_DATABASE') : $Database->db['default']),
+				'params' => array( ':username' => $form['USERNAME'] ),
 				'query' => 'SELECT id FROM fks_members WHERE username = :username'
 			))) {
-			// Query succeeded
+				// Return if the username is in use
 				if($Database->r['found'] != 0) {
-				// Username is already in use
 					return array('result' => 'validate', 'message' => 'There were issues with the form.', 'data' => $data, 'validation' => array('USERNAME' => 'Username is already in use.'));
-				} else {
-				// Username is not in use
 				}
 			} else {
-			// Query failed?...
+				// Return error message with error code
+				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+			}
+			
+			// Check for duplicate email address
+			if($Database->Q(array(
+				'db' => ($this->siteSettings('REMOTE_SITE') == 'Secondary' ? $this->siteSettings('REMOTE_DATABASE') : $Database->db['default']),
+				'params' => array( 
+					':id' => 4,
+					':member_id' => $form['ID'],
+					':data' => $form['EMAIL_ADDRESS']
+				),
+				'query' => 'SELECT member_id FROM fks_member_data WHERE id = :id AND data = :data AND member_id != :member_id'
+			))) {
+				// Return if the username is in use
+				if($Database->r['found'] != 0) {
+					return array('result' => 'validate', 'message' => 'There were issues with the form.', 'data' => $data, 'validation' => array('EMAIL_ADDRESS' => 'Email Address is already in use.'));
+				}
+			} else {
 				// Return error message with error code
 				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
 			}
@@ -569,60 +714,38 @@ class PageFunctions extends CoreFunctions {
 			// Convert form access groups back to csv
 			sort($form_access_groups);
 			$form['ACCESS_GROUPS'] = implode(',', $form_access_groups);
+
+			// Create array for storing changeable data
+			$member = array('columns' => array(), 'data' => array());
 			
-			// Separate data
+			// Seperate data (email, timezone, date) from member columns (id, username, active, deleted)
 			foreach($form as $k => $v) {
-				if(in_array($k, $names)) {
-					if(!empty($v)) {
-						$member_data[constant("\Enums\DataTypes::$k")['id']] = $v;
-					}
+				if(in_array($k, array('ID', 'USERNAME', 'ACTIVE'))) {
+					$member['columns'][strtolower($k)] = $v;
 				} else {
-					$member[strtolower($k)] = $v;
+					$member['data'][$k] = $v;
 				}
 			}
 			
-			// Save new member to database
-			if(!$Database->Q(array(
-				'params' => array(
-					':username' => $form['USERNAME'],
-					':date_created' => gmdate('Y-m-d H:i:s'),
-					':created_by' => $_SESSION['id'],
-					':active' => $form['ACTIVE'],
-					':deleted' => 0
-				),
-				'query' => '
-					INSERT INTO
-						fks_members
-						
-					SET
-						username = :username,
-						date_created = :date_created,
-						created_by = :created_by,
-						active = :active,
-						deleted = :deleted
-				'
-			))) {
-				// Return error message with error code
-				return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+// ----------------------------------------------------------------
+//return array('result' => 'failure', 'message' => 'Testing - Creating', 'data' => $form);
+		
+			// Do the thing
+			$DSL = $DataHandler->DSL(array(
+				'type' => 'local',
+				'table' => 'members',
+				'target_id' => '+',
+				'values' => $member,
+				'ignore_columns' => array(),	// Optional
+				'server' => false				// Optional
+			));
+
+			// Return
+			if($DSL['result'] == 'success') {
+				return array('result' => 'success', 'title' => 'Saved Member Settings', 'message' => 'Updated member: ' . $form['USERNAME'], 'reload' => (isset($diff['changes']['data'][13]) ? 'true' : 'false'));
+			} else {
+				return $DSL;
 			}
-			
-			$last_id = $Database->r['last_id'];
-			
-			// Set data of the new member (if there is data to set)
-			if(!empty($member_data)) { $DataTypes->setData($member_data, $last_id); }
-			
-			// Prepare member log
-			unset($member['id']);
-			$member['deleted'] = '0';
-			$diff3 = $member + $member_data;
-			
-			// Save member log
-			if($diff3 && !empty($diff3)) {
-				$MemberLog = new \MemberLog(\Enums\LogActions::MEMBER_CREATED, $_SESSION['id'], $last_id, json_encode($diff3));
-			}
-			
-			// Return Success
-			return array('result' => 'success', 'title' => 'Saved Member Settings', 'message' => 'Created new member: ' . $form['USERNAME'], 'reload' => 'false');
 		}
 	}
 	

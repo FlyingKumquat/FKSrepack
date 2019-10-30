@@ -1,3 +1,4 @@
+<?PHP if(!is_dir('install')) { header('Location:index.php'); }?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -7,7 +8,7 @@
 		<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 		<meta name="description" content="Splash page for the site">
 		<meta name="author" content="FKS">
-		<link rel="icon" href="./img/favicon.ico">
+		<link rel="icon" href="./img/_favicon.ico">
 
 		<title>FKSrepack Splash Page</title>
 
@@ -23,8 +24,8 @@
 		<nav class="navbar navbar-dark bg-dark" style="margin-bottom:10px;">
 			<div class="container">	
 				<a class="navbar-brand" href="/">
-				<img src="../img/favicon.ico" width="30" height="30" class="d-inline-block align-top" alt="">
-					FKSrepack
+					<img src="../img/_favicon.ico" width="30" height="30" class="d-inline-block align-top" alt="">
+					<b>FKS</b><span style="color: #36e3fd;">repack</span>
 				</a>
 			</div>
 		</nav>
@@ -44,7 +45,7 @@
 							<p class="card-text">This is to prevent other people from being able make changes to your site.</p>
 							<p class="card-text">If this your first time loading this site please run the installation. Otherwise remove the installation directory and try reloading the site.</p>
 							
-							<button class="btn fks-btn-primary" onclick="window.location.reload();"><i class="fa fa-refresh fa-fw"></i> Reload Site</a>
+							<button class="btn fks-btn-primary" onclick="window.location = '/';"><i class="fa fa-refresh fa-fw"></i> Reload Site</a>
 						</div>
 					</div>
 					

@@ -68,32 +68,42 @@ class PageFunctions extends CoreFunctions {
 		
 		// Set vars
 		$Database = new \Database();
-		$DataTypes = new \DataTypes();
 		$return = '<tr><th>Username</th><td>' . $_SESSION['username'] . '</td></tr>';
-		$constants = \Enums\DataTypes::constants();
 		
-		// Get member data
-		$data = $DataTypes->getData(array(
-				\Enums\DataTypes::FIRST_NAME,
-				\Enums\DataTypes::LAST_NAME,
-				\Enums\DataTypes::FULL_NAME,
-				\Enums\DataTypes::EMAIL_ADDRESS,
-				\Enums\DataTypes::DATE_FORMAT,
-				\Enums\DataTypes::TIMEZONE,
-				\Enums\DataTypes::EMAIL_VERIFIED
-			),
-			$_SESSION['id']
-		);
+		// Create Data Handler for remote site
+		$DataHandler = new \DataHandler(array(
+			'members' => array(
+				'base' => 'fks_members',						// Base Table
+				'data' => 'fks_member_data',					// Data Table
+				'data_types' => 'fks_member_data_types',		// Data Type Table
+				'base_column' => 'member_id',					// Column name (data table link to base table)
+				'data_types_column' => 'id'						// Column name (data table link to data types table)
+			)
+		));
+		
+		// Get remote member data
+		$member_data = $DataHandler->getData('remote', 'members', $_SESSION['id'], array('columns' => false, 'data' => array(
+			'FIRST_NAME',
+			'LAST_NAME',
+			'FULL_NAME',
+			'EMAIL_ADDRESS',
+			'DATE_FORMAT',
+			'TIMEZONE',
+			'EMAIL_VERIFIED'
+		)));
 		
 		// Loop through member data and print them out
-		foreach($data as $k => $v) {
+		foreach($member_data['data'] as $k => $v) {
+			$title = $v['title'];
+			$v = $v['value'];
+			
 			// Special cases
 			if($k == 'DATE_FORMAT') {$v = ($v ? $v : 'Site Default');}
 			if($k == 'TIMEZONE') {$v = ($v ? $v : 'Site Default');}
 			if($k == 'EMAIL_VERIFIED') {$v = ($v ? 'Yes' : 'No');}
 			
 			// Add row to table
-			$return .= '<tr><th>' . $constants[$k]['title'] . '</th><td>' . ($v ? $v : '-') . '</td></tr>';
+			$return .= '<tr><th>' . $title . '</th><td>' . ($v ? $v : '-') . '</td></tr>';
 		}
 		
 		// Return member data for the table

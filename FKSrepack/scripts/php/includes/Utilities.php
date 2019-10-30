@@ -1,8 +1,8 @@
 <?PHP
 /*##############################################
 	Utilities
-	Version: 1.3.02252019
-	Updated: 02/25/2019
+	Version: 1.5.20191024
+	Updated: 10/24/2019
 ##############################################*/
 
 /*----------------------------------------------
@@ -13,6 +13,22 @@ ini_set('display_startup_errors',1);
 error_reporting(-1);
 
 class Utilities {
+	/*----------------------------------------------
+		Rebuild CSS
+	----------------------------------------------*/
+	public function rebuildCSS($folder, $input, $output = false) {
+		// Require ScssPhp
+		require_once('scssphp/scss.inc.php');
+		
+		// Setup ScssPhp
+		$ScssPhp = new \ScssPhp\ScssPhp\Compiler();
+		$ScssPhp->setFormatter('\ScssPhp\ScssPhp\Formatter\Expanded');
+		$ScssPhp->setImportPaths($folder);
+		
+		// Complie and save
+		file_put_contents($folder . ($output ? $output : $input) . '.css', $ScssPhp->compile('@import "' . $input . '.scss"'));
+	}
+	
 	/*----------------------------------------------
 		Load Page Changelog
 	----------------------------------------------*/
@@ -204,7 +220,7 @@ class Utilities {
 			return array('result' => 'failure', 'message' => 'Failed to load changelog from GitHub.');
 		}
 		
-		if(!isset($Curl->r['json']['body'])) { 
+		if(!isset($Curl->r['json']['body'])) {
 			return array('result' => 'failure', 'message' => 'Changelog has no body.');
 		}
 		
@@ -265,8 +281,69 @@ class Utilities {
 	/*----------------------------------------------
 		Get Home Page
 	----------------------------------------------*/
-	public function getHomePage() {
-		return 'home';
+	public function getHomePage($member_id) {
+		$Database = new \Database;
+		
+		if($member_id == 0) {
+			$_member_data['data']['ACCESS_GROUPS']['value'] = $this->siteSettings('DEFAULT_ACCESS_GUEST');
+		} else {
+			$DataHandler = new \DataHandler(array(
+				'members' => array(
+					'base' => 'members',
+					'data' => 'fks_member_data',
+					'data_types' => 'fks_member_data_types',
+					'base_column' => 'member_id',
+					'data_types_column' => 'id'
+				)
+			));
+			
+			$_member_data = $DataHandler->getData('local', 'members', $member_id, array(
+				'ACCESS_GROUPS',
+				'HOME_PAGE'
+			));
+			
+			if(!$_member_data) {
+				$_member_data['data']['ACCESS_GROUPS']['value'] = $this->siteSettings('DEFAULT_ACCESS_GUEST');
+			}
+		}
+		
+		if(empty($_member_data['data']['ACCESS_GROUPS']['value'])) { return null; }
+
+		// Grab Access Groups
+		if($Database->Q(array(
+			'assoc' => 'id',
+			'query' => 'SELECT * FROM fks_access_groups WHERE id IN (' . $_member_data['data']['ACCESS_GROUPS']['value'] . ') AND active = 1 AND deleted = 0'
+		))) {
+			$access_groups = $Database->r['rows'];
+		} else {
+			return null;
+		}
+
+		// Grab Member's Site Home Page
+		$site_home_page = null;
+		$hierarchy = 0;
+		if(!empty($_member_data['data']['HOME_PAGE']['value'])) {
+			$site_home_page = $_member_data['data']['HOME_PAGE']['value'];
+		}
+		
+		if(empty($site_home_page) && !empty($access_groups)) {
+			foreach($access_groups as $group) {
+				if(!empty($group['home_page']) && $group['hierarchy'] >= $hierarchy) {
+					$site_home_page = $group['home_page'];
+					$hierarchy = $group['hierarchy'];
+				}
+			}
+		}
+		
+		if(empty($site_home_page)) {
+			$site_home_page = $this->siteSettings('SITE_HOME_PAGE');
+		}
+		
+		if(!empty($site_home_page)) {
+			$site_home_page = $this->getMenuItemStructures(false, true)[$site_home_page];
+		}
+		
+		return $site_home_page;
 	}
 	
 	/*----------------------------------------------
@@ -433,8 +510,8 @@ class Utilities {
 		
 		foreach($rows as $k => &$v) {			
 			// Format status
-			if(isset($v['active'])) { $v['status'] = $v['active'] == 1 ? '<span style="color:green">Active</span>' : '<span style="color:red">Disabled</span>'; }
-			if(isset($v['deleted'])) { if($v['deleted'] == 1) { $v['status'] = '<span style="color:red">Deleted</span>'; } }
+			if(isset($v['active'])) { $v['status'] = $v['active'] == 1 ? '<span class="fks-text-success">Active</span>' : '<span class="fks-text-danger">Disabled</span>'; }
+			if(isset($v['deleted'])) { if($v['deleted'] == 1) { $v['status'] = '<span class="fks-text-critical">Deleted</span>'; } }
 			
 			// Format date times into correct timezones 
 			if(isset($v['date_created'])) { $v['date_created'] = $this->formatDateTime($v['date_created']); }
@@ -849,6 +926,7 @@ class Utilities {
 				'to_address' => $site_settings['ERROR_EMAIL_ADDRESS'],
 				'subject' => $this->siteSettings('SITE_TITLE') . ' Error: ' . $error['code'],
 				'body' => 'An error was encountered:<br><br>
+					Time: ' . $error['created'] . ' (UTC)<br>
 					Code: ' . $error['code'] . '<br>
 					File: ' . $error['file'] . '<br>
 					Class: ' . $error['class'] . '<br>
@@ -918,21 +996,97 @@ class Utilities {
 	}
 
 	/*----------------------------------------------
+		Time Zone
+	----------------------------------------------*/
+	public function timeZone() {
+		$timezone = isset($_SESSION['timezone']) ? $_SESSION['timezone'] : $this->siteSettings('TIMEZONE');
+		if(empty($timezone)) { $timezone = date_default_timezone_get(); }
+		return $timezone;
+	}
+
+	/*----------------------------------------------
 		Format Date Time
 	----------------------------------------------*/
-	public function formatDateTime($time = null) {
-		if(empty($time)) { return $time; }
-		$timezone = isset($_SESSION['timezone']) ? $_SESSION['timezone'] : $this->siteSettings('TIMEZONE');
-		$date_format = isset($_SESSION['date_format']) ? $_SESSION['date_format'] : $this->siteSettings('DATE_FORMAT');
-		if(empty($timezone)) { $timezone = date_default_timezone_get(); }
-		return date_format(date_create($time, new \DateTimeZone('UTC'))->setTimezone(new \DateTimeZone($timezone)), $date_format);
+	public function formatDateTime($datetime = null, $format = false, $time_zone_from = false, $time_zone_to = false) {
+		if(empty($datetime)) { return $datetime; }
+		$date_format = $format ? $format : (isset($_SESSION['date_format']) ? $_SESSION['date_format'] : $this->siteSettings('DATE_FORMAT'));
+		if($time_zone_from && $time_zone_to) {
+			return date_format(date_create($datetime, new \DateTimeZone($time_zone_from))->setTimezone(new \DateTimeZone($time_zone_to)), $date_format);
+		} else {
+			return date_format(date_create($datetime, new \DateTimeZone('UTC'))->setTimezone(new \DateTimeZone($this->timeZone())), $date_format);
+		}
+	}
+	
+	/*----------------------------------------------
+		Time Zones
+	----------------------------------------------*/
+	public function timeZones($regions = array()) {
+		$out = array('current' => $this->timeZone(), 'list' => array());
+		$allowed = $this->siteSettings('ALLOWED_TIME_ZONES');
+		
+		// Convert regions to array
+		if(!is_array($regions)) { $regions = array($regions); }
+		
+		// Set list to allowed
+		if($allowed && empty($regions)) {
+			$out['list'] = explode(',', $allowed);
+		}
+		
+		// Set regions if nothing else is set
+		if((!$allowed || is_null($allowed)) && empty($regions)) {
+			$regions = array('AMERICA', 'UTC');
+		}
+		
+		// Generate list based on regions
+		if(!empty($regions)) {
+			// Loop through supplied regions
+			foreach($regions as $v) {
+				// Set default time zone to UTC
+				$_zone = \DateTimeZone::UTC;
+				
+				// Set actual time zone
+				switch(strtoupper($v)) {
+					case 'AFRICA':			$_zone = \DateTimeZone::AFRICA;			break;
+					case 'AMERICA':			$_zone = \DateTimeZone::AMERICA;		break;
+					case 'ANTARCTICA':		$_zone = \DateTimeZone::ANTARCTICA;		break;
+					case 'ARCTIC':			$_zone = \DateTimeZone::ARCTIC;			break;
+					case 'ASIA':			$_zone = \DateTimeZone::ASIA;			break;
+					case 'ATLANTIC':		$_zone = \DateTimeZone::ATLANTIC;		break;
+					case 'AUSTRALIA':		$_zone = \DateTimeZone::AUSTRALIA;		break;
+					case 'EUROPE':			$_zone = \DateTimeZone::EUROPE;			break;
+					case 'INDIAN':			$_zone = \DateTimeZone::INDIAN;			break;
+					case 'PACIFIC':			$_zone = \DateTimeZone::PACIFIC;		break;
+					case 'UTC':				$_zone = \DateTimeZone::UTC;			break;
+					case 'ALL':				$_zone = \DateTimeZone::ALL;			break;	//	All time zones.
+					case 'ALL_WITH_BC':		$_zone = \DateTimeZone::ALL_WITH_BC;	break;	//	All time zones including backwards compatible.
+					//case 'PER_COUNTRY':		$_zone = \DateTimeZone::PER_COUNTRY;	break;	//	Time zones per country.
+				}
+				
+				// Get all zones
+				$_zones = \DateTimeZone::listIdentifiers($_zone);
+				
+				// Loop through zones
+				foreach($_zones as $timezone) {
+					// Add zone to time zone array
+					array_push($out['list'], $timezone);
+				}
+			}
+		}
+		
+		// Remove duplicates
+		$out['list'] = array_unique($out['list']);
+		
+		// Sort the list
+		sort($out['list']);
+		
+		return $out;
 	}
 	
 	/*----------------------------------------------
 		Site Settings
 	----------------------------------------------*/
 	public function siteSettings($title, $from_db = false) {
-
+		
 		if(isset($this->Session) && $this->Session->active()) {
 			if(!$from_db && isset($_SESSION['site_settings']) && isset($_SESSION['site_settings'][$title])) {
 				return $_SESSION['site_settings'][$title];
@@ -949,6 +1103,35 @@ class Utilities {
 			}
 		}
 		
+		return false;
+	}
+	
+	/*----------------------------------------------
+		Site Data
+	----------------------------------------------*/
+	public function siteData($title = false) {		
+	
+		$Database = new \Database;
+		
+		if($title === false) {
+			if($Database->Q('SELECT id, data FROM fks_site_data')) {
+				$out = array();
+				foreach($Database->r['rows'] as $row) {
+					$out[$row['id']] = $row['data'];
+				}
+				return $out;
+			}
+		} else {
+			if($Database->Q(array(
+				'params' => array(':id' => $title),
+				'query' => 'SELECT data FROM fks_site_data WHERE id = :id'
+			))) {
+				if($Database->r['found'] > 0) {
+					return $Database->r['row']['data'];
+				}
+			}
+		}
+
 		return false;
 	}
 	
@@ -1002,38 +1185,58 @@ class Utilities {
 	/*----------------------------------------------
 		Build Form Group
 	----------------------------------------------*/
-	public function buildFormGroup($params) {
+	public function buildFormGroup($params, $prefix = false) {
 		// Set variables
 		$out = '';
 		$parts = array();
 		$content = array();
 		$classes = array();
-		$name_set = false;
+		$id_set = false;
 		$attributes = array();
 		$required = ' <span style="color: red;">*</span>';
+		$prefix = $prefix ? $prefix : $this->makeKey(6);
+		
+		// Check for hr
+		if($params['type'] == 'hr') {
+			$out = '<hr style="margin: 0px 0px 10px 0px; padding: 0px;">';
+			return $out;
+		}
 		
 		// Add
-		array_push($classes, 'form-control');
+		if($params['type'] != 'summernote') {
+			array_push($classes, 'form-control');
+		}
 		
-		// Add id to attributes array
-		array_push($attributes, 'id="' . $params['id'] . '"');
+		// Add name to attributes array
+		array_push($attributes, 'name="' . $params['name'] . '"');
 		
 		// Add all attributes
 		if(isset($params['attributes'])) {
 			foreach($params['attributes'] as $k => $v) {
-				if($k == 'name') { $name_set = true; }
+				if($k == 'id') {
+					$id_set = true;
+					$params['id'] = $v;
+					array_push($attributes, 'id="' . $v . '"');
+					continue;
+				}
 				if($k == 'class') { 
-					array_push($classes, $v);
+					$classes = array_merge($classes, explode(' ', $v));
 					continue;
 				}
 				array_push($attributes, $k . '="' . $v . '"');
 			}
 		}
 		
+		// Check for fks-color-picker class and change type
+		if($params['type'] == 'color' && in_array('fks-color-picker', $classes)) {
+			$params['type'] = 'fks-color-picker';
+		}
+		
 		// See if name was set
-		if(!$name_set) {
-			// Add name to attributes array using id value
-			array_push($attributes, 'name="' . $params['id'] . '"');
+		if(!$id_set) {
+			// Add id to params and attributes array using name value
+			$params['id'] = $prefix . '_' . $params['name'];
+			array_push($attributes, 'id="' . $params['id'] . '"');
 		}
 		
 		// Add all properties
@@ -1043,27 +1246,43 @@ class Utilities {
 			}
 		}
 		
-		// Add aria-describedby
-		array_push($attributes, 'aria-describedby="' . $params['id'] . '_help"');
-		
 		// See if input is hidden
 		if($params['type'] == 'hidden') {
 			$out = '<input type="hidden" ' . implode(' ', $attributes) . (isset($params['value']) ? ' value="' . $params['value'] . '"' : '') . '>';
 			return $out;
 		}
 		
-		// Add label to parts if not a checkbox
-		if($params['type'] != 'checkbox') {
-			array_push($parts, '<label for="' . $params['id'] . '" class="form-control-label">' . $params['title'] . (isset($params['required']) && $params['required'] ? $required : '') . '</label>');
+		// Add aria-describedby
+		array_push($attributes, 'aria-describedby="' . $params['id'] . '_help"');
+		
+		// Add label to parts
+		if(isset($params['title'])) {
+			if(empty($params['title'])) { $params['title'] = '&nbsp;'; }
+			// Check for checkbox/radio
+			if($params['type'] != 'checkbox' && $params['type'] != 'radio') {
+				array_push($parts, '<label for="' . $params['id'] . '" class="form-control-label">' . $params['title'] . (isset($params['required']) && $params['required'] ? $required : '') . '</label>');
+			} else if(isset($params['label'])) {
+				if(empty($params['label'])) { $params['label'] = '&nbsp;'; }
+				array_push($parts, '<label class="form-control-label">' . $params['label'] . (isset($params['required']) && $params['required'] ? $required : '') . '</label>');
+			}
 		}
 
 		// Attributes / Classes / Properties
 		$_acp = 'class="' . implode(' ', $classes) . '" ' . implode(' ', $attributes);
 		
 		switch($params['type']) {
+			case 'date':
+			case 'time':
 			case 'text':
+			case 'email':
 			case 'number':
+			case 'password':
+			case 'color':
 				array_push($content, '<input type="' . $params['type'] . '" ' . $_acp . (isset($params['value']) ? ' value="' . $params['value'] . '"' : '') . ' />');
+				break;
+				
+			case 'fks-color-picker':
+				array_push($content, '<input type="text" ' . $_acp . (isset($params['value']) ? ' value="' . $params['value'] . '"' : '') . ' />');
 				break;
 				
 			case 'textarea':
@@ -1072,23 +1291,88 @@ class Utilities {
 				
 			case 'select':
 				$_options = array();
-				if(isset($params['options'])) {
-					foreach($params['options'] as $o) {
-						$_a = (isset($o['value']) ? ' value="' . $o['value'] . '"' : '')
-							. ((isset($o['selected']) && $o['selected']) || (isset($o['value']) && isset($params['value']) && $o['value'] == $params['value']) ? ' selected' : '')
-							. (isset($o['disabled']) && $o['disabled'] ? ' disabled' : '');
-						array_push($_options, '<option' . $_a . '>' . $o['title'] . '</option>');
+				$_optgroups = array();
+				$_values = array();
+				
+				// See if value is set
+				if(isset($params['value'])) {
+					if(is_array($params['value'])) {
+						$_values = $params['value'];
+					} else {
+						// Check for multiple select
+						if(isset($params['properties']) && in_array('multiple', $params['properties'])) {
+							$_values = explode(',', $params['value']);
+						} else {
+							array_push($_values, $params['value']);
+						}
 					}
 				}
+				
+				// Make sure options are set
+				if(isset($params['options'])) {
+					// Sort options by title
+					//$this->aasort($params['options'], 'title');
+					
+					// Loop through options
+					foreach($params['options'] as $o) {
+						// Convert to array of string is passed
+						if(is_string($o)) { $o = array('title' => $o); }
+						
+						// Create all attributes
+						$_a = (isset($o['value']) ? ' value="' . $o['value'] . '"' : '')
+							. ((isset($o['selected']) && $o['selected']) || (isset($o['value']) && in_array($o['value'], $_values)) ? ' selected' : '')
+							. (isset($o['disabled']) && $o['disabled'] ? ' disabled' : '');
+						
+						// Check for optgroup
+						if(isset($o['group'])) {
+							if(!isset($_optgroups[$o['group']])) { $_optgroups[$o['group']] = array(); }
+							array_push($_optgroups[$o['group']], '<option' . $_a . '>' . $o['title'] . '</option>');
+						} else {
+							array_push($_options, '<option' . $_a . '>' . $o['title'] . '</option>');
+						}
+					}
+				}
+				
+				// Sort optgroups reverse
+				krsort($_optgroups);
+				
+				// Loop through optgroups and unshift
+				foreach($_optgroups as $k => $v) {
+					array_unshift($_options, '<optgroup label="' . $k . '">' . implode('', $v) . '</optgroup>');
+				}
+				
 				array_push($content, '<select ' . $_acp . '>' . implode('', $_options) . '</select>');
 				break;
 				
 			case 'checkbox':
-				$_checkbox = '<input type="checkbox" ' . $_acp . ' />'
+				$_checkbox = '<input type="checkbox" ' . $_acp . (isset($params['value']) ? ' value="' . $params['value'] . '"' : '') . ' />'
 					. $params['title']
 					. (isset($params['required']) && $params['required'] ? $required : '');
 				array_push($content, '<label class="form-checkbox">' . $_checkbox . '</label>');
 				break;
+				
+			case 'radio':
+				$_radio = '<input type="radio" ' . $_acp . (isset($params['value']) ? ' value="' . $params['value'] . '"' : '') . ' />'
+					. $params['title']
+					. (isset($params['required']) && $params['required'] ? $required : '');
+				array_push($content, '<label class="form-radio">' . $_radio . '</label>');
+				break;
+				
+			case 'summernote':
+				array_push($content, '<div ' . $_acp . '>' . (isset($params['value']) ? $params['value'] : '') . '</div>');
+				break;
+				
+			default:
+				array_push($content, '<input type="text" class="' . implode(' ', $classes) . '" value="Unknown input type (' . $params['type'] . ')" disabled>');
+				break;
+		}
+		
+		// Create an input group for the fks-color-picker
+		if($params['type'] == 'fks-color-picker') {
+			$color_picker = '<div class="input-group-addon fks-color-preview" id="' . $params['name'] . '_color_preview"></div>';
+			if(!isset($params['group'])) { $params['group'] = array(); }
+			if(!isset($params['group']['after'])) { $params['group']['after'] = ''; }
+			$params['group']['after'] = $color_picker . $params['group']['after'];
 		}
 		
 		// Check for input grouping
@@ -1121,13 +1405,62 @@ class Utilities {
 		}
 		
 		// Add form-control-feedback to parts
-		array_push($parts, '<div class="form-control-feedback"></div>');
+		if(!isset($params['feedback']) || (isset($params['feedback']) && $params['feedback'])) {
+			array_push($parts, '<div class="form-control-feedback"></div>');
+		}
 		
 		// Add help to parts
-		array_push($parts, '<small id="' . $params['id'] . '_help" class="form-text text-muted">' . (isset($params['help']) ? $params['help'] : '&nbsp;') . '</small>');
+		if(isset($params['help'])) {
+			if(empty($params['help'])) { $params['help'] = '&nbsp;'; }
+			array_push($parts, '<small id="' . $params['id'] . '_help" class="form-text text-muted">' . $params['help'] . '</small>');
+		}
 		
 		// Return the form group
 		return '<div class="form-group">' . implode('', $parts) . '</div>';
+	}
+	
+	/*----------------------------------------------
+		Build Form Groups
+	----------------------------------------------*/
+	public function buildFormGroups($params, $options = array()) {
+		$options['prefix'] = isset($options['prefix']) ? $options['prefix'] : $this->makeKey(6);
+		$options['size'] = isset($options['size']) ? $options['size'] : 'md';
+		$options['width'] = isset($options['width']) ? $options['width'] : 12;
+		
+		$out = '';
+		$build_width = 0;
+		$last_size = 'md';
+		
+		foreach($params as $group) {
+			$_size = array_key_exists('size', $group) ? $group['size'] : $options['size'];
+			$last_size = $_size;
+			$_width = array_key_exists('width', $group) ? $group['width'] : $options['width'];
+			$_form_group = array_key_exists('type', $group) ? $this->buildFormGroup($group, $options['prefix']) : '';
+			
+			if(!empty($_form_group) && $group['type'] == 'hidden') {
+				$out .= $_form_group;
+				continue;
+			}
+			
+			if($build_width == 0) {
+				$out .= '<div class="row">';
+			}
+
+			$out .= '<div class="col-' . $_size . '-' . $_width . '">' . $_form_group . '</div>';			
+			
+			$build_width += $_width;
+			
+			if($build_width >= 12) {
+				$build_width = 0;
+				$out .= '</div>';
+			}
+		}
+		
+		if($build_width !== 0) {
+			$out .= '<div class="col-' . $last_size . '-' . (12 - $build_width) . '"></div></div>';	
+		}
+		
+		return $out;
 	}
 }
 

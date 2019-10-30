@@ -91,6 +91,7 @@ define([
 			'language': {
 				'emptyTable': tables[0].empty
 			},
+			'dom': fks.data_table_dom,
 			'iDisplayLength': 15,
 			'lengthMenu': [[15, 25, 50, 100, -1], [15, 25, 50, 100, 'All']],
 			'order': [[0, 'asc']],
@@ -146,7 +147,6 @@ define([
 		if(!id) { var id = '+'; }
 		fks.editModal({
 			src: page.src,
-			wait: true,
 			action: 'editGroup', 
 			action_data: id,
 			callbacks: {
@@ -248,12 +248,18 @@ define([
 			nodes[v.id] = {
 				text: v.title,
 				icon: v.icon != null ? 'fa fa-' + v.icon + ' font-dark' : 'fa fa-times error',
-				dropdown: select.clone().wrap('<p>').parent().html(),
+				dropdown: ' <span style="display: inline-block;">' + select.clone().wrap('<p>').parent().html() + '</span>',
+				rank: '',
 				children: false
 			};
+			
 			if(nodes[v.parent] && !nodes[v.parent].children) {
 				nodes[v.parent].children = true;
 			}
+			
+			if(value > 0) { nodes[v.id].rank += '<i class="fa fa-book fa-fw"></i>'; }
+			if(value > 1) { nodes[v.id].rank += '<i class="fa fa-pencil fa-fw"></i>'; }
+			if(value > 2) { nodes[v.id].rank += '<i class="fa fa-cogs fa-fw"></i>'; }
 		});
 		
 		var added = false;
@@ -264,7 +270,7 @@ define([
 					v.parent == '0' ? $('#access_group_tree') : $('#access_group_tree').find('[id="access-node-' + v.parent + '"]'),
 					{
 						'id': 'access-node-' + v.id,
-						'text': nodes[v.id].text + '<span class="pull-right">' + nodes[v.id].dropdown + '</span>',
+						'text': nodes[v.id].text + '<span class="pull-right" style="height: 27px;">' + nodes[v.id].rank + nodes[v.id].dropdown + '</span>',
 						'type': nodes[v.id].children || v.parent == '0' ? 'parent' : 'child',
 						'icon': nodes[v.id].icon
 					},
@@ -320,18 +326,23 @@ define([
 			j = $(e.parents('.jstree')),
 			id = e.attr('name').replace('select_access_', ''),
 			html = $('a:first', p).html().replace(/<i(.*?)>(.*?)<\/i>/i, '').replace(/<span(.*?)>(.*?)<\/span>/i, ''),
-			options = '';
-			dropdown = '';
-				
+			options = '',
+			dropdown = '',
+			rank = '';
+			
+		if(v > 0) { rank += '<i class="fa fa-book fa-fw"></i>'; }
+		if(v > 1) { rank += '<i class="fa fa-pencil fa-fw"></i>'; }
+		if(v > 2) { rank += '<i class="fa fa-cogs fa-fw"></i>'; }
+		
 		$.each(access_types, function() {
 			options += '<option value="' + this.id + '"' + (v == this.id ? 'selected' : '') + '>' + this.title + '</option>';
 		});
 		
-		dropdown = '<select name="select_access_' + id + '" class="form-control form-control-sm">' + options + '</select>';
+		dropdown = ' <span style="display: inline-block;"><select name="select_access_' + id + '" class="form-control form-control-sm">' + options + '</select></span>';
 		
 		$('select.bound', p).removeClass('bound').off('change click');
 		
-		j.jstree('rename_node', p, html + '<span class="pull-right">' + dropdown + '</span>');
+		j.jstree('rename_node', p, html + '<span class="pull-right" style="height: 27px;">' + rank + dropdown + '</span>');
 
 		$('#access_group_tree select:not(.bound)').each(function() {
 			$(this).addClass('bound');

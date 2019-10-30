@@ -1,31 +1,30 @@
-@charset "UTF-8";
+@charset 'UTF-8';
 /***********************************************
-	Updated: 02/27/2019
-***********************************************/
+ Updated: 10/24/2019
+ ***********************************************/
 @import url(https://fonts.googleapis.com/css?family=Roboto);
 /*-------------------------------------------------------------------
-	Set FKS Text and Buttons Colors
--------------------------------------------------------------------*/
+ Set FKS Text and Buttons Colors
+ -------------------------------------------------------------------*/
 .fks-text-signature {
   color: #36e3fd !important;
 }
-
 .fks-border-signature {
   border-color: #36e3fd !important;
 }
-
+.fks-bg-signature {
+  background-color: #36e3fd !important;
+}
 .fks-badge-signature {
   color: #fff !important;
   background: #36e3fd !important;
 }
-
 .fks-tooltip-signature > div {
   background: #36e3fd !important;
 }
 .fks-tooltip-signature > div > div.arrow {
   border-top-color: #36e3fd !important;
 }
-
 .fks-btn-signature {
   color: #fff;
   border-color: #1ddffd;
@@ -39,33 +38,56 @@
   background: #04dcfc;
   border-color: #02c7e4;
 }
-
 .fks-alert-signature {
   color: #015966;
   background: #ddfaff;
   border-color: #b4f5fe;
 }
-
+.fks-tab-signature > a {
+  color: #36e3fd !important;
+}
+.fks-tab-signature > a.active {
+  border-color: #36e3fd !important;
+}
+.fks-tab-signature > a:hover:not(.active):not(.disabled) {
+  border-color: rgba(54, 227, 253, 0.2) !important;
+}
+.fks-tab-signature > a:not(:hover):not(.active):not(.disabled) {
+  border-color: rgba(54, 227, 253, 0.1) !important;
+}
+.fks-tab-signature > a.disabled {
+  color: rgba(54, 227, 253, 0.35) !important;
+  border-color: rgba(54, 227, 253, 0.35) !important;
+}
+.fks-card-signature {
+  border-color: #1ddffd !important;
+}
+.fks-card-signature > .header {
+  color: #fff;
+  background: #36e3fd !important;
+}
+.fks-card-signature > .body-container > .body {
+  border-color: #1ddffd !important;
+}
 .fks-text-dark {
   color: #333333 !important;
 }
-
 .fks-border-dark {
   border-color: #333333 !important;
 }
-
+.fks-bg-dark {
+  background-color: #333333 !important;
+}
 .fks-badge-dark {
   color: #fff !important;
   background: #333333 !important;
 }
-
 .fks-tooltip-dark > div {
   background: #333333 !important;
 }
 .fks-tooltip-dark > div > div.arrow {
   border-top-color: #333333 !important;
 }
-
 .fks-btn-dark {
   color: #fff;
   border-color: #262626;
@@ -79,33 +101,56 @@
   background: #1a1a1a;
   border-color: #0d0d0d;
 }
-
 .fks-alert-dark {
   color: black;
   background: #878787;
   border-color: #737373;
 }
-
+.fks-tab-dark > a {
+  color: #333333 !important;
+}
+.fks-tab-dark > a.active {
+  border-color: #333333 !important;
+}
+.fks-tab-dark > a:hover:not(.active):not(.disabled) {
+  border-color: rgba(51, 51, 51, 0.2) !important;
+}
+.fks-tab-dark > a:not(:hover):not(.active):not(.disabled) {
+  border-color: rgba(51, 51, 51, 0.1) !important;
+}
+.fks-tab-dark > a.disabled {
+  color: rgba(51, 51, 51, 0.35) !important;
+  border-color: rgba(51, 51, 51, 0.35) !important;
+}
+.fks-card-dark {
+  border-color: #262626 !important;
+}
+.fks-card-dark > .header {
+  color: #fff;
+  background: #333333 !important;
+}
+.fks-card-dark > .body-container > .body {
+  border-color: #262626 !important;
+}
 .fks-text-primary {
   color: #0275d8 !important;
 }
-
 .fks-border-primary {
   border-color: #0275d8 !important;
 }
-
+.fks-bg-primary {
+  background-color: #0275d8 !important;
+}
 .fks-badge-primary {
   color: #fff !important;
   background: #0275d8 !important;
 }
-
 .fks-tooltip-primary > div {
   background: #0275d8 !important;
 }
 .fks-tooltip-primary > div > div.arrow {
   border-top-color: #0275d8 !important;
 }
-
 .fks-btn-primary {
   color: #fff;
   border-color: #0267bf;
@@ -119,26 +164,50 @@
   background: #025aa5;
   border-color: #014c8c;
 }
-
 .fks-alert-primary {
   color: #00080e;
   background: #84c6fe;
   border-color: #5cb3fd;
 }
-
+.fks-tab-primary > a {
+  color: #0275d8 !important;
+}
+.fks-tab-primary > a.active {
+  border-color: #0275d8 !important;
+}
+.fks-tab-primary > a:hover:not(.active):not(.disabled) {
+  border-color: rgba(2, 117, 216, 0.2) !important;
+}
+.fks-tab-primary > a:not(:hover):not(.active):not(.disabled) {
+  border-color: rgba(2, 117, 216, 0.1) !important;
+}
+.fks-tab-primary > a.disabled {
+  color: rgba(2, 117, 216, 0.35) !important;
+  border-color: rgba(2, 117, 216, 0.35) !important;
+}
+.fks-card-primary {
+  border-color: #0267bf !important;
+}
+.fks-card-primary > .header {
+  color: #fff;
+  background: #0275d8 !important;
+}
+.fks-card-primary > .body-container > .body {
+  border-color: #0267bf !important;
+}
 .fks-text-secondary {
   color: #ffffff !important;
 }
-
 .fks-border-secondary {
   border-color: #ffffff !important;
 }
-
+.fks-bg-secondary {
+  background-color: #ffffff !important;
+}
 .fks-badge-secondary {
   color: #fff !important;
   background: #8c8c8c !important;
 }
-
 .fks-tooltip-secondary > div {
   color: #292b2c !important;
   background: #ffffff !important;
@@ -146,10 +215,9 @@
 .fks-tooltip-secondary > div > div.arrow {
   border-top-color: #ffffff !important;
 }
-
 .fks-btn-secondary {
   color: #292b2c;
-  border-color: #cccccc;
+  border-color: #ccc;
   background: #ffffff;
 }
 .fks-btn-secondary:hover:not(.disabled):not(:disabled) {
@@ -158,35 +226,58 @@
 }
 .fks-btn-secondary:active:not(.disabled):not(:disabled) {
   background: #e6e6e6;
-  border-color: #999999;
+  border-color: #999;
 }
-
 .fks-alert-secondary {
-  color: #999999;
+  color: #999;
   background: white;
   border-color: white;
 }
-
+.fks-tab-secondary > a {
+  color: #ffffff !important;
+}
+.fks-tab-secondary > a.active {
+  border-color: #ffffff !important;
+}
+.fks-tab-secondary > a:hover:not(.active):not(.disabled) {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+.fks-tab-secondary > a:not(:hover):not(.active):not(.disabled) {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+.fks-tab-secondary > a.disabled {
+  color: rgba(255, 255, 255, 0.35) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+.fks-card-secondary {
+  border-color: #ccc !important;
+}
+.fks-card-secondary > .header {
+  color: #292b2c;
+  background: #ffffff !important;
+}
+.fks-card-secondary > .body-container > .body {
+  border-color: #ccc !important;
+}
 .fks-text-info {
   color: #5bc0de !important;
 }
-
 .fks-border-info {
   border-color: #5bc0de !important;
 }
-
+.fks-bg-info {
+  background-color: #5bc0de !important;
+}
 .fks-badge-info {
   color: #fff !important;
   background: #5bc0de !important;
 }
-
 .fks-tooltip-info > div {
   background: #5bc0de !important;
 }
 .fks-tooltip-info > div > div.arrow {
   border-top-color: #5bc0de !important;
 }
-
 .fks-btn-info {
   color: #fff;
   border-color: #46b8da;
@@ -200,73 +291,119 @@
   background: #31b0d5;
   border-color: #28a1c5;
 }
-
 .fks-alert-info {
   color: #124a5b;
   background: #e7f6fa;
   border-color: #c5e9f3;
 }
-
+.fks-tab-info > a {
+  color: #5bc0de !important;
+}
+.fks-tab-info > a.active {
+  border-color: #5bc0de !important;
+}
+.fks-tab-info > a:hover:not(.active):not(.disabled) {
+  border-color: rgba(91, 192, 222, 0.2) !important;
+}
+.fks-tab-info > a:not(:hover):not(.active):not(.disabled) {
+  border-color: rgba(91, 192, 222, 0.1) !important;
+}
+.fks-tab-info > a.disabled {
+  color: rgba(91, 192, 222, 0.35) !important;
+  border-color: rgba(91, 192, 222, 0.35) !important;
+}
+.fks-card-info {
+  border-color: #46b8da !important;
+}
+.fks-card-info > .header {
+  color: #fff;
+  background: #5bc0de !important;
+}
+.fks-card-info > .body-container > .body {
+  border-color: #46b8da !important;
+}
 .fks-text-success {
   color: #5cb85c !important;
 }
-
 .fks-border-success {
   border-color: #5cb85c !important;
 }
-
+.fks-bg-success {
+  background-color: #5cb85c !important;
+}
 .fks-badge-success {
   color: #fff !important;
   background: #5cb85c !important;
 }
-
 .fks-tooltip-success > div {
   background: #5cb85c !important;
 }
 .fks-tooltip-success > div > div.arrow {
   border-top-color: #5cb85c !important;
 }
-
-.fks-btn-success {
+.fks-btn-success, .daterangepicker.dropdown-menu .ranges > .range_inputs > .btn.applyBtn {
   color: #fff;
   border-color: #4cae4c;
   background: #5cb85c;
 }
-.fks-btn-success:hover:not(.disabled):not(:disabled) {
+.fks-btn-success:hover:not(.disabled):not(:disabled), .daterangepicker.dropdown-menu .ranges > .range_inputs > .btn.applyBtn:hover:not(.disabled):not(:disabled) {
   background: #4cae4c;
   border-color: #449d44;
 }
-.fks-btn-success:active:not(.disabled):not(:disabled) {
+.fks-btn-success:active:not(.disabled):not(:disabled), .daterangepicker.dropdown-menu .ranges > .range_inputs > .btn.applyBtn:active:not(.disabled):not(:disabled) {
   background: #449d44;
   border-color: #3d8b3d;
 }
-
 .fks-alert-success {
   color: #163216;
   background: #d1ebd1;
   border-color: #b5dfb5;
 }
-
+.fks-tab-success > a {
+  color: #5cb85c !important;
+}
+.fks-tab-success > a.active {
+  border-color: #5cb85c !important;
+}
+.fks-tab-success > a:hover:not(.active):not(.disabled) {
+  border-color: rgba(92, 184, 92, 0.2) !important;
+}
+.fks-tab-success > a:not(:hover):not(.active):not(.disabled) {
+  border-color: rgba(92, 184, 92, 0.1) !important;
+}
+.fks-tab-success > a.disabled {
+  color: rgba(92, 184, 92, 0.35) !important;
+  border-color: rgba(92, 184, 92, 0.35) !important;
+}
+.fks-card-success {
+  border-color: #4cae4c !important;
+}
+.fks-card-success > .header {
+  color: #fff;
+  background: #5cb85c !important;
+}
+.fks-card-success > .body-container > .body {
+  border-color: #4cae4c !important;
+}
 .fks-text-warning {
   color: #f0ad4e !important;
 }
-
 .fks-border-warning {
   border-color: #f0ad4e !important;
 }
-
+.fks-bg-warning {
+  background-color: #f0ad4e !important;
+}
 .fks-badge-warning {
   color: #fff !important;
   background: #f0ad4e !important;
 }
-
 .fks-tooltip-warning > div {
   background: #f0ad4e !important;
 }
 .fks-tooltip-warning > div > div.arrow {
   border-top-color: #f0ad4e !important;
 }
-
 .fks-btn-warning {
   color: #fff;
   border-color: #eea236;
@@ -280,73 +417,119 @@
   background: #ec971f;
   border-color: #df8a13;
 }
-
 .fks-alert-warning {
   color: #694109;
   background: #fdf5e9;
   border-color: #fae3c4;
 }
-
+.fks-tab-warning > a {
+  color: #f0ad4e !important;
+}
+.fks-tab-warning > a.active {
+  border-color: #f0ad4e !important;
+}
+.fks-tab-warning > a:hover:not(.active):not(.disabled) {
+  border-color: rgba(240, 173, 78, 0.2) !important;
+}
+.fks-tab-warning > a:not(:hover):not(.active):not(.disabled) {
+  border-color: rgba(240, 173, 78, 0.1) !important;
+}
+.fks-tab-warning > a.disabled {
+  color: rgba(240, 173, 78, 0.35) !important;
+  border-color: rgba(240, 173, 78, 0.35) !important;
+}
+.fks-card-warning {
+  border-color: #eea236 !important;
+}
+.fks-card-warning > .header {
+  color: #fff;
+  background: #f0ad4e !important;
+}
+.fks-card-warning > .body-container > .body {
+  border-color: #eea236 !important;
+}
 .fks-text-danger {
   color: #d9534f !important;
 }
-
 .fks-border-danger {
   border-color: #d9534f !important;
 }
-
+.fks-bg-danger {
+  background-color: #d9534f !important;
+}
 .fks-badge-danger {
   color: #fff !important;
   background: #d9534f !important;
 }
-
 .fks-tooltip-danger > div {
   background: #d9534f !important;
 }
 .fks-tooltip-danger > div > div.arrow {
   border-top-color: #d9534f !important;
 }
-
-.fks-btn-danger {
+.fks-btn-danger, .daterangepicker.dropdown-menu .ranges > .range_inputs > .btn.cancelBtn {
   color: #fff;
   border-color: #d43f3a;
   background: #d9534f;
 }
-.fks-btn-danger:hover:not(.disabled):not(:disabled) {
+.fks-btn-danger:hover:not(.disabled):not(:disabled), .daterangepicker.dropdown-menu .ranges > .range_inputs > .btn.cancelBtn:hover:not(.disabled):not(:disabled) {
   background: #d43f3a;
   border-color: #c9302c;
 }
-.fks-btn-danger:active:not(.disabled):not(:disabled) {
+.fks-btn-danger:active:not(.disabled):not(:disabled), .daterangepicker.dropdown-menu .ranges > .range_inputs > .btn.cancelBtn:active:not(.disabled):not(:disabled) {
   background: #c9302c;
   border-color: #b52b27;
 }
-
 .fks-alert-danger {
   color: #4c1210;
   background: #f7dad9;
   border-color: #f0b9b8;
 }
-
+.fks-tab-danger > a {
+  color: #d9534f !important;
+}
+.fks-tab-danger > a.active {
+  border-color: #d9534f !important;
+}
+.fks-tab-danger > a:hover:not(.active):not(.disabled) {
+  border-color: rgba(217, 83, 79, 0.2) !important;
+}
+.fks-tab-danger > a:not(:hover):not(.active):not(.disabled) {
+  border-color: rgba(217, 83, 79, 0.1) !important;
+}
+.fks-tab-danger > a.disabled {
+  color: rgba(217, 83, 79, 0.35) !important;
+  border-color: rgba(217, 83, 79, 0.35) !important;
+}
+.fks-card-danger {
+  border-color: #d43f3a !important;
+}
+.fks-card-danger > .header {
+  color: #fff;
+  background: #d9534f !important;
+}
+.fks-card-danger > .body-container > .body {
+  border-color: #d43f3a !important;
+}
 .fks-text-critical {
   color: #e270c8 !important;
 }
-
 .fks-border-critical {
   border-color: #e270c8 !important;
 }
-
+.fks-bg-critical {
+  background-color: #e270c8 !important;
+}
 .fks-badge-critical {
   color: #fff !important;
   background: #e270c8 !important;
 }
-
 .fks-tooltip-critical > div {
   background: #e270c8 !important;
 }
 .fks-tooltip-critical > div > div.arrow {
   border-top-color: #e270c8 !important;
 }
-
 .fks-btn-critical {
   color: #fff;
   border-color: #de5bc0;
@@ -360,158 +543,234 @@
   background: #d946b8;
   border-color: #d530b0;
 }
-
 .fks-alert-critical {
   color: #6f175b;
   background: #fefcfe;
   border-color: #f7daf1;
 }
-
+.fks-tab-critical > a {
+  color: #e270c8 !important;
+}
+.fks-tab-critical > a.active {
+  border-color: #e270c8 !important;
+}
+.fks-tab-critical > a:hover:not(.active):not(.disabled) {
+  border-color: rgba(226, 112, 200, 0.2) !important;
+}
+.fks-tab-critical > a:not(:hover):not(.active):not(.disabled) {
+  border-color: rgba(226, 112, 200, 0.1) !important;
+}
+.fks-tab-critical > a.disabled {
+  color: rgba(226, 112, 200, 0.35) !important;
+  border-color: rgba(226, 112, 200, 0.35) !important;
+}
+.fks-card-critical {
+  border-color: #de5bc0 !important;
+}
+.fks-card-critical > .header {
+  color: #fff;
+  background: #e270c8 !important;
+}
+.fks-card-critical > .body-container > .body {
+  border-color: #de5bc0 !important;
+}
 /*-------------------------------------------------------------------
-	Helpers
--------------------------------------------------------------------*/
+ Helpers
+ -------------------------------------------------------------------*/
 .pad-top-0 {
   padding-top: 0px !important;
 }
-
 .pad-bot-0 {
   padding-bottom: 0px !important;
 }
-
 .mar-top-0 {
   margin-top: 0px !important;
 }
-
 .mar-bot-0 {
   margin-bottom: 0px !important;
 }
-
 .pad-top-10 {
   padding-top: 10px !important;
 }
-
 .pad-bot-10 {
   padding-bottom: 10px !important;
 }
-
 .mar-top-10 {
   margin-top: 10px !important;
 }
-
 .mar-bot-10 {
   margin-bottom: 10px !important;
 }
-
 .pad-top-20 {
   padding-top: 20px !important;
 }
-
 .pad-bot-20 {
   padding-bottom: 20px !important;
 }
-
 .mar-top-20 {
   margin-top: 20px !important;
 }
-
 .mar-bot-20 {
   margin-bottom: 20px !important;
 }
-
 .pad-top-30 {
   padding-top: 30px !important;
 }
-
 .pad-bot-30 {
   padding-bottom: 30px !important;
 }
-
 .mar-top-30 {
   margin-top: 30px !important;
 }
-
 .mar-bot-30 {
   margin-bottom: 30px !important;
 }
-
 .pad-top-40 {
   padding-top: 40px !important;
 }
-
 .pad-bot-40 {
   padding-bottom: 40px !important;
 }
-
 .mar-top-40 {
   margin-top: 40px !important;
 }
-
 .mar-bot-40 {
   margin-bottom: 40px !important;
 }
-
 .pad-top-50 {
   padding-top: 50px !important;
 }
-
 .pad-bot-50 {
   padding-bottom: 50px !important;
 }
-
 .mar-top-50 {
   margin-top: 50px !important;
 }
-
 .mar-bot-50 {
   margin-bottom: 50px !important;
 }
-
 /*-------------------------------------------------------------------
-	Table Icon Widths
--------------------------------------------------------------------*/
+ Table Icon Widths
+ -------------------------------------------------------------------*/
 th.icon-1, td.icon-1 {
   width: 20px;
 }
-
 th.icon-2, td.icon-2 {
   width: 41px;
 }
-
 th.icon-3, td.icon-3 {
   width: 62px;
 }
-
 th.icon-4, td.icon-4 {
   width: 83px;
 }
-
 th.icon-5, td.icon-5 {
   width: 104px;
 }
-
 th.icon-6, td.icon-6 {
   width: 125px;
 }
-
 th.icon-7, td.icon-7 {
   width: 146px;
 }
-
 th.icon-8, td.icon-8 {
   width: 167px;
 }
-
 th.icon-9, td.icon-9 {
   width: 188px;
 }
-
 th.icon-10, td.icon-10 {
   width: 209px;
 }
-
 /*-------------------------------------------------------------------
-	Better Button Container
--------------------------------------------------------------------*/
+ FKS Card
+ -------------------------------------------------------------------*/
+.fks-card {
+  border: 1px solid;
+  border-color: #dfdfdf;
+  background: white;
+}
+.fks-card > .header {
+  padding: 10px;
+  background: #f6f6f6;
+}
+.fks-card > .header > .title {
+  font-size: 16px;
+  font-weight: bold;
+}
+.fks-card > .body-container > .body {
+  border-top: 1px solid;
+  border-color: #dfdfdf;
+  padding: 10px;
+  padding-bottom: 0px;
+}
+/*-------------------------------------------------------------------
+ FKS List Group
+ -------------------------------------------------------------------*/
+ul.fks-list-group {
+  padding: 0px;
+  margin-bottom: 10px;
+}
+ul.fks-list-group li.list-group-item {
+  padding: 0px 0px 0px 0.75rem;
+  height: 38px;
+  max-height: 38px;
+  min-height: 38px;
+  line-height: 38px;
+  font-size: 1rem;
+  position: relative;
+  border-color: #dfdfdf;
+}
+ul.fks-list-group li.list-group-item .actions {
+  display: inline-flex;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+}
+ul.fks-list-group li.list-group-item .actions .btn {
+  padding: 0px;
+  width: 30px;
+  height: 30px;
+  font-size: 1rem;
+  margin-right: 3px;
+  margin-top: 3px;
+}
+ul.fks-list-group li.list-group-item:hover {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+ul.fks-list-group.fks-list-group-sm li.list-group-item {
+  padding-left: 0.5rem;
+  height: 27px;
+  max-height: 27px;
+  min-height: 27px;
+  line-height: 27px;
+  font-size: 0.875rem;
+}
+ul.fks-list-group.fks-list-group-sm li.list-group-item .actions .btn {
+  width: 21px;
+  height: 21px;
+  font-size: 0.875rem;
+  margin-right: 2px;
+  margin-top: 2px;
+}
+ul.fks-list-group.fks-list-group-lg li.list-group-item {
+  padding-left: 1.5rem;
+  height: 51px;
+  max-height: 51px;
+  min-height: 51px;
+  line-height: 51px;
+  font-size: 1.25rem;
+}
+ul.fks-list-group.fks-list-group-lg li.list-group-item .actions .btn {
+  width: 41px;
+  height: 41px;
+  font-size: 1.25rem;
+  margin-right: 4px;
+  margin-top: 4px;
+}
+/*-------------------------------------------------------------------
+ Better Button Container
+ -------------------------------------------------------------------*/
 .btn-container {
   display: flow-root;
 }
@@ -529,7 +788,6 @@ th.icon-10, td.icon-10 {
 .btn-container > .btn-right > .btn:not(:first-child) {
   margin-left: 10px;
 }
-
 * {
   outline: none !important;
   border-radius: 0px !important;
@@ -553,13 +811,11 @@ th.icon-10, td.icon-10 {
 *:-moz-placeholder {
   color: #cbcbcb !important;
 }
-
 pre {
   font-size: 85%;
   border: 1px solid #eceeef;
   padding: 5px;
 }
-
 a {
   color: #028598;
   text-decoration: none !important;
@@ -570,7 +826,6 @@ a:hover, a:focus {
 a:active {
   color: #01434d;
 }
-
 a.fks-link-light {
   color: #02c7e4;
 }
@@ -580,20 +835,19 @@ a.fks-link-light:hover, a.fks-link-light:focus {
 a.fks-link-light:active {
   color: #028598;
 }
-
 h1, h2, h3, h4, h5, h6 {
   font-weight: bold;
 }
-
 body {
   overflow: hidden;
 }
-
+.dropdown-menu {
+  z-index: 2000;
+}
 /*-------------------------------------------------------------------
-	No Select
--------------------------------------------------------------------*/
-.no-sel, #top_nav > .actions, .ms-container .ms-selectable .ms-list,
-.ms-container .ms-selection .ms-list, .dropdown-menu.column-toggler, .fks-panel > .body > ul.panel-nav > li {
+ No Select
+ -------------------------------------------------------------------*/
+.no-sel, #top_nav > .actions, .ms-container .ms-selectable .ms-list, .ms-container .ms-selection .ms-list, .dropdown-menu.column-toggler, .fks-panel > .body > ul.panel-nav > li {
   cursor: default;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -603,10 +857,9 @@ body {
   -o-user-select: none;
   user-select: none;
 }
-
 /*-------------------------------------------------------------------
-	Button Fixes
--------------------------------------------------------------------*/
+ Button Fixes
+ -------------------------------------------------------------------*/
 .btn {
   line-height: 1.25em;
   cursor: pointer;
@@ -616,17 +869,15 @@ body {
   -webkit-box-shadow: none !important;
   box-shadow: none !important;
 }
-
 /*-------------------------------------------------------------------
-	Input Fixes
--------------------------------------------------------------------*/
+ Input Fixes
+ -------------------------------------------------------------------*/
 input, select {
   box-shadow: none !important;
 }
-
 /*-------------------------------------------------------------------
-	Top Nav
--------------------------------------------------------------------*/
+ Top Nav
+ -------------------------------------------------------------------*/
 #top_nav {
   position: fixed;
   top: 0px;
@@ -724,7 +975,7 @@ input, select {
   font-size: 14px;
   font-family: FontAwesome;
   height: auto;
-  content: "\f107";
+  content: "\f104";
   font-weight: 300;
   text-shadow: none;
 }
@@ -761,11 +1012,21 @@ input, select {
 #top_nav > [fks-menu] > .nav-list > .nav-item .sub-menu .nav-item.active, #top_nav .notifiers > .nav-list > .nav-item .sub-menu .nav-item.active {
   background: rgba(255, 255, 255, 0.1);
 }
-#top_nav > [fks-menu] > .nav-list > .nav-item .sub-menu .nav-item:hover:not(.active), #top_nav .notifiers > .nav-list > .nav-item .sub-menu .nav-item:hover:not(.active) {
+#top_nav > [fks-menu] > .nav-list > .nav-item .sub-menu .nav-item:hover:not(.active):not(.open), #top_nav .notifiers > .nav-list > .nav-item .sub-menu .nav-item:hover:not(.active):not(.open) {
   background: rgba(255, 255, 255, 0.1);
 }
 #top_nav > [fks-menu] > .nav-list > .nav-item .sub-menu .nav-item:first-child, #top_nav .notifiers > .nav-list > .nav-item .sub-menu .nav-item:first-child {
   margin-top: 0px;
+}
+#top_nav > [fks-menu] > .nav-list > .nav-item .sub-menu .nav-item.open, #top_nav .notifiers > .nav-list > .nav-item .sub-menu .nav-item.open {
+  background: rgba(255, 255, 255, 0.05);
+}
+#top_nav > [fks-menu] > .nav-list > .nav-item .sub-menu .nav-item.open > a > .arrow:before, #top_nav .notifiers > .nav-list > .nav-item .sub-menu .nav-item.open > a > .arrow:before {
+  content: "\f107";
+}
+#top_nav > [fks-menu] > .nav-list > .nav-item .sub-menu .nav-item.open > .sub-menu, #top_nav .notifiers > .nav-list > .nav-item .sub-menu .nav-item.open > .sub-menu {
+  display: block;
+  overflow: visible;
 }
 #top_nav > [fks-menu] > .nav-list > .nav-item .sub-menu.notifier-content, #top_nav .notifiers > .nav-list > .nav-item .sub-menu.notifier-content {
   height: 300px;
@@ -823,9 +1084,8 @@ input, select {
 }
 #top_nav > [fks-menu] > .nav-list > .nav-item.active, #top_nav .notifiers > .nav-list > .nav-item.active {
   background: #353535;
-}
-#top_nav > [fks-menu] > .nav-list > .nav-item.active > a, #top_nav .notifiers > .nav-list > .nav-item.active > a {
-  color: white;
+  border-top: 1px solid #82eefe;
+  margin-top: 0px;
 }
 #top_nav > [fks-menu] > .nav-list > .nav-item:hover:not(.open):not(.active), #top_nav .notifiers > .nav-list > .nav-item:hover:not(.open):not(.active) {
   background: rgba(255, 255, 255, 0.05);
@@ -835,6 +1095,13 @@ input, select {
   line-height: 40px;
   background: #353535;
   border-color: #191919;
+}
+#top_nav > [fks-menu] > .nav-list > .nav-item.open > a > .arrow:before, #top_nav .notifiers > .nav-list > .nav-item.open > a > .arrow:before {
+  content: "\f107";
+}
+#top_nav > [fks-menu] > .nav-list > .nav-item.open.active, #top_nav .notifiers > .nav-list > .nav-item.open.active {
+  border-top: 1px solid #82eefe;
+  line-height: 39px;
 }
 #top_nav > [fks-menu] > .nav-list > .nav-item.open > .sub-menu, #top_nav .notifiers > .nav-list > .nav-item.open > .sub-menu {
   display: block;
@@ -848,7 +1115,6 @@ input, select {
   right: unset;
   left: -1px;
 }
-
 #side_nav {
   position: fixed;
   top: 40px;
@@ -958,7 +1224,6 @@ input, select {
 }
 #side_nav [fks-menu] > .nav-list > .nav-item.active > a {
   border-color: #82eefe;
-  color: white;
 }
 #side_nav [fks-menu] > .nav-list .sub-menu .nav-item.selected > a .selected {
   display: block;
@@ -970,10 +1235,12 @@ input, select {
   border-bottom: 8px solid transparent;
   border-right: 8px solid #82eefe;
 }
-
+#top_nav [fks-menu] > .nav-list .nav-item.active > a, #side_nav [fks-menu] > .nav-list .nav-item.active > a {
+  color: white;
+}
 /*-------------------------------------------------------------------
-	Announcement Notifier
--------------------------------------------------------------------*/
+ Announcement Notifier
+ -------------------------------------------------------------------*/
 #announcement_notifier .notify-announcement {
   cursor: pointer;
   padding: 10px;
@@ -993,10 +1260,9 @@ input, select {
   text-overflow: ellipsis;
   overflow: hidden;
 }
-
 /*-------------------------------------------------------------------
-	Changelog
--------------------------------------------------------------------*/
+ Changelog
+ -------------------------------------------------------------------*/
 .changelog-container:not(:last-child) {
   margin-bottom: 30px;
 }
@@ -1043,7 +1309,6 @@ input, select {
 .changelog-container > .changelog-body > .changelog-notes > .changelog-note-list > .changelog-note > .changelog-page-list {
   font-size: 12px;
 }
-
 .changelog-container.no-header > .changelog-header {
   display: none;
 }
@@ -1056,18 +1321,15 @@ input, select {
 .changelog-container.no-header > .changelog-body > .changelog-notes:first-child {
   margin-top: 0px;
 }
-
 #content_container {
   z-index: 0;
 }
-
 #content {
   padding: 10px;
   padding-bottom: 0px;
   overflow-y: auto;
   background: #eef1f5;
 }
-
 #footer {
   position: fixed;
   bottom: 0px;
@@ -1095,7 +1357,6 @@ input, select {
   position: absolute;
   right: 10px;
 }
-
 #crumbs {
   margin-bottom: 30px;
 }
@@ -1123,8 +1384,7 @@ input, select {
   display: table;
   border-collapse: collapse;
 }
-#crumbs > .bar > .actions .btn,
-#crumbs > .bar > .actions .txt {
+#crumbs > .bar > .actions .btn, #crumbs > .bar > .actions .txt {
   line-height: 30px;
   display: table-cell;
   padding: 0px 10px;
@@ -1140,8 +1400,7 @@ input, select {
   -o-transition: inherit;
   transition: inherit;
 }
-#crumbs > .bar > .actions .btn:hover,
-#crumbs > .bar > .actions .txt:hover {
+#crumbs > .bar > .actions .btn:hover, #crumbs > .bar > .actions .txt:hover {
   background: rgba(0, 0, 0, 0.1);
 }
 #crumbs > .bar > .actions .txt {
@@ -1200,9 +1459,8 @@ input, select {
   left: auto;
   right: 6px;
 }
-
 body.collapsed #top_nav > .site-logo > span {
-  display: none;
+  display: none !important;
 }
 body.collapsed #top_nav > .actions {
   left: 45px;
@@ -1223,8 +1481,7 @@ body.collapsed #side_nav [fks-menu] > .nav-list > .nav-separator {
 body.collapsed #side_nav [fks-menu] > .nav-list > .nav-item {
   background: #333;
 }
-body.collapsed #side_nav [fks-menu] > .nav-list > .nav-item > a > .title > .text,
-body.collapsed #side_nav [fks-menu] > .nav-list > .nav-item > a > .arrow {
+body.collapsed #side_nav [fks-menu] > .nav-list > .nav-item > a > .title > .text, body.collapsed #side_nav [fks-menu] > .nav-list > .nav-item > a > .arrow {
   display: none;
 }
 body.collapsed #side_nav [fks-menu] > .nav-list > .nav-item:hover {
@@ -1267,11 +1524,9 @@ body.collapsed #side_nav [fks-menu] > .nav-list > .nav-item.active {
 body.collapsed #crumbs > .bar {
   padding-left: 55px;
 }
-
 #exit_fullscreen {
   display: none;
 }
-
 @media screen and (max-width: 767px) {
   body.fullscreen #top_nav[style*="display: none;"] ~ #exit_fullscreen {
     display: block;
@@ -1306,11 +1561,9 @@ body.fullscreen #footer {
 body.fullscreen .fs-hide {
   display: none;
 }
-
 body:not(.fullscreen) .fs-show {
   display: none;
 }
-
 .fks-page-title {
   margin-bottom: 10px;
   font-size: 28px;
@@ -1322,10 +1575,9 @@ body:not(.fullscreen) .fs-show {
   font-size: 65%;
   color: rgba(0, 0, 0, 0.5);
 }
-
 /*-------------------------------------------------------------------
-	Forms
--------------------------------------------------------------------*/
+ Forms
+ -------------------------------------------------------------------*/
 .form-group {
   margin: 0px 0px 10px 0px;
 }
@@ -1336,7 +1588,6 @@ body:not(.fullscreen) .fs-show {
 .form-group .form-control-feedback {
   font-size: 14px;
 }
-
 form .row.form-group label.form-control-label {
   margin: 0px;
   line-height: 27px;
@@ -1347,10 +1598,9 @@ form .row.form-group:not([style*="display:none"]):not([style*="display: none"]):
 form > *:not([style*="display:none"]):not([style*="display: none"]):last-child {
   margin-bottom: 0px;
 }
-
 /*-------------------------------------------------------------------
-	Sizing Conditions
--------------------------------------------------------------------*/
+ Sizing Conditions
+ -------------------------------------------------------------------*/
 /* Small */
 @media screen and (min-width: 576px) {
   .row > *[class^="col-sm-"]:not(:only-child):not(:last-child), .row > *[class*=" col-sm-"]:not(:only-child):not(:last-child) {
@@ -1359,7 +1609,6 @@ form > *:not([style*="display:none"]):not([style*="display: none"]):last-child {
   .row > *[class^="col-sm-"]:not(:only-child):not(:first-child), .row > *[class*=" col-sm-"]:not(:only-child):not(:first-child) {
     padding-left: 5px;
   }
-
   .modal .modal-dialog.modal-full {
     max-width: calc(100% - 60px);
   }
@@ -1407,7 +1656,6 @@ form > *:not([style*="display:none"]):not([style*="display: none"]):last-child {
   .row > *[class^="col-lg-"]:not(:only-child):not(:first-child), .row > *[class*=" col-lg-"]:not(:only-child):not(:first-child) {
     padding-left: 5px;
   }
-
   .modal .modal-dialog.modal-xl {
     max-width: 800px;
   }
@@ -1420,7 +1668,6 @@ form > *:not([style*="display:none"]):not([style*="display: none"]):last-child {
   .row > *[class^="col-xl-"]:not(:only-child):not(:first-child), .row > *[class*=" col-xl-"]:not(:only-child):not(:first-child) {
     padding-left: 5px;
   }
-
   .row.resize > *.col-xl-2:nth-child(6) {
     padding-right: 15px !important;
   }
@@ -1445,7 +1692,6 @@ form > *:not([style*="display:none"]):not([style*="display: none"]):last-child {
   .row.resize > *.col-xl-6:nth-child(3) {
     padding-left: 15px !important;
   }
-
   .modal .modal-dialog.modal-xl {
     max-width: 1000px;
   }
@@ -1459,17 +1705,14 @@ form > *:not([style*="display:none"]):not([style*="display: none"]):last-child {
   }
 }
 /*-------------------------------------------------------------------
-	Spacing
--------------------------------------------------------------------*/
-pre,
-p,
-fieldset {
+ Spacing
+ -------------------------------------------------------------------*/
+pre, p, fieldset {
   margin-bottom: 10px;
 }
-
 /*-------------------------------------------------------------------
-	Fieldset
--------------------------------------------------------------------*/
+ Fieldset
+ -------------------------------------------------------------------*/
 fieldset {
   padding: 0px 10px 10px 10px;
   border: 1px solid #cbcbcb;
@@ -1478,10 +1721,9 @@ fieldset > legend {
   padding: 0px 5px;
   width: initial;
 }
-
 /*-------------------------------------------------------------------
-	FKS Modal
--------------------------------------------------------------------*/
+ FKS Modal
+ -------------------------------------------------------------------*/
 #fks_modal.show ~ .modal.bootbox > .modal-dialog {
   margin-top: 60px;
 }
@@ -1490,11 +1732,9 @@ fieldset > legend {
     margin-top: 81px;
   }
 }
-
 .modal-backdrop {
   z-index: 2009;
 }
-
 .modal {
   z-index: 2010;
 }
@@ -1541,27 +1781,24 @@ fieldset > legend {
   font-size: 16px;
   margin-top: 10px;
 }
-
 /*-------------------------------------------------------------------
-	FKS Blockquote
--------------------------------------------------------------------*/
+ FKS Blockquote
+ -------------------------------------------------------------------*/
 .fks-blockquote {
   margin-left: 10px;
   padding: 5px 10px;
   border-left: 4px solid #eceeef;
 }
-
 /*-------------------------------------------------------------------
-	Tooltip
--------------------------------------------------------------------*/
+ Tooltip
+ -------------------------------------------------------------------*/
 .tooltip {
   pointer-events: none !important;
   z-index: 10000;
 }
-
 /*-------------------------------------------------------------------
-	Sortable
--------------------------------------------------------------------*/
+ Sortable
+ -------------------------------------------------------------------*/
 .order-handle {
   cursor: -webkit-grab;
   cursor: -moz-grab;
@@ -1570,19 +1807,17 @@ fieldset > legend {
   cursor: -webkit-grabbing;
   cursor: -moz-grabbing;
 }
-
 .order-ghost {
   color: rgba(0, 0, 0, 0.3);
 }
-
 /*-------------------------------------------------------------------
-	Bootstrap From Control Changes
--------------------------------------------------------------------*/
+ Bootstrap From Control Changes
+ -------------------------------------------------------------------*/
 .form-control, .select2-container .select2-dropdown .select2-search > input[type="search"], .select2.select2-container > .selection .select2-selection, .dataTables_wrapper div.dataTables_length select, .dataTables_wrapper div.dataTables_filter input {
   display: block;
   width: 100%;
   font-size: 1rem;
-  padding: .5rem .75rem;
+  padding: 0.5rem 0.75rem;
   min-height: 38px;
   line-height: 1.25;
   color: rgba(0, 0, 0, 0.65);
@@ -1601,91 +1836,63 @@ fieldset > legend {
   border-color: rgba(0, 0, 0, 0.5);
   box-shadow: initial;
 }
-.form-control[readonly], .select2-container .select2-dropdown .select2-search > input[readonly][type="search"], .select2.select2-container > .selection [readonly].select2-selection, .dataTables_wrapper div.dataTables_length select[readonly], .dataTables_wrapper div.dataTables_filter input[readonly], .form-control[disabled], .select2-container .select2-dropdown .select2-search > input[disabled][type="search"], .select2.select2-container > .selection [disabled].select2-selection, .select2.select2-container.select2-container--disabled > .selection .select2-selection, .dataTables_wrapper div.dataTables_length select[disabled], .dataTables_wrapper div.dataTables_filter input[disabled] {
+.form-control[readonly], .select2-container .select2-dropdown .select2-search > input[type="search"][readonly], .select2.select2-container > .selection .select2-selection[readonly], .dataTables_wrapper div.dataTables_length select[readonly], .dataTables_wrapper div.dataTables_filter input[readonly], .form-control[disabled], .select2-container .select2-dropdown .select2-search > input[type="search"][disabled], .select2.select2-container > .selection .select2-selection[disabled], .select2.select2-container.select2-container--disabled > .selection .select2-selection, .dataTables_wrapper div.dataTables_length select[disabled], .dataTables_wrapper div.dataTables_filter input[disabled] {
   background-color: #eceeef;
 }
 .form-control:not([multiple]):not(textarea), .select2-container .select2-dropdown .select2-search > input[type="search"]:not([multiple]):not(textarea), .select2.select2-container > .selection .select2-selection:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length select:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter input:not([multiple]):not(textarea) {
   height: 38px !important;
   max-height: 38px;
 }
-
-.form-control-sm, .select2-container .select2-dropdown.fks-sm .select2-search > input[type="search"], .select2.select2-container > .selection .select2-selection.fks-sm, .dataTables_wrapper div.dataTables_length select, .dataTables_wrapper div.dataTables_filter input,
-.input-group-sm > .form-control,
-.select2-container .select2-dropdown .select2-search.input-group-sm > input[type="search"],
-.select2.select2-container > .selection .input-group-sm > .select2-selection,
-.dataTables_wrapper div.dataTables_length .input-group-sm > select,
-.dataTables_wrapper div.dataTables_filter .input-group-sm > input,
-.input-group-sm > .input-group-addon,
-.input-group-sm > .input-group-btn > .btn {
-  font-size: .875rem;
-  padding: .25rem .5rem;
+.form-control-sm, .daterangepicker.dropdown-menu .daterangepicker_input > input, .select2-container .select2-dropdown.fks-sm .select2-search > input[type="search"], .select2.select2-container > .selection .select2-selection.fks-sm, .dataTables_wrapper div.dataTables_length select, .dataTables_wrapper div.dataTables_filter input, .input-group-sm > .form-control, .select2-container .select2-dropdown .select2-search.input-group-sm > input[type="search"], .select2.select2-container > .selection .input-group-sm > .select2-selection, .dataTables_wrapper div.dataTables_length .input-group-sm > select, .dataTables_wrapper div.dataTables_filter .input-group-sm > input, .input-group-sm > .input-group-addon, .input-group-sm > .input-group-btn > .btn {
+  font-size: 0.875rem;
+  padding: 0.25rem;
   min-height: 27px;
 }
-.form-control-sm:not([multiple]):not(textarea), .select2-container .select2-dropdown.fks-sm .select2-search > input[type="search"]:not([multiple]):not(textarea), .select2.select2-container > .selection .select2-selection.fks-sm:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length select:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter input:not([multiple]):not(textarea),
-.input-group-sm > .form-control:not([multiple]):not(textarea),
-.select2-container .select2-dropdown .select2-search.input-group-sm > input[type="search"]:not([multiple]):not(textarea),
-.select2.select2-container > .selection .input-group-sm > .select2-selection:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_length .input-group-sm > select:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_filter .input-group-sm > input:not([multiple]):not(textarea),
-.input-group-sm > .input-group-addon:not([multiple]):not(textarea),
-.input-group-sm > .input-group-btn > .btn:not([multiple]):not(textarea) {
+.form-control-sm:not(select), .daterangepicker.dropdown-menu .daterangepicker_input > input:not(select), .select2-container .select2-dropdown.fks-sm .select2-search > input[type="search"]:not(select), .select2.select2-container > .selection .select2-selection.fks-sm:not(select), .dataTables_wrapper div.dataTables_length select:not(select), .dataTables_wrapper div.dataTables_filter input:not(select), .input-group-sm > .form-control:not(select), .select2-container .select2-dropdown .select2-search.input-group-sm > input[type="search"]:not(select), .select2.select2-container > .selection .input-group-sm > .select2-selection:not(select), .dataTables_wrapper div.dataTables_length .input-group-sm > select:not(select), .dataTables_wrapper div.dataTables_filter .input-group-sm > input:not(select), .input-group-sm > .input-group-addon:not(select), .input-group-sm > .input-group-btn > .btn:not(select) {
+  padding: 0.25rem 0.5rem;
+}
+.form-control-sm[multiple], .daterangepicker.dropdown-menu .daterangepicker_input > input[multiple], .select2-container .select2-dropdown.fks-sm .select2-search > input[type="search"][multiple], .select2.select2-container > .selection .select2-selection.fks-sm[multiple], .dataTables_wrapper div.dataTables_length select[multiple], .dataTables_wrapper div.dataTables_filter input[multiple], .input-group-sm > .form-control[multiple], .select2-container .select2-dropdown .select2-search.input-group-sm > input[type="search"][multiple], .select2.select2-container > .selection .input-group-sm > .select2-selection[multiple], .dataTables_wrapper div.dataTables_length .input-group-sm > select[multiple], .dataTables_wrapper div.dataTables_filter .input-group-sm > input[multiple], .input-group-sm > .input-group-addon[multiple], .input-group-sm > .input-group-btn > .btn[multiple] {
+  padding: 0.36rem;
+}
+.form-control-sm:not([multiple]):not(textarea), .daterangepicker.dropdown-menu .daterangepicker_input > input:not([multiple]):not(textarea), .select2-container .select2-dropdown.fks-sm .select2-search > input[type="search"]:not([multiple]):not(textarea), .select2.select2-container > .selection .select2-selection.fks-sm:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length select:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter input:not([multiple]):not(textarea), .input-group-sm > .form-control:not([multiple]):not(textarea), .select2-container .select2-dropdown .select2-search.input-group-sm > input[type="search"]:not([multiple]):not(textarea), .select2.select2-container > .selection .input-group-sm > .select2-selection:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length .input-group-sm > select:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter .input-group-sm > input:not([multiple]):not(textarea), .input-group-sm > .input-group-addon:not([multiple]):not(textarea), .input-group-sm > .input-group-btn > .btn:not([multiple]):not(textarea) {
   height: 27px !important;
   max-height: 27px;
 }
-
-.form-control-md,
-.input-group-md > .form-control,
-.select2-container .select2-dropdown .select2-search.input-group-md > input[type="search"],
-.select2.select2-container > .selection .input-group-md > .select2-selection,
-.dataTables_wrapper div.dataTables_length .input-group-md > select,
-.dataTables_wrapper div.dataTables_filter .input-group-md > input,
-.input-group-md > .input-group-addon,
-.input-group-md > .input-group-btn > .btn {
+.form-control-md, .input-group-md > .form-control, .select2-container .select2-dropdown .select2-search.input-group-md > input[type="search"], .select2.select2-container > .selection .input-group-md > .select2-selection, .dataTables_wrapper div.dataTables_length .input-group-md > select, .dataTables_wrapper div.dataTables_filter .input-group-md > input, .input-group-md > .input-group-addon, .input-group-md > .input-group-btn > .btn {
   font-size: 1rem;
-  padding: .5rem .75rem;
+  padding: 0.5rem;
   min-height: 38px;
 }
-.form-control-md:not([multiple]):not(textarea),
-.input-group-md > .form-control:not([multiple]):not(textarea),
-.select2-container .select2-dropdown .select2-search.input-group-md > input[type="search"]:not([multiple]):not(textarea),
-.select2.select2-container > .selection .input-group-md > .select2-selection:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_length .input-group-md > select:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_filter .input-group-md > input:not([multiple]):not(textarea),
-.input-group-md > .input-group-addon:not([multiple]):not(textarea),
-.input-group-md > .input-group-btn > .btn:not([multiple]):not(textarea) {
+.form-control-md:not(select), .input-group-md > .form-control:not(select), .select2-container .select2-dropdown .select2-search.input-group-md > input[type="search"]:not(select), .select2.select2-container > .selection .input-group-md > .select2-selection:not(select), .dataTables_wrapper div.dataTables_length .input-group-md > select:not(select), .dataTables_wrapper div.dataTables_filter .input-group-md > input:not(select), .input-group-md > .input-group-addon:not(select), .input-group-md > .input-group-btn > .btn:not(select) {
+  padding: 0.5rem 0.75rem;
+}
+.form-control-md[multiple], .input-group-md > .form-control[multiple], .select2-container .select2-dropdown .select2-search.input-group-md > input[type="search"][multiple], .select2.select2-container > .selection .input-group-md > .select2-selection[multiple], .dataTables_wrapper div.dataTables_length .input-group-md > select[multiple], .dataTables_wrapper div.dataTables_filter .input-group-md > input[multiple], .input-group-md > .input-group-addon[multiple], .input-group-md > .input-group-btn > .btn[multiple] {
+  padding: 0.61rem;
+}
+.form-control-md:not([multiple]):not(textarea), .input-group-md > .form-control:not([multiple]):not(textarea), .select2-container .select2-dropdown .select2-search.input-group-md > input[type="search"]:not([multiple]):not(textarea), .select2.select2-container > .selection .input-group-md > .select2-selection:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length .input-group-md > select:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter .input-group-md > input:not([multiple]):not(textarea), .input-group-md > .input-group-addon:not([multiple]):not(textarea), .input-group-md > .input-group-btn > .btn:not([multiple]):not(textarea) {
   height: 38px !important;
   max-height: 38px;
 }
-
-.form-control-lg, .select2-container .select2-dropdown.fks-lg .select2-search > input[type="search"], .select2.select2-container > .selection .select2-selection.fks-lg,
-.input-group-lg > .form-control,
-.select2-container .select2-dropdown .select2-search.input-group-lg > input[type="search"],
-.select2.select2-container > .selection .input-group-lg > .select2-selection,
-.dataTables_wrapper div.dataTables_length .input-group-lg > select,
-.dataTables_wrapper div.dataTables_filter .input-group-lg > input,
-.input-group-lg > .input-group-addon,
-.input-group-lg > .input-group-btn > .btn {
+.form-control-lg, .select2-container .select2-dropdown.fks-lg .select2-search > input[type="search"], .select2.select2-container > .selection .select2-selection.fks-lg, .input-group-lg > .form-control, .select2-container .select2-dropdown .select2-search.input-group-lg > input[type="search"], .select2.select2-container > .selection .input-group-lg > .select2-selection, .dataTables_wrapper div.dataTables_length .input-group-lg > select, .dataTables_wrapper div.dataTables_filter .input-group-lg > input, .input-group-lg > .input-group-addon, .input-group-lg > .input-group-btn > .btn {
   font-size: 1.25rem;
-  padding: .75rem 1.5rem;
+  padding: 0.75rem;
   min-height: 51px;
 }
-.form-control-lg:not([multiple]):not(textarea), .select2-container .select2-dropdown.fks-lg .select2-search > input[type="search"]:not([multiple]):not(textarea), .select2.select2-container > .selection .select2-selection.fks-lg:not([multiple]):not(textarea),
-.input-group-lg > .form-control:not([multiple]):not(textarea),
-.select2-container .select2-dropdown .select2-search.input-group-lg > input[type="search"]:not([multiple]):not(textarea),
-.select2.select2-container > .selection .input-group-lg > .select2-selection:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_length .input-group-lg > select:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_filter .input-group-lg > input:not([multiple]):not(textarea),
-.input-group-lg > .input-group-addon:not([multiple]):not(textarea),
-.input-group-lg > .input-group-btn > .btn:not([multiple]):not(textarea) {
+.form-control-lg:not(select), .select2-container .select2-dropdown.fks-lg .select2-search > input[type="search"]:not(select), .select2.select2-container > .selection .select2-selection.fks-lg:not(select), .input-group-lg > .form-control:not(select), .select2-container .select2-dropdown .select2-search.input-group-lg > input[type="search"]:not(select), .select2.select2-container > .selection .input-group-lg > .select2-selection:not(select), .dataTables_wrapper div.dataTables_length .input-group-lg > select:not(select), .dataTables_wrapper div.dataTables_filter .input-group-lg > input:not(select), .input-group-lg > .input-group-addon:not(select), .input-group-lg > .input-group-btn > .btn:not(select) {
+  padding: 0.75rem 1.5rem;
+}
+.form-control-lg[multiple], .select2-container .select2-dropdown.fks-lg .select2-search > input[type="search"][multiple], .select2.select2-container > .selection .select2-selection.fks-lg[multiple], .input-group-lg > .form-control[multiple], .select2-container .select2-dropdown .select2-search.input-group-lg > input[type="search"][multiple], .select2.select2-container > .selection .input-group-lg > .select2-selection[multiple], .dataTables_wrapper div.dataTables_length .input-group-lg > select[multiple], .dataTables_wrapper div.dataTables_filter .input-group-lg > input[multiple], .input-group-lg > .input-group-addon[multiple], .input-group-lg > .input-group-btn > .btn[multiple] {
+  padding: 1.36rem;
+}
+.form-control-lg:not([multiple]):not(textarea), .select2-container .select2-dropdown.fks-lg .select2-search > input[type="search"]:not([multiple]):not(textarea), .select2.select2-container > .selection .select2-selection.fks-lg:not([multiple]):not(textarea), .input-group-lg > .form-control:not([multiple]):not(textarea), .select2-container .select2-dropdown .select2-search.input-group-lg > input[type="search"]:not([multiple]):not(textarea), .select2.select2-container > .selection .input-group-lg > .select2-selection:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length .input-group-lg > select:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter .input-group-lg > input:not([multiple]):not(textarea), .input-group-lg > .input-group-addon:not([multiple]):not(textarea), .input-group-lg > .input-group-btn > .btn:not([multiple]):not(textarea) {
   height: 51px !important;
   max-height: 51px;
 }
-
 .form-checkbox {
   display: block;
   line-height: 36px;
   font-weight: bold;
-  padding: 0px .75rem;
+  padding: 0px 0.75rem;
   margin-bottom: 0px;
   border: 1px solid #dfdfdf;
   cursor: pointer;
@@ -1698,132 +1905,111 @@ fieldset > legend {
 .form-checkbox:hover {
   background-color: rgba(0, 0, 0, 0.075);
 }
-
+.form-radio {
+  display: block;
+  line-height: 36px;
+  font-weight: bold;
+  padding: 0px 0.75rem;
+  margin-bottom: 0px;
+  border: 1px solid #dfdfdf;
+  cursor: pointer;
+}
+.form-radio .iradio_minimal {
+  margin-top: -1px;
+  margin-right: 7px;
+  background-color: white;
+  border-radius: 10px !important;
+}
+.form-radio:hover {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+.fks-color-preview {
+  width: 38px;
+  cursor: pointer;
+}
 /*-------------------------------------------------------------------
-	FKS Custom Form Class
--------------------------------------------------------------------*/
-form.fks-form .form-control:not(.form-control-md):not(.form-control-lg), form.fks-form .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg), .select2-container .select2-dropdown form.fks-form .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg), form.fks-form .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg), .select2.select2-container > .selection form.fks-form .select2-selection:not(.form-control-md):not(.form-control-lg), form.fks-form .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg), .dataTables_wrapper div.dataTables_length form.fks-form select:not(.form-control-md):not(.form-control-lg), form.fks-form .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg), .dataTables_wrapper div.dataTables_filter form.fks-form input:not(.form-control-md):not(.form-control-lg),
-form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .form-control,
-form.fks-form .select2-container .select2-dropdown .select2-search.input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"],
-.select2-container .select2-dropdown form.fks-form .select2-search.input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"],
-form.fks-form .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection,
-.select2.select2-container > .selection form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection,
-form.fks-form .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select,
-.dataTables_wrapper div.dataTables_length form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > select,
-form.fks-form .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input,
-.dataTables_wrapper div.dataTables_filter form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > input,
-form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon,
-form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn {
+ FKS Custom Form Class
+ -------------------------------------------------------------------*/
+form.fks-form .form-control:not(.form-control-md):not(.form-control-lg), form.fks-form .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg), .select2-container .select2-dropdown form.fks-form .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg), form.fks-form .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg), .select2.select2-container > .selection form.fks-form .select2-selection:not(.form-control-md):not(.form-control-lg), form.fks-form .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg), .dataTables_wrapper div.dataTables_length form.fks-form select:not(.form-control-md):not(.form-control-lg), form.fks-form .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg), .dataTables_wrapper div.dataTables_filter form.fks-form input:not(.form-control-md):not(.form-control-lg), form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .form-control, form.fks-form .select2-container .select2-dropdown .select2-search.input-group > input[type="search"], .select2-container .select2-dropdown form.fks-form .select2-search > .input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"], form.fks-form .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection, .select2.select2-container > .selection form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection, form.fks-form .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select, .dataTables_wrapper div.dataTables_length form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > select, form.fks-form .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input, .dataTables_wrapper div.dataTables_filter form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > input, form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon, form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn {
   font-size: 1rem;
-  padding: .5rem .75rem;
+  padding: 0.5rem;
   min-height: 38px;
 }
-form.fks-form .form-control:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .select2-container .select2-dropdown form.fks-form .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .select2.select2-container > .selection form.fks-form .select2-selection:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length form.fks-form select:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter form.fks-form input:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea),
-form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .form-control:not([multiple]):not(textarea),
-form.fks-form .select2-container .select2-dropdown .select2-search.input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"]:not([multiple]):not(textarea),
-.select2-container .select2-dropdown form.fks-form .select2-search.input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"]:not([multiple]):not(textarea),
-form.fks-form .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not([multiple]):not(textarea),
-.select2.select2-container > .selection form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not([multiple]):not(textarea),
-form.fks-form .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_length form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > select:not([multiple]):not(textarea),
-form.fks-form .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_filter form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > input:not([multiple]):not(textarea),
-form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon:not([multiple]):not(textarea),
-form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn:not([multiple]):not(textarea) {
+form.fks-form .form-control:not(.form-control-md):not(.form-control-lg):not(select), form.fks-form .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not(select), .select2-container .select2-dropdown form.fks-form .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not(select), form.fks-form .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg):not(select), .select2.select2-container > .selection form.fks-form .select2-selection:not(.form-control-md):not(.form-control-lg):not(select), form.fks-form .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg):not(select), .dataTables_wrapper div.dataTables_length form.fks-form select:not(.form-control-md):not(.form-control-lg):not(select), form.fks-form .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg):not(select), .dataTables_wrapper div.dataTables_filter form.fks-form input:not(.form-control-md):not(.form-control-lg):not(select), form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .form-control:not(select), form.fks-form .select2-container .select2-dropdown .select2-search.input-group > input[type="search"]:not(select), .select2-container .select2-dropdown form.fks-form .select2-search > .input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"]:not(select), form.fks-form .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not(select), .select2.select2-container > .selection form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not(select), form.fks-form .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select:not(select), .dataTables_wrapper div.dataTables_length form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > select:not(select), form.fks-form .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input:not(select), .dataTables_wrapper div.dataTables_filter form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > input:not(select), form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon:not(select), form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn:not(select) {
+  padding: 0.5rem 0.75rem;
+}
+form.fks-form .form-control:not(.form-control-md):not(.form-control-lg)[multiple], form.fks-form .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg)[multiple], .select2-container .select2-dropdown form.fks-form .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg)[multiple], form.fks-form .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg)[multiple], .select2.select2-container > .selection form.fks-form .select2-selection:not(.form-control-md):not(.form-control-lg)[multiple], form.fks-form .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg)[multiple], .dataTables_wrapper div.dataTables_length form.fks-form select:not(.form-control-md):not(.form-control-lg)[multiple], form.fks-form .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg)[multiple], .dataTables_wrapper div.dataTables_filter form.fks-form input:not(.form-control-md):not(.form-control-lg)[multiple], form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .form-control[multiple], form.fks-form .select2-container .select2-dropdown .select2-search.input-group > input[type="search"][multiple], .select2-container .select2-dropdown form.fks-form .select2-search > .input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"][multiple], form.fks-form .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection[multiple], .select2.select2-container > .selection form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection[multiple], form.fks-form .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select[multiple], .dataTables_wrapper div.dataTables_length form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > select[multiple], form.fks-form .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input[multiple], .dataTables_wrapper div.dataTables_filter form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > input[multiple], form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon[multiple], form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn[multiple] {
+  padding: 0.61rem;
+}
+form.fks-form .form-control:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .select2-container .select2-dropdown form.fks-form .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .select2.select2-container > .selection form.fks-form .select2-selection:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length form.fks-form select:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter form.fks-form input:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .form-control:not([multiple]):not(textarea), form.fks-form .select2-container .select2-dropdown .select2-search.input-group > input[type="search"]:not([multiple]):not(textarea), .select2-container .select2-dropdown form.fks-form .select2-search > .input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"]:not([multiple]):not(textarea), form.fks-form .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not([multiple]):not(textarea), .select2.select2-container > .selection form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not([multiple]):not(textarea), form.fks-form .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > select:not([multiple]):not(textarea), form.fks-form .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > input:not([multiple]):not(textarea), form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon:not([multiple]):not(textarea), form.fks-form .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn:not([multiple]):not(textarea) {
   height: 38px !important;
   max-height: 38px;
 }
-form.fks-form.fks-form-sm .form-control:not(.form-control-md):not(.form-control-lg), form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg), .select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg), form.fks-form.fks-form-sm .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg), .select2.select2-container > .selection form.fks-form.fks-form-sm .select2-selection:not(.form-control-md):not(.form-control-lg), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm select:not(.form-control-md):not(.form-control-lg), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm input:not(.form-control-md):not(.form-control-lg),
-form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .form-control,
-form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search.input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"],
-.select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search.input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"],
-form.fks-form.fks-form-sm .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection,
-.select2.select2-container > .selection form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection,
-form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select,
-.dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > select,
-form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input,
-.dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > input,
-form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon,
-form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn {
-  font-size: .875rem;
-  padding: .25rem .5rem;
+form.fks-form.fks-form-sm .form-control:not(.form-control-md):not(.form-control-lg), form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg), .select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg), form.fks-form.fks-form-sm .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg), .select2.select2-container > .selection form.fks-form.fks-form-sm .select2-selection:not(.form-control-md):not(.form-control-lg), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm select:not(.form-control-md):not(.form-control-lg), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm input:not(.form-control-md):not(.form-control-lg), form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .form-control, form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search.input-group > input[type="search"], .select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search > .input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"], form.fks-form.fks-form-sm .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection, .select2.select2-container > .selection form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection, form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select, .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > select, form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input, .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > input, form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon, form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn {
+  font-size: 0.875rem;
+  padding: 0.25rem;
   min-height: 27px;
 }
-form.fks-form.fks-form-sm .form-control:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form.fks-form-sm .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .select2.select2-container > .selection form.fks-form.fks-form-sm .select2-selection:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm select:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm input:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea),
-form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .form-control:not([multiple]):not(textarea),
-form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search.input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"]:not([multiple]):not(textarea),
-.select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search.input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"]:not([multiple]):not(textarea),
-form.fks-form.fks-form-sm .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not([multiple]):not(textarea),
-.select2.select2-container > .selection form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not([multiple]):not(textarea),
-form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > select:not([multiple]):not(textarea),
-form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > input:not([multiple]):not(textarea),
-form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon:not([multiple]):not(textarea),
-form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn:not([multiple]):not(textarea) {
+form.fks-form.fks-form-sm .form-control:not(.form-control-md):not(.form-control-lg):not(select), form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not(select), .select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not(select), form.fks-form.fks-form-sm .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg):not(select), .select2.select2-container > .selection form.fks-form.fks-form-sm .select2-selection:not(.form-control-md):not(.form-control-lg):not(select), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg):not(select), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm select:not(.form-control-md):not(.form-control-lg):not(select), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg):not(select), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm input:not(.form-control-md):not(.form-control-lg):not(select), form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .form-control:not(select), form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search.input-group > input[type="search"]:not(select), .select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search > .input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"]:not(select), form.fks-form.fks-form-sm .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not(select), .select2.select2-container > .selection form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not(select), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select:not(select), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > select:not(select), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input:not(select), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > input:not(select), form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon:not(select), form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn:not(select) {
+  padding: 0.25rem 0.5rem;
+}
+form.fks-form.fks-form-sm .form-control:not(.form-control-md):not(.form-control-lg)[multiple], form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg)[multiple], .select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg)[multiple], form.fks-form.fks-form-sm .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg)[multiple], .select2.select2-container > .selection form.fks-form.fks-form-sm .select2-selection:not(.form-control-md):not(.form-control-lg)[multiple], form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg)[multiple], .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm select:not(.form-control-md):not(.form-control-lg)[multiple], form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg)[multiple], .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm input:not(.form-control-md):not(.form-control-lg)[multiple], form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .form-control[multiple], form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search.input-group > input[type="search"][multiple], .select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search > .input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"][multiple], form.fks-form.fks-form-sm .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection[multiple], .select2.select2-container > .selection form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection[multiple], form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select[multiple], .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > select[multiple], form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input[multiple], .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > input[multiple], form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon[multiple], form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn[multiple] {
+  padding: 0.36rem;
+}
+form.fks-form.fks-form-sm .form-control:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search > input[type="search"]:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form.fks-form-sm .select2.select2-container > .selection .select2-selection:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .select2.select2-container > .selection form.fks-form.fks-form-sm .select2-selection:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length select:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm select:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter input:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm input:not(.form-control-md):not(.form-control-lg):not([multiple]):not(textarea), form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .form-control:not([multiple]):not(textarea), form.fks-form.fks-form-sm .select2-container .select2-dropdown .select2-search.input-group > input[type="search"]:not([multiple]):not(textarea), .select2-container .select2-dropdown form.fks-form.fks-form-sm .select2-search > .input-group:not(.input-group-md):not(.input-group-lg) > input[type="search"]:not([multiple]):not(textarea), form.fks-form.fks-form-sm .select2.select2-container > .selection .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not([multiple]):not(textarea), .select2.select2-container > .selection form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .select2-selection:not([multiple]):not(textarea), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-md):not(.input-group-lg) > select:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > select:not([multiple]):not(textarea), form.fks-form.fks-form-sm .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-md):not(.input-group-lg) > input:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > input:not([multiple]):not(textarea), form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-addon:not([multiple]):not(textarea), form.fks-form.fks-form-sm .input-group:not(.input-group-md):not(.input-group-lg) > .input-group-btn > .btn:not([multiple]):not(textarea) {
   height: 27px !important;
   max-height: 27px;
 }
-form.fks-form.fks-form-sm .form-checkbox {
+form.fks-form.fks-form-sm .form-checkbox, form.fks-form.fks-form-sm .form-radio {
   line-height: 25px;
-  padding: 0px .5rem;
+  padding: 0px 0.5rem;
 }
-form.fks-form.fks-form-lg .form-control:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md), .select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .select2.select2-container > .selection .select2-selection:not(.form-control-sm):not(.form-control-md), .select2.select2-container > .selection form.fks-form.fks-form-lg .select2-selection:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length select:not(.form-control-sm):not(.form-control-md), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg select:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter input:not(.form-control-sm):not(.form-control-md), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg input:not(.form-control-sm):not(.form-control-md),
-form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .form-control,
-form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search.input-group:not(.input-group-sm):not(.input-group-md) > input[type="search"],
-.select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search.input-group:not(.input-group-sm):not(.input-group-md) > input[type="search"],
-form.fks-form.fks-form-lg .select2.select2-container > .selection .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection,
-.select2.select2-container > .selection form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection,
-form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-sm):not(.input-group-md) > select,
-.dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > select,
-form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-sm):not(.input-group-md) > input,
-.dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > input,
-form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-addon,
-form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-btn > .btn {
+form.fks-form.fks-form-sm .fks-color-preview {
+  width: 27px;
+}
+form.fks-form.fks-form-lg .form-control:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md), .select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .select2.select2-container > .selection .select2-selection:not(.form-control-sm):not(.form-control-md), .select2.select2-container > .selection form.fks-form.fks-form-lg .select2-selection:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length select:not(.form-control-sm):not(.form-control-md), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg select:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter input:not(.form-control-sm):not(.form-control-md), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg input:not(.form-control-sm):not(.form-control-md), form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .form-control, form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search.input-group > input[type="search"], .select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search > .input-group:not(.input-group-sm):not(.input-group-md) > input[type="search"], form.fks-form.fks-form-lg .select2.select2-container > .selection .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection, .select2.select2-container > .selection form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection, form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-sm):not(.input-group-md) > select, .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > select, form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-sm):not(.input-group-md) > input, .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > input, form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-addon, form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-btn > .btn {
   font-size: 1.25rem;
-  padding: .75rem 1.5rem;
+  padding: 0.75rem;
   min-height: 51px;
 }
-form.fks-form.fks-form-lg .form-control:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), .select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), form.fks-form.fks-form-lg .select2.select2-container > .selection .select2-selection:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), .select2.select2-container > .selection form.fks-form.fks-form-lg .select2-selection:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length select:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg select:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter input:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg input:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea),
-form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .form-control:not([multiple]):not(textarea),
-form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search.input-group:not(.input-group-sm):not(.input-group-md) > input[type="search"]:not([multiple]):not(textarea),
-.select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search.input-group:not(.input-group-sm):not(.input-group-md) > input[type="search"]:not([multiple]):not(textarea),
-form.fks-form.fks-form-lg .select2.select2-container > .selection .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection:not([multiple]):not(textarea),
-.select2.select2-container > .selection form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection:not([multiple]):not(textarea),
-form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-sm):not(.input-group-md) > select:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > select:not([multiple]):not(textarea),
-form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-sm):not(.input-group-md) > input:not([multiple]):not(textarea),
-.dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > input:not([multiple]):not(textarea),
-form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-addon:not([multiple]):not(textarea),
-form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-btn > .btn:not([multiple]):not(textarea) {
+form.fks-form.fks-form-lg .form-control:not(.form-control-sm):not(.form-control-md):not(select), form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md):not(select), .select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md):not(select), form.fks-form.fks-form-lg .select2.select2-container > .selection .select2-selection:not(.form-control-sm):not(.form-control-md):not(select), .select2.select2-container > .selection form.fks-form.fks-form-lg .select2-selection:not(.form-control-sm):not(.form-control-md):not(select), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length select:not(.form-control-sm):not(.form-control-md):not(select), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg select:not(.form-control-sm):not(.form-control-md):not(select), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter input:not(.form-control-sm):not(.form-control-md):not(select), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg input:not(.form-control-sm):not(.form-control-md):not(select), form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .form-control:not(select), form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search.input-group > input[type="search"]:not(select), .select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search > .input-group:not(.input-group-sm):not(.input-group-md) > input[type="search"]:not(select), form.fks-form.fks-form-lg .select2.select2-container > .selection .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection:not(select), .select2.select2-container > .selection form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection:not(select), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-sm):not(.input-group-md) > select:not(select), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > select:not(select), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-sm):not(.input-group-md) > input:not(select), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > input:not(select), form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-addon:not(select), form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-btn > .btn:not(select) {
+  padding: 0.75rem 1.5rem;
+}
+form.fks-form.fks-form-lg .form-control:not(.form-control-sm):not(.form-control-md)[multiple], form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md)[multiple], .select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md)[multiple], form.fks-form.fks-form-lg .select2.select2-container > .selection .select2-selection:not(.form-control-sm):not(.form-control-md)[multiple], .select2.select2-container > .selection form.fks-form.fks-form-lg .select2-selection:not(.form-control-sm):not(.form-control-md)[multiple], form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length select:not(.form-control-sm):not(.form-control-md)[multiple], .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg select:not(.form-control-sm):not(.form-control-md)[multiple], form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter input:not(.form-control-sm):not(.form-control-md)[multiple], .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg input:not(.form-control-sm):not(.form-control-md)[multiple], form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .form-control[multiple], form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search.input-group > input[type="search"][multiple], .select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search > .input-group:not(.input-group-sm):not(.input-group-md) > input[type="search"][multiple], form.fks-form.fks-form-lg .select2.select2-container > .selection .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection[multiple], .select2.select2-container > .selection form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection[multiple], form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-sm):not(.input-group-md) > select[multiple], .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > select[multiple], form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-sm):not(.input-group-md) > input[multiple], .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > input[multiple], form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-addon[multiple], form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-btn > .btn[multiple] {
+  padding: 1.36rem;
+}
+form.fks-form.fks-form-lg .form-control:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), .select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search > input[type="search"]:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), form.fks-form.fks-form-lg .select2.select2-container > .selection .select2-selection:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), .select2.select2-container > .selection form.fks-form.fks-form-lg .select2-selection:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length select:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg select:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter input:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg input:not(.form-control-sm):not(.form-control-md):not([multiple]):not(textarea), form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .form-control:not([multiple]):not(textarea), form.fks-form.fks-form-lg .select2-container .select2-dropdown .select2-search.input-group > input[type="search"]:not([multiple]):not(textarea), .select2-container .select2-dropdown form.fks-form.fks-form-lg .select2-search > .input-group:not(.input-group-sm):not(.input-group-md) > input[type="search"]:not([multiple]):not(textarea), form.fks-form.fks-form-lg .select2.select2-container > .selection .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection:not([multiple]):not(textarea), .select2.select2-container > .selection form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .select2-selection:not([multiple]):not(textarea), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_length .input-group:not(.input-group-sm):not(.input-group-md) > select:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_length form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > select:not([multiple]):not(textarea), form.fks-form.fks-form-lg .dataTables_wrapper div.dataTables_filter .input-group:not(.input-group-sm):not(.input-group-md) > input:not([multiple]):not(textarea), .dataTables_wrapper div.dataTables_filter form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > input:not([multiple]):not(textarea), form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-addon:not([multiple]):not(textarea), form.fks-form.fks-form-lg .input-group:not(.input-group-sm):not(.input-group-md) > .input-group-btn > .btn:not([multiple]):not(textarea) {
   height: 51px !important;
   max-height: 51px;
 }
-form.fks-form.fks-form-lg .form-checkbox {
+form.fks-form.fks-form-lg .form-checkbox, form.fks-form.fks-form-lg .form-radio {
   line-height: 49px;
   padding: 0px 1.5rem;
 }
-
+form.fks-form.fks-form-lg .fks-color-preview {
+  width: 51px;
+}
+.fks-form-description > i.fa {
+  cursor: pointer;
+}
 /*-------------------------------------------------------------------
-	Pace
--------------------------------------------------------------------*/
+ Pace
+ -------------------------------------------------------------------*/
 .pace .pace-progress {
   z-index: 2001;
 }
-
 /*-------------------------------------------------------------------
-	Alerts
--------------------------------------------------------------------*/
+ Alerts
+ -------------------------------------------------------------------*/
 .alert {
   margin-bottom: 10px;
 }
 .alert:empty {
   display: none !important;
 }
-
 /*-------------------------------------------------------------------
-	Multi Select
--------------------------------------------------------------------*/
+ Multi Select
+ -------------------------------------------------------------------*/
 .ms-container {
   width: inherit;
   padding: 0px;
@@ -1843,56 +2029,40 @@ form.fks-form.fks-form-lg .form-checkbox {
 .ms-container .ms-list.ms-focus {
   border-color: rgba(0, 0, 0, 0.5);
 }
-.ms-container .ms-selectable,
-.ms-container .ms-selection {
+.ms-container .ms-selectable, .ms-container .ms-selection {
   width: calc(50% - 15px);
 }
-.ms-container .ms-selectable .ms-list,
-.ms-container .ms-selection .ms-list {
+.ms-container .ms-selectable .ms-list, .ms-container .ms-selection .ms-list {
   background-color: rgba(0, 0, 0, 0.025);
 }
-.ms-container .ms-selectable .ms-list ul.ms-optgroup,
-.ms-container .ms-selection .ms-list ul.ms-optgroup {
+.ms-container .ms-selectable .ms-list ul.ms-optgroup, .ms-container .ms-selection .ms-list ul.ms-optgroup {
   background: white;
 }
-.ms-container .ms-selectable .ms-list ul.ms-optgroup li.ms-optgroup-label,
-.ms-container .ms-selection .ms-list ul.ms-optgroup li.ms-optgroup-label {
+.ms-container .ms-selectable .ms-list ul.ms-optgroup li.ms-optgroup-label, .ms-container .ms-selection .ms-list ul.ms-optgroup li.ms-optgroup-label {
   cursor: default;
   color: inherit;
   font-weight: bold;
 }
-.ms-container .ms-selectable .ms-list li.ms-elem-selectable,
-.ms-container .ms-selectable .ms-list li.ms-elem-selection,
-.ms-container .ms-selection .ms-list li.ms-elem-selectable,
-.ms-container .ms-selection .ms-list li.ms-elem-selection {
+.ms-container .ms-selectable .ms-list li.ms-elem-selectable, .ms-container .ms-selection .ms-list li.ms-elem-selectable, .ms-container .ms-selectable .ms-list li.ms-elem-selection, .ms-container .ms-selection .ms-list li.ms-elem-selection {
   cursor: default;
 }
-.ms-container .ms-selectable .ms-list li.ms-elem-selectable:not(:hover),
-.ms-container .ms-selectable .ms-list li.ms-elem-selection:not(:hover),
-.ms-container .ms-selection .ms-list li.ms-elem-selectable:not(:hover),
-.ms-container .ms-selection .ms-list li.ms-elem-selection:not(:hover) {
+.ms-container .ms-selectable .ms-list li.ms-elem-selectable:not(:hover), .ms-container .ms-selection .ms-list li.ms-elem-selectable:not(:hover), .ms-container .ms-selectable .ms-list li.ms-elem-selection:not(:hover), .ms-container .ms-selection .ms-list li.ms-elem-selection:not(:hover) {
   color: rgba(0, 0, 0, 0.65);
   background: white;
 }
-.ms-container .ms-selectable .ms-list li.ms-elem-selectable.disabled,
-.ms-container .ms-selectable .ms-list li.ms-elem-selection.disabled,
-.ms-container .ms-selection .ms-list li.ms-elem-selectable.disabled,
-.ms-container .ms-selection .ms-list li.ms-elem-selection.disabled {
+.ms-container .ms-selectable .ms-list li.ms-elem-selectable.disabled, .ms-container .ms-selection .ms-list li.ms-elem-selectable.disabled, .ms-container .ms-selectable .ms-list li.ms-elem-selection.disabled, .ms-container .ms-selection .ms-list li.ms-elem-selection.disabled {
   color: rgba(0, 0, 0, 0.35);
   background: #eceeef;
 }
-.ms-container .ms-selectable > button,
-.ms-container .ms-selection > button {
+.ms-container .ms-selectable > button, .ms-container .ms-selection > button {
   margin-top: 10px;
 }
-.ms-container .ms-selectable > .form-group,
-.ms-container .ms-selection > .form-group {
+.ms-container .ms-selectable > .form-group, .ms-container .ms-selection > .form-group {
   margin-bottom: 10px !important;
 }
-
 /*-------------------------------------------------------------------
-	FKS Block
--------------------------------------------------------------------*/
+ FKS Block
+ -------------------------------------------------------------------*/
 .fks-block-container {
   pointer-events: all;
   display: none;
@@ -1937,7 +2107,6 @@ form.fks-form.fks-form-lg .form-checkbox {
   text-align: center;
   font-size: 14px;
 }
-
 .fks-block-test {
   position: absolute;
   top: -10000px;
@@ -1959,14 +2128,12 @@ form.fks-form.fks-form-lg .form-checkbox {
   text-align: center;
   font-size: 14px;
 }
-
 .nav-tabs > .nav-item .fks-block-message-container > .fks-block-message-body {
   padding: 5px;
 }
-
 /*-------------------------------------------------------------------
-	Toastr
--------------------------------------------------------------------*/
+ Toastr
+ -------------------------------------------------------------------*/
 #toast-container.toast-top-right {
   top: 80px;
   right: 10px;
@@ -1988,31 +2155,37 @@ form.fks-form.fks-form-lg .form-checkbox {
   top: 0;
   right: 0;
 }
-
 body.fullscreen #toast-container.toast-top-right {
   top: 10px;
 }
 body.fullscreen #toast-container.toast-bottom-right {
   bottom: 5px;
 }
-
 body.has-panel-fullscreen #toast-container.toast-top-right {
   top: 60px;
 }
 body.has-panel-fullscreen #toast-container.toast-bottom-right {
   bottom: 10px;
 }
-
 /*-------------------------------------------------------------------
-	Date Range Picker
--------------------------------------------------------------------*/
+ Date Range Picker
+ -------------------------------------------------------------------*/
 .daterangepicker {
   font-size: 14px;
 }
-
+.daterangepicker.dropdown-menu {
+  padding: 5px;
+}
+.daterangepicker.dropdown-menu .daterangepicker_input > input {
+  padding-left: 1.4rem !important;
+}
+.daterangepicker.dropdown-menu .daterangepicker_input > i.fa {
+  top: 6px;
+  left: 6px;
+}
 /*-------------------------------------------------------------------
-	Select2
--------------------------------------------------------------------*/
+ Select2
+ -------------------------------------------------------------------*/
 .select2-container {
   z-index: 2015;
 }
@@ -2030,12 +2203,11 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
   background-color: rgba(0, 0, 0, 0.125);
 }
 .select2-container .select2-dropdown.fks-sm .select2-results .select2-results__option {
-  font-size: .875rem;
+  font-size: 0.875rem;
 }
 .select2-container .select2-dropdown.fks-lg .select2-results .select2-results__option {
   font-size: 1.25rem;
 }
-
 .select2.select2-container {
   z-index: 1;
 }
@@ -2046,7 +2218,7 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
 }
 .select2.select2-container > .selection .select2-selection > .select2-selection__rendered {
   line-height: inherit;
-  padding: .5rem .75rem;
+  padding: 0.5rem 0.75rem;
   color: inherit;
 }
 .select2.select2-container > .selection .select2-selection > .select2-selection__arrow {
@@ -2065,10 +2237,10 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
   border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
 }
 .select2.select2-container > .selection .select2-selection.fks-sm > .select2-selection__rendered {
-  padding: .25rem .5rem;
+  padding: 0.25rem 0.5rem;
 }
 .select2.select2-container > .selection .select2-selection.fks-sm > .select2-selection__rendered > .select2-selection__choice {
-  margin-right: .5rem;
+  margin-right: 0.5rem;
   margin-top: -1px;
 }
 .select2.select2-container > .selection .select2-selection.fks-sm > .select2-selection__rendered > .select2-selection__choice > .select2-selection__choice__remove {
@@ -2081,7 +2253,7 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
   margin-top: 0px;
 }
 .select2.select2-container > .selection .select2-selection.fks-lg > .select2-selection__rendered {
-  padding: .75rem 1.5rem;
+  padding: 0.75rem 1.5rem;
 }
 .select2.select2-container.select2-container--open > .selection .select2-selection > .select2-selection__arrow > b[role="presentation"] {
   border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
@@ -2090,10 +2262,9 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
   color: rgba(0, 0, 0, 0.65);
   border: 1px solid rgba(0, 0, 0, 0.2);
 }
-
 /*-------------------------------------------------------------------
-	jsTree
--------------------------------------------------------------------*/
+ jsTree
+ -------------------------------------------------------------------*/
 #vakata-dnd > #jstree-dnd > .jstree-icon {
   background: none;
   font-style: normal;
@@ -2114,26 +2285,21 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
   content: "\f00c";
   color: #5cb85c;
 }
-
 .jstree-default a {
   height: auto;
 }
-
 .jstree-anchor {
   height: auto !important;
 }
-
 .jstree-default li > ins {
   vertical-align: top;
 }
-
 .jstree-leaf {
   height: auto;
 }
 .jstree-leaf a {
   height: auto !important;
 }
-
 #access_group_tree {
   margin-top: -2px;
   font-size: 14px;
@@ -2162,20 +2328,18 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
   font-weight: bold;
   background: #ffffaf !important;
 }
-
 /*-------------------------------------------------------------------
-	Slim Scroll
--------------------------------------------------------------------*/
+ Slim Scroll
+ -------------------------------------------------------------------*/
 #content_container > .slimScrollDiv > .slimScrollBar {
   z-index: 2001 !important;
 }
 #content_container > .slimScrollDiv > .slimScrollRail {
   z-index: 2000 !important;
 }
-
 /*-------------------------------------------------------------------
-	Nestable
--------------------------------------------------------------------*/
+ Nestable
+ -------------------------------------------------------------------*/
 .dd {
   position: relative;
   display: block;
@@ -2185,7 +2349,6 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
   font-size: 12px;
   line-height: 20px;
 }
-
 .dd-list {
   display: block;
   position: relative;
@@ -2196,9 +2359,7 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
 .dd-list .dd-list {
   padding-left: 30px;
 }
-.dd-list .dd-item,
-.dd-list .dd-empty,
-.dd-list .dd-placeholder {
+.dd-list .dd-item, .dd-list .dd-empty, .dd-list .dd-placeholder {
   display: block;
   position: relative;
   margin: 0;
@@ -2253,8 +2414,7 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
 .dd-list .dd-item > button[data-action="collapse"]:before {
   content: "\f0d7";
 }
-.dd-list .dd-placeholder,
-.dd-list .dd-empty {
+.dd-list .dd-placeholder, .dd-list .dd-empty {
   margin: 5px 0;
   padding: 0;
   min-height: 30px;
@@ -2268,11 +2428,9 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
   background-size: 60px 60px;
   background-position: 0 0, 30px 30px;
 }
-
 .dd-collapsed .dd-list {
   display: none;
 }
-
 .dd-dragel {
   position: absolute;
   pointer-events: none;
@@ -2285,7 +2443,6 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
   -webkit-box-shadow: 2px 4px 6px 0 rgba(0, 0, 0, 0.1);
   box-shadow: 2px 4px 6px 0 rgba(0, 0, 0, 0.1);
 }
-
 .dd3-content {
   display: block;
   height: 30px;
@@ -2301,15 +2458,12 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
   color: #2ea8e5;
   background: #fff;
 }
-
 .dd-dragel > .dd3-item > .dd3-content {
   margin: 0;
 }
-
 .dd3-item > button {
   margin-left: 30px;
 }
-
 .dd3-handle {
   position: absolute;
   margin: 0;
@@ -2339,23 +2493,17 @@ body.has-panel-fullscreen #toast-container.toast-bottom-right {
 .dd3-handle:hover {
   background: #ddd;
 }
-
 /*-------------------------------------------------------------------
-	Tables
--------------------------------------------------------------------*/
+ Tables
+ -------------------------------------------------------------------*/
 table.table-border {
   border: 1px solid #eceeef;
 }
-
 table.table.dataTable {
   border-collapse: collapse !important;
   margin-bottom: 10px !important;
 }
-table.table.dataTable thead .sorting:after,
-table.table.dataTable thead .sorting_asc:after,
-table.table.dataTable thead .sorting_desc:after,
-table.table.dataTable thead .sorting_asc_disabled:after,
-table.table.dataTable thead .sorting_desc_disabled:after {
+table.table.dataTable thead .sorting:after, table.table.dataTable thead .sorting_asc:after, table.table.dataTable thead .sorting_desc:after, table.table.dataTable thead .sorting_asc_disabled:after, table.table.dataTable thead .sorting_desc_disabled:after {
   position: absolute;
   bottom: calc(50% - 12px);
   right: 5px;
@@ -2378,7 +2526,6 @@ table.table.dataTable thead .sorting_desc:after {
 table.table.dataTable.table-border {
   border: 1px solid #eceeef;
 }
-
 .dataTables_wrapper div.dataTables_length {
   float: left;
   margin-bottom: 2px;
@@ -2433,7 +2580,6 @@ table.table.dataTable.table-border {
 .dataTables_wrapper div.dataTables_paginate span .paginate_button:last-child {
   border-right: none;
 }
-
 table.table thead.thead-dark th:first-child {
   border-left: 1px solid #32383e;
 }
@@ -2484,7 +2630,6 @@ table.table td div.progress > div.progress-bar {
 table.table td div.progress > div.progress-bar:not([aria-valuenow="0"]):not([aria-valuenow="100"]) {
   border-right: 1px solid #292b2c !important;
 }
-
 .dropdown-menu.column-toggler {
   padding: 2.5px 0px 3.5px 0px;
 }
@@ -2518,10 +2663,9 @@ table.table td div.progress > div.progress-bar:not([aria-valuenow="0"]):not([ari
 .dropdown-menu.column-toggler > li > label:hover > span {
   color: black;
 }
-
 /*-------------------------------------------------------------------
-	Tabs
--------------------------------------------------------------------*/
+ Tabs
+ -------------------------------------------------------------------*/
 .nav.nav-tabs {
   border: 0px;
   line-height: 35px;
@@ -2537,7 +2681,6 @@ table.table td div.progress > div.progress-bar:not([aria-valuenow="0"]):not([ari
   text-align: center;
 }
 .nav.nav-tabs > .nav-item > a.active {
-  /*border-color: rgba(0, 0, 0, 0.65);*/
   border-color: #02c7e4;
   color: black;
 }
@@ -2553,7 +2696,6 @@ table.table td div.progress > div.progress-bar:not([aria-valuenow="0"]):not([ari
   content: '';
 }
 .nav.nav-tabs > .nav-item > a:hover:not(.active):not(.disabled) {
-  /*border-color: rgba(0, 0, 0, 0.2);*/
   border-color: rgba(2, 133, 152, 0.2);
   color: rgba(0, 0, 0, 0.75);
 }
@@ -2563,13 +2705,20 @@ table.table td div.progress > div.progress-bar:not([aria-valuenow="0"]):not([ari
 .nav.nav-tabs.no-wrap > .nav-item {
   white-space: nowrap;
 }
+.nav.nav-tabs.tabs-fill {
+  width: 100%;
+}
+.nav.nav-tabs.tabs-fill > li {
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
+  text-align: center;
+}
 .nav.nav-tabs, .nav.nav-pills {
   position: relative;
 }
-
 /*-------------------------------------------------------------------
-	FKS Tabdrop
--------------------------------------------------------------------*/
+ FKS Tabdrop
+ -------------------------------------------------------------------*/
 .fks-tabdrop a {
   font-size: 14px;
   color: rgba(0, 0, 0, 0.65);
@@ -2587,22 +2736,21 @@ table.table td div.progress > div.progress-bar:not([aria-valuenow="0"]):not([ari
   border-left: 4px solid transparent;
 }
 .fks-tabdrop > .dropdown-menu > .dropdown-item.active {
-  border-color: rgba(0, 0, 0, 0.65);
+  border-color: #02c7e4;
   background-color: rgba(0, 0, 0, 0.05);
   color: black;
 }
 .fks-tabdrop > .dropdown-menu > .dropdown-item:hover:not(.active):not(.disabled) {
-  border-color: rgba(0, 0, 0, 0.2);
+  border-color: rgba(2, 133, 152, 0.2);
   background-color: rgba(0, 0, 0, 0.025);
   color: rgba(0, 0, 0, 0.75);
 }
 .fks-tabdrop > .dropdown-menu > .dropdown-item.disabled {
   color: rgba(0, 0, 0, 0.35);
 }
-
 /*-------------------------------------------------------------------
-	FKS Tooltip
--------------------------------------------------------------------*/
+ FKS Tooltip
+ -------------------------------------------------------------------*/
 .fks-tooltip {
   position: absolute;
   pointer-events: none !important;
@@ -2686,10 +2834,9 @@ table.table td div.progress > div.progress-bar:not([aria-valuenow="0"]):not([ari
   border-width: 5px 0px 5px 5px;
   border-left-color: #000;
 }
-
 /*-------------------------------------------------------------------
-	FKS Panel
--------------------------------------------------------------------*/
+ FKS Panel
+ -------------------------------------------------------------------*/
 .fks-panel {
   border: 1px solid #cbcbcb;
   background: white;
@@ -2908,9 +3055,6 @@ table.table td div.progress > div.progress-bar:not([aria-valuenow="0"]):not([ari
 .fks-panel.collapsed > .header {
   border-bottom: 0px;
 }
-.fks-panel.collapsed > .header > .actions .btn.panel-collapse {
-  padding-left: 2px;
-}
 .fks-panel.collapsed > .header > .actions .btn.panel-collapse:before {
   content: "\f2d0";
 }
@@ -2949,10 +3093,116 @@ table.table td div.progress > div.progress-bar:not([aria-valuenow="0"]):not([ari
   flex: 1 1 auto;
   text-align: center;
 }
-
 /*-------------------------------------------------------------------
-	Login Page
--------------------------------------------------------------------*/
+ Calendar Page
+ -------------------------------------------------------------------*/
+table.table-calendar {
+  width: 100%;
+  table-layout: fixed;
+}
+table.table-calendar tr th {
+  text-align: center;
+}
+table.table-calendar tr td {
+  border: 1px solid #32383e;
+  height: 120px;
+  position: relative;
+  vertical-align: top;
+}
+table.table-calendar tr td div.day {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  border: 1px solid #32383e;
+  border-top: none;
+  border-right: none;
+  height: 20px;
+  width: 20px;
+  line-height: 20px;
+  text-align: center;
+  font-size: 12px;
+  background: white;
+}
+table.table-calendar tr td .event-list .event {
+  position: relative;
+  font-size: 14px;
+  border: 1px solid #32383e;
+  background: white;
+  padding: 2px;
+}
+table.table-calendar tr td .event-list .event .event-bar {
+  margin: -2px -2px 2px -2px;
+  height: 3px;
+  opacity: 0.75;
+}
+table.table-calendar tr td .event-list .event .event-title {
+  font-weight: bold;
+}
+table.table-calendar tr td .event-list .event .event-body .event-footer {
+  font-size: 12px;
+  font-style: italic;
+}
+table.table-calendar tr td .event-list .event:not(:last-child) {
+  margin-bottom: 5px;
+}
+table.table-calendar tr td .event-list .event.hover {
+  background: whitesmoke;
+  border: 1px solid black;
+  cursor: pointer;
+}
+table.table-calendar tr td .event-list .event.hover .event-bar {
+  opacity: 1;
+}
+table.table-calendar tr td.empty {
+  background: #ccc;
+}
+table.table-calendar tr td.today {
+  background: #ccf;
+}
+div.list-calendar > .row:not(:last-child) {
+  margin-bottom: 10px;
+}
+div.list-calendar div.day {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+div.list-calendar .event-list {
+  padding: 0 5px;
+}
+div.list-calendar .event-list .event {
+  position: relative;
+  font-size: 14px;
+  border: 1px solid #32383e;
+  background: white;
+  padding: 5px;
+}
+div.list-calendar .event-list .event .event-bar {
+  margin: -5px -5px 5px -5px;
+  height: 3px;
+  opacity: 0.75;
+}
+div.list-calendar .event-list .event .event-title {
+  font-weight: bold;
+}
+div.list-calendar .event-list .event .event-body .event-footer {
+  font-size: 12px;
+  font-style: italic;
+}
+div.list-calendar .event-list .event:not(:last-child) {
+  margin-bottom: 5px;
+}
+div.list-calendar .event-list .event.hover {
+  background: whitesmoke;
+  border: 1px solid black;
+  cursor: pointer;
+}
+div.list-calendar .event-list .event.hover .event-bar {
+  opacity: 1;
+}
+/*-------------------------------------------------------------------
+ Login Page
+ -------------------------------------------------------------------*/
 body.fks-login {
   zoom: 0.8;
   background: #eef1f5;
@@ -2981,7 +3231,7 @@ body.fks-login > .row > div .fks-panel .footer {
   text-align: right;
 }
 body.fks-login > .row > div .fks-panel .footer > small {
-  line-height: 27px;
+  line-height: 34px;
   float: left;
 }
 body.fks-login > .row > div .fks-panel .g-recaptcha iframe {
@@ -2990,7 +3240,6 @@ body.fks-login > .row > div .fks-panel .g-recaptcha iframe {
   transform: scale(0.8);
   transform-origin: 0 0;
 }
-
 @media screen and (min-width: 768px) {
   body.fks-login {
     zoom: 1;
@@ -3010,15 +3259,14 @@ body.fks-login > .row > div .fks-panel .g-recaptcha iframe {
   }
 }
 /*-------------------------------------------------------------------
-	FKS Templates
--------------------------------------------------------------------*/
+ FKS Templates
+ -------------------------------------------------------------------*/
 template {
   display: none;
 }
-
 /*-------------------------------------------------------------------
-	Error Pages
--------------------------------------------------------------------*/
+ Error Pages
+ -------------------------------------------------------------------*/
 .error-page {
   height: calc(100% - 10px);
 }

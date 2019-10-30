@@ -7,7 +7,7 @@
 		<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 		<meta name="description" content="">
 		<meta name="author" content="FKSrepack">
-		<link rel="icon" href="../img/favicon.ico">
+		<link rel="icon" href="../img/_favicon.ico">
 
 		<title>FKSrepack : Installer</title>
 
@@ -53,8 +53,8 @@
 		<nav class="navbar navbar-dark bg-dark" style="margin-bottom:10px;">
 			<div class="container">	
 				<a class="navbar-brand" href="/">
-					<img src="../img/favicon.ico" width="30" height="30" class="d-inline-block align-top" alt="">
-					FKSrepack
+					<img src="../img/_favicon.ico" width="30" height="30" class="d-inline-block align-top" alt="">
+					<b>FKS</b><span style="color: #36e3fd;">repack</span>
 				</a>
 			</div>
 		</nav>
@@ -85,32 +85,22 @@
 									</li>
 								</ul>
 							</span>
-							<span class="actions">
-								
-							</span>
 						</div>
-						
 						<div class="body">
-							
 							<div class="tab-content">
 								<div class="tab-pane active" id="tab1" role="tabpanel">
 									<h5>Database Connection</h5>
 									<p>Click on the button below to attempt a connection to the database that is setup as the default connection in /scripts/php/config/connections.php.</p>
-									
 									<div id="tab1_results" role="tablist">
-										<div class="card">
-											<div class="card-header" role="tab" id="tab1_results_heading" data-toggle="collapse" href="#tab1_results_body" aria-expanded="true" aria-controls="tab1_results_body">
-												<h6 class="mb-0">Connection Results <span class="badge-placeholder"></span></h6>
+										<div class="fks-card">
+											<div class="header">
+												<span class="title">Connection Results <span class="badge-placeholder"></span></span>
 											</div>
-
-											<div id="tab1_results_body" class="collapse" role="tabpanel" aria-labelledby="tab1_results_heading" data-parent="#tab1_results">
-												<div class="card-body">
-													<div class="data"><pre>Results will be displayed here...</pre></div>
-												</div>
+											<div class="body-container" style="display:none;">
+												<div class="body"><div class="data"><pre>Results will be displayed here...</pre></div></div>
 											</div>
 										</div>
 									</div>
-									
 									<div class="footer">
 										<button type="button" onClick="testDatabase()" class="btn fks-btn-success btn-sm go-btn"><i class="fa fa-plug"></i> Test Connection</button>
 										<button type="button" onClick="fks.editModal({handler:'handler.php', action:'helpModal', data:'connect'})" class="btn fks-btn-info btn-sm float-sm-right help-gtn"><i class="fa fa-info"></i> Help</button>
@@ -122,15 +112,12 @@
 									<p>Below are the list of tables that FKSrepack requires. If there is a check next to the name then it is either out of date or doesn't exist and needs to be (re)created. If you want a clean install you may check the unselected tables.</p>
 									<div class="data"></div>
 									<div id="tab2_results" role="tablist">
-										<div class="card">
-											<div class="card-header" role="tab" id="tab2_results_heading" data-toggle="collapse" href="#tab2_results_body" aria-expanded="true" aria-controls="tab2_results_body">
-												<h6 class="mb-0">Creation Results <span class="badge-placeholder"></span></h6>
+										<div class="fks-card">
+											<div class="header">
+												<span class="title">Creation Results <span class="badge-placeholder"></span></span>
 											</div>
-
-											<div id="tab2_results_body" class="collapse" role="tabpanel" aria-labelledby="tab2_results_heading" data-parent="#tab2_results">
-												<div class="card-body">
-													<div class="pre"><pre>Results will be displayed here...</pre></div>
-												</div>
+											<div class="body-container" style="display:none;">
+												<div class="body"><div class="data"><pre>Results will be displayed here...</pre></div></div>
 											</div>
 										</div>
 									</div>
@@ -145,43 +132,50 @@
 									<p>Fill in the below form for the main local admin account for this site.</p>
 									<p>This account should probably be disabled after the site has been setup if you plan on using LDAP.</p>
 									<form id="formAccount" role="form" action="javascript:void(0);" style="margin-bottom:10px;">
-										<div class="row">
-											<div class="col-md-6">
-												<div class="form-group" >
-													<label for="formUsername"><b>Username</b></label>
-													<input type="text" class="form-control form-control-sm" id="formUsername" name="username" aria-describedby="usernameHelp" required="required">
-													<small id="usernameHelp" class="form-text text-muted">Pick a username that won't be used by LDAP.</small>
-												</div>
-											</div>
-											
-											<div class="col-md-6">
-												<div class="form-group" >
-													<label for="formPassword"><b>Password</b></label>
-													<input type="password" class="form-control form-control-sm" id="formPassword" name="password" aria-describedby="passwordHelp" required="required">
-													<small id="passwordHelp" class="form-text text-muted">Make a complex password that can't be guessed.</small>
-												</div>
-											</div>
-										</div>
-										<div class="row">
-											<div class="col-md-12">
-												<div class="form-group" style="margin-top:5px">
-													<input type="checkbox" class="table-checkbox"  name="skip" value="1" id="formSkip" aria-describedby="formSkipHelp">
-													<label for="formSkip" style="margin:0px"><b>Skip Account Creation</b></label><br>
-													<small id="formSkipHelp" class="form-text text-muted">Don't create a new admin account.</small>
-												</div>
-											</div>
-										</div>
+										<?PHP
+											require_once('../scripts/php/includes/Utilities.php');
+											$Utilities = new \Utilities();
+											echo $Utilities->buildFormGroups(array(
+												array(
+													'title' => 'Username',
+													'type' => 'text',
+													'name' => 'username',
+													'help' => 'Pick a username that won\'t be used by LDAP.',
+													'width' => 6
+												),array(
+													'title' => 'Password',
+													'type' => 'password',
+													'name' => 'password',
+													'help' => 'Make a complex password that can\'t be guessed.',
+													'width' => 6
+												),array(
+													'title' => 'Overwrite Existing User',
+													'type' => 'checkbox',
+													'name' => 'overwrite',
+													'value' => 1,
+													'help' => 'Overwrites the password if the username already exists.',
+													'width' => 6
+												),array(
+													'width' => 6
+												),array(
+													'type' => 'hr'
+												),array(
+													'title' => 'Skip Account Creation',
+													'type' => 'checkbox',
+													'name' => 'skip',
+													'value' => 1,
+													'help' => 'Don\'t create an admin account.'
+												)
+											));
+										?>
 									</form>
 									<div id="tab3_results" role="tablist">
-										<div class="card">
-											<div class="card-header" role="tab" id="tab3_results_heading" data-toggle="collapse" href="#tab3_results_body" aria-expanded="true" aria-controls="tab3_results_body">
-												<h6 class="mb-0">Creation Results <span class="badge-placeholder"></span></h6>
+										<div class="fks-card">
+											<div class="header">
+												<span class="title">Creation Results <span class="badge-placeholder"></span></span>
 											</div>
-
-											<div id="tab3_results_body" class="collapse" role="tabpanel" aria-labelledby="tab3_results_heading" data-parent="#tab3_results">
-												<div class="card-body">
-													<div class="pre"><pre>Results will be displayed here...</pre></div>
-												</div>
+											<div class="body-container" style="display:none;">
+												<div class="body"><div class="data"><pre>Results will be displayed here...</pre></div></div>
 											</div>
 										</div>
 									</div>

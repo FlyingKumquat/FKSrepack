@@ -1,9 +1,50 @@
 <?PHP
 /*##############################################
 	Validator Form Validation
-	Version: 1.3.02222019
-	Updated: 02/22/2019
+	Version: 2.3.20191024
+	Updated: 10/24/2019
 ##############################################*/
+
+/*
+	base64_decode
+	not_empty
+	nullify
+	required
+	set
+	unset
+	urldecode
+	
+	alphanumeric
+	bool
+	date
+	datetime
+	email
+	file
+	ip
+	json
+	length
+	mag
+	match
+	max_length
+	max_value
+	min_length
+	min_value
+	no_spaces
+	not_values
+	not_values_i
+	not_values_csv
+	not_values_csv_i
+	numeric
+	regex
+	time
+	time_zone
+	url
+	urlmag
+	values
+	values_i
+	values_csv
+	values_csv_i
+*/
 
 /*----------------------------------------------
 	Debug / Error reporting
@@ -12,373 +53,506 @@ ini_set('display_errors',1);
 ini_set('display_startup_errors',1);
 error_reporting(-1);
 
-/*
-	required - true/false
-		If true, the validator checks that the passed value is not empty
-	
-	number - true/false
-		If true, the validator checks that the passed value is a number
-		
-	bool - true/false
-		If true, the validator checks that the passed value (to string) is either '0' or '1'
-		
-	min_length - (numeric value)
-		If set, the validator checks that the passed value is at least #min_length characters long
-		
-	max_length - (numeric value)
-		If set, the validator checks that the passed value is no more than #max_length characters long
-		
-	min_value - (numeric value)
-		If set, the validator checks that the passed value is no less than #min_value
-		
-	max_value - (numeric value)
-		If set, the validator checks that the passed value is no more than #max_value
-		
-	email - true/false
-		If true, the validator checks that the passed value is a valid email address format
-		
-	date - true/false
-		If true, the validator checks that the passed value is a valid date
-		
-	date_to_epoch - true/false
-		If true, the validator checks that the passed value is a valid date and coverts it to epoch
-	
-	ip - true/false
-		If true, the validator checks that the passed value is a valid ip address format
-		
-	timezone - true/false
-		If true, the validator checks that the passed value is a valid timezone
-		
-	url - true/false
-		If true, the validator checks that the passed value is a valid url format
-		
-	mag - true/false
-		If true, the validator checks that the passed value is a valid magnet link format
-		
-	urlmag - true/false
-		If true, the validator checks that the passed value is a valid url or magnet link format
-		
-	values - (array of acceptable values)
-	values_i - (array of acceptable values)[case-insensitive]
-		If set, the validator checks that the passed value is in the array of acceptable values
-		
-	values_csv - (array of acceptable values - comma separated)
-	values_csv_i - (array of acceptable values - comma separated)[case-insensitive]
-		If set, the validator checks that the passed value is in the array of acceptable values
-		
-	not_values - (array of unacceptable values)
-	not_values_i - (array of unacceptable values) [case-insensitive]
-		If set, the validator checks that the passed value is not in the array of unacceptable values
-		
-	not_values_csv - (array of unacceptable values - comma separated)
-	not_values_csv_i - (array of unacceptable values - comma separated)[case-insensitive]
-		If set, the validator checks that the passed value is not in the array of unacceptable values
-		
-	match - (title)
-		If set, the validator checks that the passed value matches the value of $data[title]
-		
-	no_spaces - true/false
-		If set, the validator checks that the passed value does not contain spaces
-		
-	alphanumeric - true/false
-		If set, the validator checks that the passed value is alphanumeric
-		
-	file - (options)
-		image - true/false
-			If set, the validator checks that all the files passed are images
-		max_files - (numeric value)
-			If set, the validator checks that the number of files passed are no more than #max_files
-		max_file_size - (numeric value)
-			If set, the validator checks that the size of files passed are no larger than #max_file_size
-		max_total_size - (numeric value)
-			If set, the validator checks that the total size of files passed is no larger than #max_total_size
-	
-EXAMPLE
-	$Validator = new \Validator($data);
-	$Validator->validate('id', array('required' => true, 'number' => true));
-	$Validator->validate('artist', array('max_length' => 255));
-	$Validator->validate('title', array('required' => true, 'max_length' => 255));
-	$Validator->validate('song_id', array('required' => true));
-	$Validator->validate('post_url', array('url' => true));
-	$Validator->validate('type', array('required' => true, 'values' => array('YouTube', 'Soundcloud')));
-	$Validator->validate('active', array('required' => true, 'bool' => true));
-	$Validator->validate('posted', array('date_to_epoch' => true));
-	$Validator->validate('info', array());
-	
-	// JSON is also acceptable instead of an array (useful for validating directly from a databse)
-	// ex. $Validator->validate('id', '{"required":true,"number":true}');
-	
-	if(!$Validator->getResult()) {
-		return array('result' => 'failure', 'validation' => $Validator->getOutput());
-	}
-	
-	// Filters out anything passed in $data that was not put through the validator
-	$form = $Validator->getForm();
-*/
-
 class Validator {
 /*----------------------------------------------
 	Global Variables
 ----------------------------------------------*/
 	private $result = true;
 	private $output = array();
-	private $data = null;
+	private $input = null;
+	private $options = array();
 	private $form = array();
+	private $missing = null;
+	private $required = null;
+	private $not_empty = null;
+	
+	private $current_title = null;
 
 /*----------------------------------------------
 	Construct
 ----------------------------------------------*/
-	public function __construct($data = null) {
-		if($data != null) {
-			$this->data = $data;
-		}
+	public function __construct($input = null) {
+		$this->input = $input;
 	}
 	
 /*----------------------------------------------
+	Public Functions
+----------------------------------------------*/
+	public function getOptions() { return $this->options; }
+	
+	public function getResult() { return $this->result; }
+	
+	public function getInput() { return $this->input; }
+	
+	public function getOutput() { return $this->output; }
+	
+	public function getForm() { return $this->form; }
+	
+	public function getDebug($parts) {
+		$out = array();
+		foreach($parts as $p) {
+			switch($p) {
+				case 'input':
+					array_push($out, '<b>Input</b>');
+					array_push($out, print_r(self::getInput(), true));
+					break;
+					
+				case 'options':
+					array_push($out, '<b>Options</b>');
+					array_push($out, print_r(self::getOptions(), true));
+					break;
+					
+				case 'result':
+					array_push($out, '<b>Result</b>');
+					array_push($out, print_r(var_export(self::getResult(), true) . '<br>', true));
+					break;
+					
+				case 'output':
+					array_push($out, '<b>Output</b>');
+					array_push($out, print_r(self::getOutput(), true));
+					break;
+					
+				case 'form':
+					array_push($out, '<b>Form</b>');
+					array_push($out, print_r(self::getForm(), true));
+					break;
+					
+				default:
+					array_push($out, '<b>UNKNOWN</b>');
+					array_push($out, $p);
+					break;
+			}
+		}
+		echo implode('<br>', $out);
+	}
+	
+	public function validate($options, $args = array()) {
+		// Convert options if not array
+		if(!is_array($options)) { $options = array($options => $args); }
+		
+		// Loop through all options
+		foreach($options as $title => $validators) {
+			// Set current title
+			$this->current_title = $title;
+			
+			// Reset missing
+			$this->missing = false;
+			
+			// Check to see if input for title is missing
+			if(!key_exists($title, $this->input)) {
+				$this->missing = true;
+				$this->form[$title] = null;
+			}
+			
+			// JSON decode validators if not an array
+			if(!is_array($validators)) { $validators = json_decode($validators, true); }
+			
+			// Set options
+			$this->options[$title] = $validators;
+			
+			// Check for set
+			if(key_exists('set', $validators)) {
+				$this->missing = false;
+				$this->form[$title] = $validators['set'];
+				unset($validators['set']);
+			}
+			
+			// Check for base64_decode
+			if(key_exists('base64_decode', $validators)) {
+				if(self::trueFalse($validators['base64_decode'])) {
+					$this->form[$title] = base64_decode($this->input[$title]);
+				}
+				unset($validators['base64_decode']);
+			}
+			
+			// Check for urldecode
+			if(key_exists('urldecode', $validators)) {
+				if(self::trueFalse($validators['urldecode'])) {
+					$this->form[$title] = str_replace('&plus;', '+', urldecode($this->input[$title]));
+				}
+				unset($validators['urldecode']);
+			}
+			
+			// Check for value nullification
+			if(key_exists('nullify', $validators)) {
+				if(self::trueFalse($validators['nullify'])) {
+					$this->form[$title] = null;
+				}
+				unset($validators['nullify']);
+			}
+
+			// Set required
+			$this->required = (key_exists('required', $validators) ? self::trueFalse($validators['required']) : false);
+			unset($validators['required']);
+			
+			// Set not_empty
+			$this->not_empty = (key_exists('not_empty', $validators) ? self::trueFalse($validators['not_empty']) : false);
+			unset($validators['not_empty']);
+			
+			// Check to see if input for title is missing and required
+			if($this->missing && $this->required) {
+				self::addError($title, '_required', 'Input is missing.');
+			}
+			
+			// Set temp input
+			$_input = key_exists($title, $this->form) ? $this->form[$title] : $this->input[$title];
+			
+			// Check for empty input
+			if(!$this->missing && $this->required && $this->not_empty && self::is_empty($_input)) {
+				self::addError($title, '_not_empty', 'Input must not be empty.');
+			}
+			
+			// Validate if not missing and empty is not allowed or empty is allowed but input is not empty
+			if(
+				!$this->missing
+					&&
+				(
+					$this->not_empty
+						||
+					(
+						!$this->not_empty
+							&&
+						!self::is_empty($_input)
+					)
+				)
+			) {
+				// Loop through all validators
+				foreach($validators as $k => $v) {
+					// Skip special
+					if($k == 'unset') { continue; }
+					
+					// Set _func to function name
+					$_func = '_' . $k;
+					
+					// Make sure class function exists and is callable
+					if(method_exists(__CLASS__, $_func) && is_callable(__CLASS__, $_func)) {
+						// Call the class function
+						self::{$_func}($title, $_input, $v);
+					} else {
+						// Add an error
+						self::addError($title, $_func, 'Unknown validation option "' . $k . '".');
+					}
+				}
+			}
+			
+			// Set form data, change empty to null
+			$this->form[$title] = ($_input == '' ? null : $_input);
+			
+			// Check for unset
+			if(key_exists('unset', $validators)) {
+				if(self::trueFalse($validators['unset'])) {
+					unset($this->form[$title]);
+				}
+			}
+		}
+		
+		return $this->result;
+	}
+
+/*----------------------------------------------
 	Private Functions
 ----------------------------------------------*/
-	private function _required($data, $value, $title) {
-		if($value && empty($data) && (string)$data != '0') {
-			$this->output[$title] = 'Input is missing or blank.';
-			$this->result = false;
+	private function _alphanumeric($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		if(!ctype_alnum($input)) {
+			self::addError($title, __FUNCTION__, 'Must consist of only letters and numbers.');
+		}
+	}
+
+	private function _bool($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		if($input !== false && $input !== true && (string)$input != '0' && (string)$input != '1') {
+			self::addError($title, __FUNCTION__, 'Non-bool value in a bool-only field.');
 		}
 	}
 	
-	private function _number($data, $value, $title) {
-		if($value && (!is_int($data * 1) || !is_numeric($data)) && !empty($data)) {
-			$this->output[$title] = 'Must be a numeric value.';
-			$this->result = false;
+	private function _date($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		$proper = true;
+		preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/m', $input, $matches, PREG_OFFSET_CAPTURE, 0);
+		if(count($matches) != 1) { $proper = false; }
+		if($proper) {
+			$parts = explode(' ', str_replace('-', ' ', $input));
+			if($parts[1] < 1 || $parts[1] > 12) { $proper = false; }
+			if($parts[2] < 1 || $parts[2] > date('t', strtotime($parts[0] . '-' . $parts[1]))) { $proper = false; }
+		}
+		if(!$proper) {
+			self::addError($title, __FUNCTION__, 'Must be in MySQL date format.');
 		}
 	}
 	
-	private function _bool($data, $value, $title) {
-		$data = (string)$data;
-		if($value && $data != '0' && $data != '1' && !empty($data)) {
-			$this->output[$title] = 'Non-bool value in a bool-only field.';
-			$this->result = false;
+	private function _datetime($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		$proper = true;
+		preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/m', $input, $matches, PREG_OFFSET_CAPTURE, 0);
+		if(count($matches) != 1) { $proper = false; }
+		if($proper) {
+			$parts = explode(' ', str_replace(array('-', ':'), ' ', $input));
+			if($parts[1] < 1 || $parts[1] > 12) { $proper = false; }
+			if($parts[2] < 1 || $parts[2] > date('t', strtotime($parts[0] . '-' . $parts[1]))) { $proper = false; }
+			if($parts[3] < 0 || $parts[3] > 23) { $proper = false; }
+			if($parts[4] < 0 || $parts[4] > 59) { $proper = false; }
+			if($parts[5] < 0 || $parts[5] > 59) { $proper = false; }
+		}
+		if(!$proper) {
+			self::addError($title, __FUNCTION__, 'Must be in MySQL datetime format.');
 		}
 	}
 	
-	private function _min_length($data, $value, $title) {
-		if(strlen($data) < $value && !empty($data)) {
-			$this->output[$title] = 'Must be at least ' . $value . ' characters long.';
-			$this->result = false;
+	private function _email($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		if(!filter_var($input, FILTER_VALIDATE_EMAIL)) {
+			self::addError($title, __FUNCTION__, 'Invalid email address format.');
 		}
 	}
 	
-	private function _max_length($data, $value, $title) {
-		if(strlen($data) > $value && !empty($data)) {
-			$this->output[$title] = 'Must be no more than ' . $value . ' characters long.';
-			$this->result = false;
-		}
-	}
-	
-	private function _min_value($data, $value, $title) {
-		if($data < $value && strlen($data) > 0) {
-			$this->output[$title] = 'Must not be less than ' . $value . '.';
-			$this->result = false;
-		}
-	}
-	
-	private function _max_value($data, $value, $title) {
-		if($data > $value && strlen($data) > 0) {
-			$this->output[$title] = 'Must not be greater than ' . $value . '.';
-			$this->result = false;
-		}
-	}
-	
-	private function _email($data, $value, $title) {
-		if($value && !filter_var($data, FILTER_VALIDATE_EMAIL) && !empty($data)) {
-			$this->output[$title] = 'Invalid email address.';
-			$this->result = false;
-		}
-	}
-	
-	private function _date($data, $value, $title) {
-		if($value && !strtotime($data) && !empty($data)) {
-			$this->output[$title] = 'Invalid date.';
-			$this->result = false;
-		}
-	}
-	
-	private function _date_to_epoch($data, $value, $title) {
-		if($value && !strtotime($data) && !empty($data)) {
-			$this->output[$title] = 'Invalid date.';
-			$this->result = false;
-		} else {
-			if(isset($this->data[$title])) {
-				$this->data[$title] = strtotime($data);
-			}
-		}
-	}
-	
-	private function _ip($data, $value, $title) {
-		if($value && !filter_var($data, FILTER_VALIDATE_IP) && !empty($data)) {
-			$this->output[$title] = 'Invalid ip address.';
-			$this->result = false;
-		}
-	}
-	
-	private function _timezone($data, $value, $title) {
-		if($value && !in_array($data, DateTimeZone::listIdentifiers(DateTimeZone::ALL)) && !empty($data)) {
-			$this->output[$title] = 'Invalid timezone.';
-			$this->result = false;
-		}
-	}
-	
-	private function _url($data, $value, $title) {
-		if($value && !filter_var($data, FILTER_VALIDATE_URL) && !empty($data)) {
-			$this->output[$title] = 'Invalid url.';
-			$this->result = false;
-		}
-	}
-	
-	private function _mag($data, $value, $title) {
-		if($value && substr($data, 0, 8) != 'magnet:?' && !empty($data)) {
-			$this->output[$title] = 'Invalid magnet.';
-			$this->result = false;
-		}
-	}
-	
-	private function _urlmag($data, $value, $title) {
-		if($value && !empty($data) && !filter_var($data, FILTER_VALIDATE_URL) && substr($data, 0, 8) != 'magnet:?') {
-			$this->output[$title] = 'Invalid url/magnet.';
-			$this->result = false;
-		}
-	}
-	
-	private function _values($data, $value, $title) {
-		if($value && !empty($data) && !in_array($data, $value)) {
-			$this->output[$title] = 'Invalid value.';
-			$this->result = false;
-		}
-	}
-	
-	private function _values_i($data, $value, $title) {
-		if($value && !empty($data) && !$this->in_arrayi($data, $value)) {
-			$this->output[$title] = 'Invalid value.';
-			$this->result = false;
-		}
-	}
-	
-	private function _values_csv($data, $value, $title) {
-		if($value && !empty($data)) {
-			foreach(explode(',', $data) as $v) {
-				if(!in_array($v, $value)) {
-					$this->output[$title] = 'Invalid value.';
-					$this->result = false;
-				}
-			}
-		}
-	}
-	
-	private function _values_csv_i($data, $value, $title) {
-		if($value && !empty($data)) {
-			foreach(explode(',', $data) as $v) {
-				if(!$this->in_arrayi($v, $value)) {
-					$this->output[$title] = 'Invalid value.';
-					$this->result = false;
-				}
-			}
-		}
-	}
-	
-	private function _not_values($data, $value, $title) {
-		if($value && !empty($data) && in_array($data, $value)) {
-			$this->output[$title] = 'Unacceptable value.';
-			$this->result = false;
-		}
-	}
-	
-	private function _not_values_i($data, $value, $title) {
-		if($value && !empty($data) && $this->in_arrayi($data, $value)) {
-			$this->output[$title] = 'Unacceptable value.';
-			$this->result = false;
-		}
-	}
-	
-	private function _not_values_csv($data, $value, $title) {
-		if($value && !empty($data)) {
-			foreach(explode(',', $data) as $v) {
-				if(in_array($v, $value)) {
-					$this->output[$title] = 'Unacceptable value.';
-					$this->result = false;
-				}
-			}
-		}
-	}
-	
-	private function _not_values_csv_i($data, $value, $title) {
-		if($value && !empty($data)) {
-			foreach(explode(',', $data) as $v) {
-				if($this->in_arrayi($v, $value)) {
-					$this->output[$title] = 'Unacceptable value.';
-					$this->result = false;
-				}
-			}
-		}
-	}
-	
-	private function _match($data, $value, $title) {
-		if($value && !empty($data) && $data != $this->data[$value]) {
-			$this->output[$title] = 'Values do not match.';
-			$this->output[$value] = 'Values do not match.';
-			$this->result = false;
-		}
-	}
-	
-	private function _no_spaces($data, $value, $title) {
-		if($value && !empty($data) && strpos($data, ' ') !== false) {
-			$this->output[$title] = 'Must not contain spaces.';
-			$this->result = false;
-		}
-	}
-	
-	private function _alphanumeric($data, $value, $title) {
-		if($value && !empty($data) && !ctype_alnum($data)) {
-			$this->output[$title] = 'Must consist of only letters and numbers.';
-			$this->result = false;
-		}
-	}
-	
-	private function _file($data, $value, $title) {
+	private function _file($title, $input, $value) {
 		$image_types = array(
 			'image/png',
 			'image/jpeg',
 			'image/gif',
 			'image/bmp'
 		);
-		if($value && !empty($data)) {
+		if($value && !empty($input)) {
 			$size = 0;
-			if(isset($value['max_files']) && count($data) > $value['max_files']) {
-				$this->output[$title] = 'Must select ' . $value['max_files'] . ' or fewer files.';
-				$this->result = false;
+			if(isset($value['max_files']) && count($input) > $value['max_files']) {
+				self::addError($title, __FUNCTION__, 'Must select ' . $value['max_files'] . ' or fewer files.');
 				return false;
 			}
-			foreach($data as $v) {
+			foreach($input as $v) {
 				if(isset($value['image']) && $value['image'] && !in_array($v['type'], $image_types)) {
-					$this->output[$title] = 'File is not a valid image type.';
-					$this->result = false;
+					self::addError($title, __FUNCTION__, 'File is not a valid image type.');
 					return false;
 				}
 				if(isset($value['max_file_size']) && $v['size'] > $value['max_file_size']) {
-					$this->output[$title] = 'File size must be ' . $this->formatBytes($value['max_file_size']) . ' or smaller.';
-					$this->result = false;
+					self::addError($title, __FUNCTION__, 'File size must be ' . $this->formatBytes($value['max_file_size']) . ' or smaller.');
 					return false;
 				}
 				$size += $v['size'];
 			}
 			if(isset($value['max_total_size']) && $size > $value['max_total_size']) {
-				$this->output[$title] = 'File sizes must total ' . $this->formatBytes($value['max_total_size']) . ' or smaller.';
-				$this->result = false;
+				self::addError($title, __FUNCTION__, 'File sizes must total ' . $this->formatBytes($value['max_total_size']) . ' or smaller.');
 				return false;
 			}
 		}
 	}
 	
+	private function _ip($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		if(!filter_var($input, FILTER_VALIDATE_IP)) {
+			self::addError($title, __FUNCTION__, 'Invalid IP Address.');
+		}
+	}
+	
+	private function _json($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		if(!is_string($value)) {
+			self::addError($title, __FUNCTION__, 'Invalid JSON format.');
+		} else {
+			$json = json_decode($input);
+			if($json === null && json_last_error() !== JSON_ERROR_NONE) {
+				self::addError($title, __FUNCTION__, 'Invalid JSON format.');
+			}
+		}
+	}
+	
+	private function _length($title, $input, $value) {
+		if(strlen($input) != $value) {
+			self::addError($title, __FUNCTION__, 'Must be exactly ' . $value . ' characters long.');
+		}
+	}
+	
+	private function _mag($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		if(substr($input, 0, 8) != 'magnet:?') {
+			self::addError($title, __FUNCTION__, 'Invalid magnet.');
+		}
+	}
+	
+	private function _match($title, $input, $value) {
+		if($input != $this->input[$value]) {
+			self::addError($title, __FUNCTION__, 'Values do not match.');
+			self::addError($value, __FUNCTION__, 'Values do not match.');
+		}
+	}
+	
+	private function _max_length($title, $input, $value) {
+		if(strlen($input) > $value) {
+			self::addError($title, __FUNCTION__, 'Must be no more than ' . $value . ' characters long.');
+		}
+	}
+	
+	private function _max_value($title, $input, $value) {
+		if($input > $value) {
+			self::addError($title, __FUNCTION__, 'Must not be greater than ' . $value . '.');
+		}
+	}
+	
+	private function _min_length($title, $input, $value) {
+		if(strlen($input) < $value) {
+			self::addError($title, __FUNCTION__, 'Must be at least ' . $value . ' characters long.');
+		}
+	}
+	
+	private function _min_value($title, $input, $value) {
+		if($input < $value) {
+			self::addError($title, __FUNCTION__, 'Must not be less than ' . $value . '.');
+		}
+	}
+	
+	private function _no_spaces($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		if(strpos($input, ' ') !== false) {
+			self::addError($title, __FUNCTION__, 'Must not contain spaces.');
+		}
+	}
+	
+	private function _not_values($title, $input, $value) {
+		if(in_array($input, $value)) {
+			self::addError($title, __FUNCTION__, 'Unacceptable value.');
+		}
+	}
+	
+	private function _not_values_i($title, $input, $value) {
+		if($this->in_arrayi($input, $value)) {
+			self::addError($title, __FUNCTION__, 'Unacceptable value.');
+		}
+	}
+	
+	private function _not_values_csv($title, $input, $value) {
+		foreach(explode(',', $input) as $v) {
+			if(in_array($v, $value)) {
+				self::addError($title, __FUNCTION__, 'Unacceptable value.');
+				break;
+			}
+		}
+	}
+	
+	private function _not_values_csv_($title, $input, $value) {
+		foreach(explode(',', $input) as $v) {
+			if($this->in_arrayi($v, $value)) {
+				self::addError($title, __FUNCTION__, 'Unacceptable value.');
+				break;
+			}
+		}
+	}
+	
+	private function _numeric($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		if(!is_int($input * 1) || !is_numeric($input)) {
+			self::addError($title, __FUNCTION__, 'Must be a numeric value.');
+		}
+	}
+	
+	private function _regex($title, $input, $value) {
+		preg_match('/^' . $value . '$/m', $input, $matches, PREG_OFFSET_CAPTURE, 0);
+		if(count($matches) == 0) {
+			self::addError($title, __FUNCTION__, 'Does not match pattern.');
+		}
+	}
+	
+	private function _time($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		$proper = true;
+		preg_match('/^[0-9]{2}:[0-9]{2}:[0-9]{2}$/m', $input, $matches, PREG_OFFSET_CAPTURE, 0);
+		if(count($matches) != 1) { $proper = false; }
+		if($proper) {
+			$parts = explode(' ', str_replace(':', ' ', $input));
+			if($parts[0] < 0 || $parts[0] > 23) { $proper = false; }
+			if($parts[1] < 0 || $parts[1] > 59) { $proper = false; }
+			if($parts[2] < 0 || $parts[2] > 59) { $proper = false; }
+		}
+		if(!$proper) {
+			self::addError($title, __FUNCTION__, 'Must be in MySQL time format.');
+		}
+	}
+	
+	private function _time_zone($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		if(!in_array($input, DateTimeZone::listIdentifiers(DateTimeZone::ALL))) {
+			self::addError($title, __FUNCTION__, 'Invalid Time Zone.');
+		}
+	}
+	
+	private function _url($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		if(!filter_var($input, FILTER_VALIDATE_URL)) {
+			self::addError($title, __FUNCTION__, 'Invalid URL.');
+		}
+	}
+
+	private function _urlmag($title, $input, $value) {
+		if(!self::trueFalse($value)) { return; }
+		if(!filter_var($input, FILTER_VALIDATE_URL) && substr($input, 0, 8) != 'magnet:?') {
+			self::addError($title, __FUNCTION__, 'Invalid URL or magnet.');
+		}
+	}
+	
+	private function _values($title, $input, $value) {
+		if(!is_array($input)) { $input = array($input); }
+		foreach($input as $i) {
+			if(!in_array($i, $value)) {
+				self::addError($title, __FUNCTION__, 'Invalid value.');
+				break;
+			}
+		}
+	}
+	
+	private function _values_i($title, $input, $value) {
+		if(!is_array($input)) { $input = array($input); }
+		foreach($input as $i) {
+			if(!in_arrayi($i, $value)) {
+				self::addError($title, __FUNCTION__, 'Invalid value.');
+				break;
+			}
+		}
+	}
+	
+	private function _values_csv($title, $input, $value) {
+		foreach(explode(',', $input) as $i) {
+			if(!in_array($i, $value)) {
+				self::addError($title, __FUNCTION__, 'Invalid value.');
+				break;
+			}
+		}
+	}
+	
+	private function _values_csv_i($title, $input, $value) {
+		foreach(explode(',', $input) as $i) {
+			if(!$this->in_arrayi($i, $value)) {
+				self::addError($title, __FUNCTION__, 'Invalid value.');
+				break;
+			}
+		}
+	}
+
 /*----------------------------------------------
 	Utility Functions
 ----------------------------------------------*/
+	private function reset() {
+		$this->result = true;
+		$this->output = array();
+		$this->options = array();
+		$this->form = array();
+		$this->missing = null;
+		$this->required = null;
+		$this->not_empty = null;
+		$this->current_title = null;
+	}
+
+	private function is_empty($value) {
+		if(is_array($value)) { return empty($value); }
+		if(strlen($value) != 0) { return false; }
+		if($value === false) { return false; }
+		return true;
+	}
+
+	private function addError($title, $function, $error) {
+		if(!isset($this->output[$title])) { $this->output[$title] = array(); }
+		$this->output[$title][substr($function, 1, strlen($function) - 1)] = $error;
+		$this->result = false;
+	}
+
 	private function formatBytes($size, $precision = 2) {
 		if(!is_numeric($size)) { $size = 0; }
 		$base = log($size, 1024);
@@ -390,152 +564,59 @@ class Validator {
 	private function in_arrayi($needle, $haystack) {
 		return in_array(strtolower($needle), array_map('strtolower', $haystack));
 	}
-	
-/*----------------------------------------------
-	Public Functions
-----------------------------------------------*/
-	public function getResult() { return $this->result; }
-	
-	public function getOutput() { return $this->output; }
-	
-	public function getForm() { return $this->form; }
-	
-	public function validate($title = null, $validators = null, $data = null) {
-		if($data == null && isset($this->data[$title])) { $data = $this->data[$title]; }
-		if($data == null && $data != '') {
-			$this->output['UNKNOWN'] = 'No data supplied.';
-			$this->result = false;
-			return $this->result;
-		}
+
+	private function trueFalse($args) {
+		// Return if bool
+		if(is_bool($args)) { return $args; }
 		
-		if($validators == null) {
-			//array_push($this->output, array('UNKNOWN' => 'No validators supplied.'));
-			//$this->result = false;
-			return $this->result;
-		}
+		// Return false if not array
+		if(!is_array($args)) { return false; }
 		
-		if(!is_array($validators)) {
-			$validators = json_decode($validators, true);
-		}
+		// Setup options
+		$options = array(
+			'conditions' => key_exists('conditions', $args) ? $args['conditions'] : $args,
+			'inverse' => key_exists('inverse', $args) ? $args['inverse'] : false,
+			'operator' => key_exists('operator', $args) ? strtoupper($args['operator']) : 'AND'
+		);
 		
-		foreach($validators as $k => $v) {
-			switch($k) {
-				case 'required':
-					$this->_required($data, $v, $title);
-					break;
-					
-				case 'number':
-					$this->_number($data, $v, $title);
-					break;
-					
-				case 'bool':
-					$this->_bool($data, $v, $title);
-					break;
-					
-				case 'min_length':
-					$this->_min_length($data, $v, $title);
-					break;
-					
-				case 'max_length':
-					$this->_max_length($data, $v, $title);
-					break;
-					
-				case 'min_value':
-					$this->_min_value($data, $v, $title);
-					break;
-					
-				case 'max_value':
-					$this->_max_value($data, $v, $title);
-					break;
-					
-				case 'email':
-					$this->_email($data, $v, $title);
-					break;
-					
-				case 'date':
-					$this->_date($data, $v, $title);
-					break;
-					
-				case 'date_to_epoch':
-					$this->_date_to_epoch($data, $v, $title);
-					break;
-					
-				case 'ip':
-					$this->_ip($data, $v, $title);
-					break;
-					
-				case 'timezone':
-					$this->_timezone($data, $v, $title);
-					break;
-					
-				case 'url':
-					$this->_url($data, $v, $title);
-					break;
-					
-				case 'mag':
-					$this->_mag($data, $v, $title);
-					break;
-					
-				case 'urlmag':
-					$this->_urlmag($data, $v, $title);
-					break;
-					
-				case 'values':
-					$this->_values($data, $v, $title);
-					break;
-					
-				case 'values_i':
-					$this->_values_i($data, $v, $title);
-					break;
-					
-				case 'values_csv':
-					$this->_values_csv($data, $v, $title);
-					break;
-					
-				case 'values_csv_i':
-					$this->_values_csv_i($data, $v, $title);
-					break;
-					
-				case 'not_values':
-					$this->_not_values($data, $v, $title);
-					break;
-					
-				case 'not_values_i':
-					$this->_not_values_i($data, $v, $title);
-					break;
-					
-				case 'not_values_csv':
-					$this->_not_values_csv($data, $v, $title);
-					break;
-					
-				case 'not_values_csv_i':
-					$this->_not_values_csv_i($data, $v, $title);
-					break;
-					
-				case 'match':
-					$this->_match($data, $v, $title);
-					break;
-					
-				case 'no_spaces':
-					$this->_no_spaces($data, $v, $title);
-					break;
-					
-				case 'alphanumeric':
-					$this->_alphanumeric($data, $v, $title);
-					break;
-					
-				case 'file':
-					$this->_file($data, $v, $title);
-					break;
+		// Set errors
+		$errors = false;
+		
+		// Loop through all conditions for missing inputs
+		foreach($options['conditions'] as $title => $value) {
+			// Input does not exist
+			if(!key_exists($title, $this->input)) {
+				self::addError($this->current_title, '_input_missing', 'Input not found. (' . $title . ')');
+				$errors = true;
 			}
 		}
 		
-		if($this->result && isset($this->data[$title])) {
-			if($this->data[$title] == '') { $this->data[$title] = null; }
-			$this->form[$title] = $this->data[$title];
+		// Return false if errors
+		if($errors) { return false; }
+		
+		// Loop through all conditions to check values
+		foreach($options['conditions'] as $title => $value) {
+			// Set temp input
+			$_input = key_exists($title, $this->form) ? $this->form[$title] : $this->input[$title];
+			
+			// All values must match
+			if($options['operator'] == 'AND') {
+				// Value is not what we want
+				if($_input != $value) {
+					return $options['inverse'];
+				}
+			}
+			
+			// At least one value must match
+			if($options['operator'] == 'OR') {
+				// Value is what we want
+				if($_input == $value) {
+					return !$options['inverse'];
+				}
+			}
 		}
 		
-		return $this->result;
+		return (!$options['inverse'] && $options['operator'] == 'AND');
 	}
 }
 ?>

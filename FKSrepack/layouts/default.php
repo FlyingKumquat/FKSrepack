@@ -8,7 +8,7 @@
 		<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 		<meta name="description" content="">
 		<meta name="author" content="FKSrepack">
-		<link rel="icon" href="img/favicon.ico">
+		<link rel="icon" href="<?=(empty($Manager->siteSettings('SITE_FAVICON_URL')) ? 'img/_favicon.ico' : $Manager->siteSettings('SITE_FAVICON_URL'))?>">
 
 		<title><?=$Manager->siteSettings('SITE_TITLE')?></title>
 
@@ -46,8 +46,14 @@
 		
 		<div class="top-nav-background"></div>
 		<div id="top_nav" fks-nav="top">
-			<a class="site-logo" href="#<?=$Manager->getHomePage()?>">
-				<img src="img/favicon.ico" /><span class="d-none d-sm-inline"><b>FKS</b><span style="color: #36e3fd;">repack</span></span>
+			<a class="site-logo" href="/">
+				<?PHP
+					if(empty($Manager->siteSettings('SITE_LOGO_MAIN'))) {
+						echo '<img src="img/_favicon.ico" /><span class="d-none d-sm-inline"><b>FKS</b><span class="fks-text-signature">repack</span></span>';
+					} else {
+						echo $Manager->siteSettings('SITE_LOGO_MAIN');
+					}
+				?>
 			</a>
 			<!--
 			<div class="actions">
@@ -86,7 +92,7 @@
 				<small>
 					<a class="fks-link-light" href="http://fksrepack.com/" target="_blank">FKSrepack
 					<br />
-					v<?=$Manager->siteSettings('FKS_VERSION')?></a>
+					v<?=$Manager->siteData('fks_version')?></a>
 				</small>
 			</div>
 		</div>

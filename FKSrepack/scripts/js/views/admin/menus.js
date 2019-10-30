@@ -54,6 +54,21 @@ define([
 		// Run functions when page loads
 		loadMenusTable();
 		loadMenuItemsTable();
+		
+		// On tab switch
+		$('#main_panel .header .title .nav a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+			// Get tab id
+			var tab_id = $(e.target).attr('href').replace('#', '');
+			
+			// Hide all actions
+			$('#main_panel .header .actions').hide();
+			
+			// Show tab actions
+			$('#main_panel .header .actions[tab-actions="' + tab_id + '"]').show();
+			
+			// Resize window to fix tabdrop
+			$(window).resize();
+		});
 	}
 	
 	function loadMenusTable() {
@@ -62,9 +77,9 @@ define([
 			ele: {
 				block: $('#menus_panel'),								// Element that you want blocked
 				table: $('#menus_panel table:first'),					// The table
-				add: $('#menus_panel .actions .add-table'),				// The add button (Optional)
-				reload: $('#menus_panel .actions .reload-table'),		// The reload button (Optional)
-				columns: $('#menus_panel .actions .column-toggler')		// The column toggler button (Optional)
+				add: $('#main_panel .actions[tab-actions="menus_panel"] .add-table'),				// The add button (Optional)
+				reload: $('#main_panel .actions[tab-actions="menus_panel"] .reload-table'),		// The reload button (Optional)
+				columns: $('#main_panel .actions[tab-actions="menus_panel"] .column-toggler')		// The column toggler button (Optional)
 			},
 			dt: null,						// DataTable variable
 			empty: 'No menus found',		// Empty message
@@ -86,6 +101,7 @@ define([
 			'language': {
 				'emptyTable': tables[0].empty
 			},
+			'dom': fks.data_table_dom,
 			'iDisplayLength': 15,
 			'lengthMenu': [[15, 25, 50, 100, -1], [15, 25, 50, 100, 'All']],
 			'order': [[0, 'asc']],
@@ -131,7 +147,6 @@ define([
 		if(!id) { var id = '+'; }
 		fks.editModal({
 			src: page.src,
-			wait: true,
 			action: 'editMenu', 
 			action_data: id,
 			callbacks: {
@@ -166,9 +181,9 @@ define([
 			ele: {
 				block: $('#menu_items_panel'),									// Element that you want blocked
 				table: $('#menu_items_panel table:first'),						// The table
-				add: $('#menu_items_panel .actions .add-table'),				// The add button (Optional)
-				reload: $('#menu_items_panel .actions .reload-table'),			// The reload button (Optional)
-				columns: $('#menu_items_panel .actions .column-toggler')		// The column toggler button (Optional)
+				add: $('#main_panel .actions[tab-actions="menu_items_panel"] .add-table'),				// The add button (Optional)
+				reload: $('#main_panel .actions[tab-actions="menu_items_panel"] .reload-table'),			// The reload button (Optional)
+				columns: $('#main_panel .actions[tab-actions="menu_items_panel"] .column-toggler')		// The column toggler button (Optional)
 			},
 			dt: null,							// DataTable variable
 			empty: 'No menu items found',		// Empty message
@@ -190,6 +205,7 @@ define([
 			'language': {
 				'emptyTable': tables[1].empty
 			},
+			'dom': fks.data_table_dom,
 			'iDisplayLength': 15,
 			'lengthMenu': [[15, 25, 50, 100, -1], [15, 25, 50, 100, 'All']],
 			'order': [[1, 'asc']],
@@ -248,7 +264,6 @@ define([
 		if(!id) { var id = '+'; }
 		fks.editModal({
 			src: page.src,
-			wait: true,
 			action: 'editMenuItem', 
 			action_data: id,
 			callbacks: {
@@ -297,6 +312,21 @@ define([
 					}).trigger('change');
 					
 					$('[name="parent_id"].select2').val(data.current_parent).trigger('change');
+					
+					$('.gen-url', '#fks_modal').click(function() {
+						var title = $('[name="title"]', '#fks_modal').val().trim().toLowerCase().replace(/ /g, '_').replace(/[^a-zA-Z0-9-_]/g, '');
+						$('[name="url"]', '#fks_modal').val(title);
+					});
+					
+					$('.gen-label', '#fks_modal').click(function() {
+						var title = $('[name="title"]', '#fks_modal').val().trim().toLowerCase().replace(/ /g, '_').replace(/[^a-zA-Z0-9-_]/g, '');
+						var parent = $('[name="parent_id"]', '#fks_modal').val();
+						if(parent != 0) {
+							parent = data.parents[parent].parent_title.trim().toLowerCase().replace(/[ \/]/g, '_').replace(/[^a-zA-Z0-9-_]/g, '');
+							title = parent + '_' + title;
+						}
+						$('[name="label"]', '#fks_modal').val(title);
+					});
 					
 					$('#editMenuItemForm').bind('reset:after', function() {
 						$('[name="icon"].select2').val(data.current_icon).trigger('change');
