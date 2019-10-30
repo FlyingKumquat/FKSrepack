@@ -1,8 +1,8 @@
 <?PHP
 /*##############################################
 	Database Simplistic PDO Wrapper
-	Version: 1.15.20191018
-	Updated: 10/18/2019
+	Version: 1.15.20191030
+	Updated: 10/30/2019
 ##############################################*/
 
 /*----------------------------------------------
@@ -488,6 +488,7 @@ class Database {
 		$location_table = sprintf('%s%s/', $location_backups, $table_info['name']);
 		$backup_file = sprintf('%s%s-%s.txt', $location_table, $table_info['name'], date('Y-m-d-H-i-s'));
 		$columns = array_keys($table_info['columns']);
+		$all = true;
 		
 		// Check backup settings
 		if(array_key_exists('backup', $table_info)) {
@@ -500,11 +501,13 @@ class Database {
 			// Set columns if include is not empty
 			if(array_key_exists('include', $table_info['backup'])) {
 				$columns = $table_info['backup']['include'];
+				$all = false;
 			}
 			
 			// Remove columns if exclude is not empty
 			if(array_key_exists('exclude', $table_info['backup'])) {
 				$columns = array_diff($columns, $table_info['backup']['exclude']);
+				$all = false;
 			}
 		}
 		
@@ -521,7 +524,22 @@ class Database {
 		if(!is_file($location_backups_root . '.htaccess')) { file_put_contents($location_backups_root . '.htaccess', 'Deny from all'); }
 		
 		// Grab all data from the table
-		if(!$this->Q('SELECT ' . implode(',', $columns) . ' FROM ' . $table_info['name'])) { return false; }
+		if(!$this->Q('SELECT * FROM ' . $table_info['name'])) { return false; }
+		
+		// See if we don't want to backup all
+		if(!$all) {
+			// Loop through rows and remove columns we don't want to backup
+			foreach($this->r['rows'] as &$row) {
+				// Loop through columns
+				foreach($row as $column => $v) {
+					// See if column is not what we want
+					if(!in_array($column, $columns)) {
+						// Unset column
+						unset($row[$column]);
+					}
+				}
+			}
+		}
 		
 		// Save file
 		if(file_put_contents($backup_file, json_encode($this->r['rows'])) === false) {
