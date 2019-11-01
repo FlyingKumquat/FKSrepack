@@ -12,12 +12,13 @@ require_once(__DIR__ . '/../scripts/php/includes/Validator.php');
 require_once(__DIR__ . '/../scripts/php/includes/DataHandler.php');
 require_once(__DIR__ . '/../scripts/php/includes/Session.php');
 require_once(__DIR__ . '/../scripts/php/includes/Tables.php');
+require_once(__DIR__ . '/../scripts/php/includes/Utilities.php');
 
 class Functions {
 /*----------------------------------------------
 	Global Variables
 ----------------------------------------------*/
-	private $fks_version = '0.1.191025';
+	public $fks_version = '0.1.191101';
 	private $Database;
 	private $Tables;
 	
@@ -31,7 +32,7 @@ class Functions {
 		// Make a global database connection
 		$this->Database = new \Database();
 		
-		//
+		// Stores table configs
 		$this->Tables = new \Tables();
 	}
 
@@ -75,62 +76,32 @@ class Functions {
 	}
 	
 	// -------------------- Update FKS Version --------------------
-	private function updateFKSVersion() {
+	public function updateFKSVersion() {
 		// Needs a new class for default connection
 		$Database = new \Database();
 		
 		// Update the version
-		$Database->Q(array(
+		if($Database->Q(array(
 			'params' => array(':version' => $this->fks_version),
 			'query' => 'INSERT INTO fks_site_data SET id = "fks_version", data = :version ON DUPLICATE KEY UPDATE data = :version'
-		));
+		))) {
+			return array('result' => 'success', 'version' => $this->fks_version);
+		} else {
+			return array('result' => 'failure', 'version' => $this->fks_version);
+		}
 	}
 	
 /*----------------------------------------------
 	Public Functions
 ----------------------------------------------*/
-	// -------------------- Help Modal --------------------
-	public function helpModal($data){
-		switch($data)
-		{
-			case 'connect';
-				$title = '<small>Database Connection</small>';
-				$body = '<p>This will use the settings stored in the connections.php file which is found in the scripts > php > config folder.</p><p>Make sure this is up to date before attempting a connection.</p>';
-				break;
-				
-			case 'tables';
-				$title = '<small>Create Database Tables</small>';
-				$body = '<p>This tab will attempt to locate any tables that are out of date and check them so you know.</p><p>You can check any of the tables if you want to wipe them and start over. Keep in mind that you will lose all data in the table.</p><p>Not updating tables when there is an update may cause issues with the site.</p>';
-				break;
-				
-			case 'account';
-				$title = '<small>Create Admin Account</small>';
-				$body = '<p>Make sure you create an admin account if this is a new installation OR if you are re-creating the members table</p><p>If you do not have an admin account created you will not be able to access this site!</p><p>If you forget you can always come back to this install to create the account while skipping the database creation tab.</p><p>If you are only updating an existing site without updating the members table you should skip this step as to not overwrite an existing admin account</p>';
-				break;
-				
-			default:
-				$title = '?';
-				$body = '?';
-				break;
-		}
-		
-		$parts = array(
-			'title' => 'Help ' . $title,
-			'body' => $body
-		);
-		
-		return array('result' => 'success', 'parts' => $parts);
-	}
-	
 	// ---------------------------------------------------------------
-	// Test Database Public Function
+	// Connect Public Function
 	// ---------------------------------------------------------------
-	public function testDatabase(){
+	public function testConnection(){
 		// Set variables
 		$Database = $this->Database;
 		$tables = $this->Tables->tables;
 		$message = '';
-		$return = '';
 		
 		// Loop through all the tables database connections
 		foreach($tables as $k => $v) {
@@ -154,11 +125,118 @@ class Functions {
 			}
 		}
 		
+		// Return
+		return array('result' => 'success', 'message' => $message);
+	}
+	
+	// ---------------------------------------------------------------
+	// Versions Public Function
+	// ---------------------------------------------------------------
+	public function getVersions(){
+		// Set variables
+		$Utilities = new \Utilities;
+		$_versions = array(
+			'current' => $Utilities->siteData('fks_version'),
+			'installer' => $this->fks_version
+		);
+		
+		// Make sure the version is set
+		$_versions['current'] = !$_versions['current'] ? 0 : $_versions['current'];
+		
+		// TESTING - REMOVE ME
+		//$_versions['current'] = '0.0.181025';
+		//$_versions['installer'] = '0.1.191030';
+		
+		// Colors - Current
+		if($_versions['current'] < $_versions['installer']) { $versions['current'] = '<span class="fks-text-danger">' . $_versions['current'] . '</span>'; }
+		if($_versions['current'] == $_versions['installer']) { $versions['current'] = '<span class="fks-text-success">' . $_versions['current'] . '</span>'; }
+		if($_versions['current'] > $_versions['installer']) { $versions['current'] = '<span class="fks-text-critical">' . $_versions['current'] . '</span>'; }
+		
+		// Colors - Installer
+		$versions['installer'] = '<span class="fks-text-success">' . $_versions['installer'] . '</span>';
+		
+		// Return
+		return array('result' => 'success', 'versions' => $versions);
+	}
+	
+	// ---------------------------------------------------------------
+	// Latest Version Public Function
+	// ---------------------------------------------------------------
+	public function getLatestVersion(){
+		// Require stuff
+		require_once(__DIR__ . '/../scripts/php/includes/Utilities.php');
+		require_once(__DIR__ . '/../scripts/php/includes/Curl.php');
+		
+		// Set variables
+		$Utilities = new \Utilities;
+		$releases = array();
+		$_versions = array(
+			'current' => $Utilities->siteData('fks_version'),
+			'installer' => $this->fks_version,
+			'latest' => $Utilities->getGitHubReleases(array('repo' => 'https://api.github.com/repos/FlyingKumquat/FKSrepack/', 'type' => 'latest'))['name']
+		);
+		
+		// Make sure the version is set
+		$_versions['current'] = !$_versions['current'] ? 0 : $_versions['current'];
+		
+		// TESTING - REMOVE ME
+		//$_versions['current'] = '0.0.181025';
+		//$_versions['installer'] = '0.1.191030';
+		
+		// Colors - Current
+		if($_versions['current'] < $_versions['installer']) { $versions['current'] = '<span class="fks-text-danger">' . $_versions['current'] . '</span>'; }
+		if($_versions['current'] == $_versions['installer']) {
+			if($_versions['installer'] < $_versions['latest']) { $versions['current'] = '<span class="fks-text-warning">' . $_versions['current'] . '</span>'; }
+			if($_versions['installer'] == $_versions['latest']) { $versions['current'] = '<span class="fks-text-success">' . $_versions['current'] . '</span>'; }
+			if($_versions['installer'] > $_versions['latest']) { $versions['current'] = '<span class="fks-text-critical">' . $_versions['current'] . '</span>'; }
+		}
+		if($_versions['current'] > $_versions['installer']) { $versions['current'] = '<span class="fks-text-critical">' . $_versions['current'] . '</span>'; }
+		
+		// Colors - Installer
+		if($_versions['installer'] < $_versions['latest']) { $versions['installer'] = '<span class="fks-text-warning">' . $_versions['installer'] . '</span>'; }
+		if($_versions['installer'] == $_versions['latest']) { $versions['installer'] = '<span class="fks-text-success">' . $_versions['installer'] . '</span>'; }
+		if($_versions['installer'] > $_versions['latest']) { $versions['installer'] = '<span class="fks-text-critical">' . $_versions['installer'] . '</span>'; }
+		
+		// Colors - Latest
+		$versions['latest'] = '<span class="fks-text-success">' . $_versions['latest'] . '</span>';
+		
+		// Only grab the YYMMDD formated date
+		$_current = explode('.', $_versions['current'])[2];
+		
+		// Grab all releases
+		$_releases = $Utilities->getGitHubReleases(array('repo' => 'https://api.github.com/repos/FlyingKumquat/FKSrepack/', 'type' => 'all'));
+		
+		// Loop through all the releases and only return missing
+		foreach($_releases as $r) {
+			// Only grab the YYMMDD formated date
+			$_date = explode('.', $r['name'])[2];
+			
+			// Add the release if newer
+			if($_date > $_current) { $releases[$_date] = $r; }
+		}
+		
+		// Sort
+		ksort($releases);
+		
+		// Return
+		return array('result' => 'success', 'versions' => $versions, 'releases' => $releases);
+	}
+	
+	// ---------------------------------------------------------------
+	// Get Tables Public Function
+	// ---------------------------------------------------------------
+	public function getTables(){
+		// Needed to get default connection name
+		$Database = new \Database();
+		
+		// Get all tables
+		$tables = $this->Tables->tables;
+		
 		// Get table versions
 		$current_versions = $this->getTableVersions();
 		
 		// Build return table
-		$return .= '<form>';
+		$return = '<form>';
 		$return .= '<table class="table table-striped table-hover table-sm table-bordered" style="margin-bottom:10px;">';
 		$return .= '<thead class="thead-dark"><tr><th style="text-align: center;"><input type="checkbox" class="header_checkbox"></th><th>Backup and Restore</th><th>Database</th><th>Table Name</th><th>Current Version</th><th>Latest Version</th></tr></thead>';
 		
@@ -178,9 +256,9 @@ class Functions {
 				if(!$_exists) {
 					$current_version = '<span class="fks-text-danger">table missing</span>';
 				} elseif($table['version'] > $_db_version) {
-					$current_version = '<span class="fks-text-warning">' . $table['version'] . '</span>';
+					$current_version = '<span class="fks-text-warning">' . $_db_version . '</span>';
 				} else {
-					$current_version = '<span class="fks-text-success">' . $table['version'] . '</span>';
+					$current_version = '<span class="fks-text-success">' . $_db_version . '</span>';
 				}
 				
 				// Build dropdown actions
@@ -197,107 +275,99 @@ class Functions {
 				}
 				
 				// Create the table row for this db table
-				$return .= '<tr>'
+				$return .= '<tr class="' . $db_name . ' ' . $table['name'] . '">'
 					. '<td style="width:30px"><input type="checkbox" class="table-checkbox" database="' .  $db_name . '" table="' . $table['name'] . '"' . (!$_exists || $table['version'] > $_db_version ? ' checked' : '') . '></td>'
 					. '<td><select class="form-control form-control-sm table-action-select" value="' . $_option . '">' . $_options . '</select></td>'
 					. '<td>' . $db_name . '</td>'
 					. '<td>' . $table['name'] . '</td>'
-					. '<td>' . $current_version . '</td>'
-					. '<td>' . $_db_version . '</td>'
+					. '<td class="version">' . $current_version . '</td>'
+					. '<td>' . $table['version'] . '</td>'
 				. '</tr>';
 			}
 		}
 		$return .= '</table></form>';
 		
 		// Return
-		return array('result' => 'success', 'message' => $message, 'table' => $return);
+		return array('result' => 'success', 'table' => $return, 'default_connection' => $Database->db['default']);
 	}
 	
 	// ---------------------------------------------------------------
 	// Create Database Tables Public Function
 	// ---------------------------------------------------------------
-	public function createTables($data){
-		// Check to make sure tables is set and has data
-		if( !isset($data) || empty($data) ) { $this->updateFKSVersion(); return array('result' => 'success', 'message' => 'No tables selected...'); }
+	public function createTable($data){
+		// Check to make sure 'db', 'table', and 'value' are set
+		if( !isset($data) || empty($data) ) { return array('result' => 'failure', 'message' => 'No data passed!'); }
+		if( !isset($data['db']) ) { return array('result' => 'failure', 'message' => 'Missing database connection!'); }
+		if( !isset($data['table']) ) { return array('result' => 'failure', 'message' => 'Missing table name!'); }
+		if( !isset($data['value']) ) { return array('result' => 'failure', 'message' => 'Missing action value!'); }
 		
-		// Set vars
-		$Database = new \Database();
-		$tables = $this->Tables->tables;
-		$actions = array();
+		// Get all tables
+		if(isset($this->Tables->tables[$data['db']][$data['table']])) {
+			$table = $this->Tables->tables[$data['db']][$data['table']];
+		} else {
+			return array('result' => 'failure', 'message' => 'Unknown table');
+		}
+		
+		// Collect old versions for the back up
+		$Databas = new \Database();
+		
+		// FKS version
+		$Utilities = new \Utilities();
+		$backup['fks_version'] = $Utilities->siteData('fks_version');
+		$backup['fks_version'] = !$backup['fks_version'] ? 0 : $backup['fks_version'];
+		
+		// Site version
+		$backup['site_version'] = $Utilities->siteSettings('SITE_VERSION');
+		$backup['site_version'] = !$backup['site_version'] ? 0 : $backup['site_version'];
+		
+		// Table version
+		$_temp = $this->getTableVersions();
+		$backup['table_version'] = isset($_temp[$data['db']][$data['table']]['version']) ? $_temp[$data['db']][$data['table']]['version'] : 0;
+		
+		// Set new version
+		$data['version'] = $table['version'];
+		
+		// Set a temp database variable
+		$_database = new \Database(array('db' => $data['db']));
+		
+		// Restore selected table using options
 		$result = 'success';
-		
-		// Reset versions table if set - Needs to happen first so the other tables can update the versions
-		if(isset($data[$Database->db['default']]['fks_versions'])) {
-			//
-			$tables[$Database->db['default']]['fks_versions']['rows'] = array(
-				array(
-					'title' => 'fks_versions',
-					'connection' => $Database->db['default'],
-					'version' => $tables[$Database->db['default']]['fks_versions']['version']
-				)
-			);
+		$message = '</br>' . $data['db'] . '.' . $data['table'];
+		if($_database->tableRestore(
+			$table,
+			array(
+				'backup' => ($data['value'] == 1 || $data['value'] == 2),
+				'restore' => ($data['value'] == 2),
+				'fks_version' => $backup['fks_version'],
+				'site_version' => $backup['site_version'],
+				'table_version' => $backup['table_version']
+			)
+		)) {
+			// Set message
+			if($data['value'] == 0) { $message .= ' - Reset table - ';}
+			if($data['value'] == 1) { $message .= ' - Reset and Backed up table - ';}
+			if($data['value'] == 2) { $message .= ' - Reset, Backup up, and restored table - ';}
 			
-			//
-			if(!$Database->tableReset($tables[$Database->db['default']]['fks_versions'])){return array('result' => 'failure', 'message' => 'Reset failure - ' . print_r($Database->r, true));}
+			// Update table versions
+			$this->updateTableVersions($data['db'], $data['table'], $table['version']);
+		} else {
+			// Set message
+			if($data['value'] == 0) { $message .= ' - Failed to Reset table - ' . print_r($_database->r['error'],true);}
+			if($data['value'] == 1) { $message .= ' - Failed to Reset and Backed up table - ' . $_database->r['error'];}
+			if($data['value'] == 2) { $message .= ' - Failed to Reset, Backup up, and restored table - ' . print_r($_database->r['error'],true);}
 			
-			// Unset version table
-			unset($data[$Database->db['default']]['fks_versions']);
+			// Set result to failure
+			$result = 'failure';
 		}
 		
-		// Loop through each selected database
-		foreach($data as $db_name => $db_data) {
-			// Set a temp database variable
-			$_database = new \Database(array('db' => $db_name));
-			
-			// Loop through each of the selected tables
-			foreach($db_data as $table => $value) {
-				// Check for a legit table
-				if(!isset($tables[$db_name][$table])) {
-					$actions[$table] = '<br/>-- ' . $table . ' --' . '<br/>&#9;Unknown Table!';
-					continue;
-				}
-				
-				$actions[$table] = '<br/>' . $table;
-				
-				// Restore selected table using options
-				if(!$_database->tableRestore(
-					$tables[$db_name][$table],
-					array(
-						'backup' => ($value == 1 || $value == 2),
-						'restore' => ($value == 2)
-					)
-				)) {
-					if($value == 0) { $actions[$table] .= ' - Failed to Reset table - ' . print_r($_database->r,true);}
-					if($value == 1) { $actions[$table] .= ' - Failed to Reset and Backed up table - ' . $_database->r['error'];}
-					if($value == 2) { $actions[$table] .= ' - Failed to Reset, Backup up, and restored table - ' . print_r($_database->r,true);}
-					$result = 'failure';
-					continue;
-				}
-				
-				//
-				if($value == 0) { $actions[$table] .= ' - Reset table - ';}
-				if($value == 1) { $actions[$table] .= ' - Reset and Backed up table - ';}
-				if($value == 2) { $actions[$table] .= ' - Reset, Backup up, and restored table - ';}
-				
-				// Update table versions
-				$this->updateTableVersions($db_name, $table, $tables[$db_name][$table]['version']);
-			}
-		}
-		
-		// Update FKS version
-		$this->updateFKSVersion();
-		
-		// Return status and messages
-		return array('result' => $result, 'message' => implode('<br/>', $actions));
+		// Return
+		return array('result' => $result, 'message' => $message, 'data' => $data);
 	}
 	
 	// ---------------------------------------------------------------
 	// Create Admin Account Public Function
 	// ---------------------------------------------------------------
 	public function createAccount( $data ){
-		// Skip?
-		if(isset($data['skip']) && $data['skip'] == 1){return array('result' => 'success', 'message' => 'Skipped admin account creation.');}
-		
 		// Validation
 		$Validator = new \Validator($data);
 		$Validator->validate(array(

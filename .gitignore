@@ -36,7 +36,7 @@ FKSrepack/backups
 FKSrepack/img/favicon.ico
 
 # Remove all errors
-FKSrepack/errors/**
+FKSrepack/errors
 
 # Remove all config files
 FKSrepack/scripts/php/config/**
@@ -49,11 +49,10 @@ FKSrepack/scripts/js/autoloader.js
 FKSrepack/scripts/js/site.js
 
 # Remove all .bkp files
-FKSrepack/*.bkp
+*.bkp
 
 # Keep .htaccess files
-!FKSrepack/.htaccess
-!FKSrepack/**/.htaccess
+!*.htaccess
 
 # Keep config template files
 !FKSrepack/scripts/php/config/_*

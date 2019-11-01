@@ -1186,6 +1186,9 @@ class CoreFunctions extends \Utilities {
 
 		if(!empty($temp_access)) {
 			foreach(explode(',', $temp_access) as $group) {
+				// Skip if group doesn't exist
+				if(!key_exists($group, $access_groups)) { continue; }
+				
 				$access_out[$group] = array();
 				foreach(json_decode($access_groups[$group]['data'], true) as $item => $access) {
 					if(!isset($menu_items[$item])) { continue; }

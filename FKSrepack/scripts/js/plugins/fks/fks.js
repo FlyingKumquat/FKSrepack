@@ -1,5 +1,5 @@
 /***********************************************
-	Updated: 10/24/2019
+	Updated: 10/30/2019
 ***********************************************/
 (function(fks, $, undefined) {
 /*----------------------------------------------
@@ -1374,17 +1374,6 @@
 				},
 				failure: function(response) {
 					$(args.modal).modal('hide');
-					
-					// Display failure toast
-					fks.toast({
-						type: 'error',
-						header: (response.title ? response.title : ''),
-						msg: response.message,
-						timeOut: null,
-						extendedTimeOut: null,
-						tapToDismiss: false,
-						closeButton: true
-					});
 				},
 				auth: function(response) {
 					$(args.modal).modal('hide');

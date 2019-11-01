@@ -1,8 +1,8 @@
 <?PHP
 /*##############################################
 	Database Simplistic PDO Wrapper
-	Version: 1.15.20191030
-	Updated: 10/30/2019
+	Version: 1.16.20191101
+	Updated: 11/01/2019
 ##############################################*/
 
 /*----------------------------------------------
@@ -481,9 +481,17 @@ class Database {
 /*----------------------------------------------
 	Table Backup
 ----------------------------------------------*/
-	public function tableBackup($table_info, $location = false) {
-		if(!$location) { $location = sprintf('%s/../../../', __DIR__); }
-		$location_backups_root = sprintf('%sbackups/', $location);
+	public function tableBackup($table_info, $options = array()) {
+		// Set defaults
+		$options = array_merge(array(
+			'location' => false,
+			'fks_version' => 0,
+			'site_version' => 0,
+			'table_version' => 0
+		), $options);
+		
+		if(!$options['location']) { $options['location'] = sprintf('%s/../../../', __DIR__); }
+		$location_backups_root = sprintf('%sbackups/', $options['location']);
 		$location_backups = sprintf('%s%s/', $location_backups_root, $this->db[$this->db['default']]['name']);
 		$location_table = sprintf('%s%s/', $location_backups, $table_info['name']);
 		$backup_file = sprintf('%s%s-%s.txt', $location_table, $table_info['name'], date('Y-m-d-H-i-s'));
@@ -541,8 +549,16 @@ class Database {
 			}
 		}
 		
+		// Set contents
+		$contents = array(
+			'fks_version' => $options['fks_version'],
+			'site_version' => $options['site_version'],
+			'table_version' => $options['table_version'],
+			'table_data' => $this->r['rows']
+		);
+		
 		// Save file
-		if(file_put_contents($backup_file, json_encode($this->r['rows'])) === false) {
+		if(file_put_contents($backup_file, json_encode($contents)) === false) {
 			$this->r['error'] = sprintf('Unable to save backup file for table \'%s\'.', $table_info['name']);
 			return false;
 		}
@@ -552,17 +568,23 @@ class Database {
 /*----------------------------------------------
 	Table Backup Get Data
 ----------------------------------------------*/
-	public function tableBackupGetData($table_info, $file_name = false, $location = false) {
-		if(!$location) { $location = sprintf('%s/../../../', __DIR__); }
-		$location_backups_root = sprintf('%sbackups/', $location);
+	public function tableBackupGetData($table_info, $options = array()) {
+		// Set defaults
+		$options = array_merge(array(
+			'file_name' => false,
+			'location' => false
+		), $options);
+		
+		if(!$options['location']) { $options['location'] = sprintf('%s/../../../', __DIR__); }
+		$location_backups_root = sprintf('%sbackups/', $options['location']);
 		$location_backups = sprintf('%s%s/', $location_backups_root, $this->db[$this->db['default']]['name']);
 		$location_table = sprintf('%s%s/', $location_backups, $table_info['name']);
-		$backup_file = $file_name;
+		$backup_file = $options['file_name'];
 		
 		// Check for file name
-		if($file_name) {
+		if($options['file_name']) {
 			// File name provided, see if it is a file
-			$file_name = is_file($location_table . $file_name) ? $location_table . $file_name : false;
+			$options['file_name'] = is_file($location_table . $options['file_name']) ? $location_table . $options['file_name'] : false;
 		} else {
 			// File name NOT provided, find the newest backup
 			if(!is_dir($location_table)) {
@@ -580,12 +602,12 @@ class Database {
 				}
 			}
 			if(!empty($_file)) {
-				$file_name = $location_table . $_file['name'];
+				$options['file_name'] = $location_table . $_file['name'];
 			}
 		}
 		
 		// No file found, return false
-		if(!$file_name) {
+		if(!$options['file_name']) {
 			if($backup_file) {
 				$this->r['error'] = sprintf('Unable to locate backup file \'%s\'.', $location_table . $backup_file);
 			} else {
@@ -595,11 +617,11 @@ class Database {
 		}
 		
 		// Get table data from file
-		$table_data = file_get_contents($file_name);
+		$table_data = file_get_contents($options['file_name']);
 		
 		// Return false if unable to grab table data from file
 		if($table_data === false) {
-			$this->r['error'] = sprintf('Unable to get data from backup file \'%s\'.', $file_name);
+			$this->r['error'] = sprintf('Unable to get data from backup file \'%s\'.', $options['file_name']);
 			return false;
 		}
 		
@@ -651,11 +673,10 @@ class Database {
 			$backup_columns = array_keys($table_data[$i]);
 			
 			// Set variables
-			$params = array();			// Array of parametrized values
-			$query = array();			// Insert query
-			$update = array();			// On dupe update query
 			$modifications = array();	// Modifications to existing columns
 			$additions = array();		// Additional columns to add
+			$update = array();
+			$insert = array();
 
 			// Loop through the new columns
 			foreach($columns as $column) {
@@ -684,44 +705,68 @@ class Database {
 				if(is_null($val) && array_key_exists($col, $modifications)) { $val = $modifications[$col]; }
 				
 				// Set params
-				$params[':' . $col] = $val;
-				array_push($query, $col . ' = :' . $col);
+				$insert[$col] = $val;
 				
 				// Check for primary key(s)
 				if(!in_array($col, $primary_keys) && in_array($col, $restore_columns)) {
-					array_push($update, $col . ' = :' . $col);
+					$update[$col] = $val;
 				}
 			}
 			
 			// Loop through any additions that need to be added
 			foreach($additions as $col => $val) {
 				// Set params
-				$params[':' . $col] = $val;
-				array_push($query, $col . ' = :' . $col);
+				$insert[$col] = $val;
 				
 				// Check for primary key(s)
 				if(!in_array($col, $primary_keys) && in_array($col, $restore_columns)) {
-					array_push($update, $col . ' = :' . $col);
+					$update[$col] = $val;
 				}
 			}
 			
-			// Check for empty columns
-			if(empty($update)) {
-				array_push($update, array_keys($columns)[0] . ' = ' . array_keys($columns)[0]);
-			}
-			
 			// Check for missing data
-			if(empty($params) || empty($query) || empty($update)) {
+			if(empty($insert) && empty($update)) {
 				$this->r['error'] = sprintf('Something went wrong, data is missing for table \'%s\'.', $table_info['name']);
 				return false;
 			}
 			
-			// Upsert row
-			if(!$this->Q(array(
-				'params' => $params,
-				'query' => 'INSERT INTO ' . $table_info['name'] . ' SET ' . implode(', ', $query) . ' ON DUPLICATE KEY UPDATE ' . implode(', ', $update)
-			))) {
-				return false;
+			// Check to see if inserting is allowed
+			if($restoring && isset($table_info['restore']['insert']) && !$table_info['restore']['insert']) {
+				// 
+				$_keys = array();
+				foreach($primary_keys as $v) {
+					$_keys[$v] = $row[$v];
+				}
+				
+				// Function
+				$_params = $this->buildParams(array_merge($update, $_keys));
+				$_update = $this->buildQuery($update, $_keys);
+				
+				// Update row
+				if(!$this->Q(array(
+					'params' => $_params,
+					'query' => 'UPDATE ' . $table_info['name'] . ' SET ' . $_update
+				))) {
+					return false;
+				}
+			} else {
+				// Function
+				$_params = $this->buildParams($insert);
+				$_insert = $this->buildQuery($insert);
+				$_update = $this->buildQuery($update);
+				
+				// Check for empty columns
+				if(empty($_update)) {
+					$_update = array_keys($columns)[0] . ' = ' . array_keys($columns)[0];
+				}
+			
+				// Upsert row
+				if(!$this->Q(array(
+					'params' => $_params,
+					'query' => 'INSERT INTO ' . $table_info['name'] . ' SET ' . $_insert . ' ON DUPLICATE KEY UPDATE ' . $_update
+				))) {
+					return false;
+				}	
 			}
 		}
 		
@@ -760,7 +805,10 @@ class Database {
 			'backup' => false,
 			'restore' => false,
 			'file_name' => false,
-			'location' => false
+			'location' => false,
+			'fks_version' => 0,
+			'site_version' => 0,
+			'table_version' => 0
 		), $options);
 		
 		// See if backup is enabled
@@ -781,7 +829,7 @@ class Database {
 		
 		// Backup table data
 		if($options['backup']) {
-			if(!$this->tableBackup($table_info, $options['location'])) {
+			if(!$this->tableBackup($table_info, $options)) {
 				return false;
 			}
 		}
@@ -794,21 +842,59 @@ class Database {
 		// Restore backup data to table
 		if($options['restore']) {
 			// Get backup data from file
-			$backup_data = $this->tableBackupGetData($table_info, $options['file_name'], $options['location']);
+			$backup_data = $this->tableBackupGetData($table_info, $options);
 			
 			// Check for failure
 			if($backup_data === false) { return false; }
 			
 			// If data is empty, return true
-			if(empty($backup_data)) { return true; }
+			if(empty($backup_data) || empty($backup_data['table_data'])) { return true; }
 			
 			// Fill table with backup data
-			if(!$this->tableFill($table_info, $backup_data, true)) {
+			if(!$this->tableFill($table_info, $backup_data['table_data'], true)) {
 				return false;
 			}
 		}
 		
 		return true;
+	}
+/*----------------------------------------------
+	Build Parameters
+----------------------------------------------*/
+	public function buildParams($params) {
+		// Set return
+		$return = array();
+		
+		// Build return
+		foreach($params as $k => $v) {
+			$return[':' . $k] = $v;
+		}
+		
+		// Return return
+		return $return;
+	}
+/*----------------------------------------------
+	Build Query
+----------------------------------------------*/
+	public function buildQuery($params, $keys = false) {
+		// Variables
+		$_params = array();
+		$_keys = array();
+		
+		// Params
+		foreach($params as $k => $v) {
+			array_push($_params, $k . ' = :' . $k);
+		}
+		
+		// Add keys if passed
+		if($keys) {
+			foreach($keys as $k => $v) {
+				array_push($_keys, $k . ' = :' . $k);
+			}
+		}
+		
+		// Return
+		return implode(',', $_params) . ($keys ? ' WHERE ' . implode(' AND ', $_keys) : '');
 	}
 }
 ?>

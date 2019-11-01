@@ -200,6 +200,8 @@ class MemberLog extends MemberLogX {
 		Parse Log Misc // Type Formatter
 	----------------------------------------------------------------------------------------------------*/
 	public function formatType($column, $misc) {
+		$unknown = '<span class="fks-text-danger">unknown</span>';
+		
 		$out = '<div class="history-title">' . $column['title'] . '</div>';
 		$out .= '<div class="fks-blockquote">';
 		switch($column['type']) {
@@ -237,23 +239,34 @@ class MemberLog extends MemberLogX {
 			case 'values':
 			case 'bool':
 				if(is_array($misc)) {
+					$_v0 = (key_exists($misc[0], $column['values']) ? $column['values'][$misc[0]] : $unknown);
+					$_v1 = (key_exists($misc[1], $column['values']) ? $column['values'][$misc[1]] : $unknown);
+					
 					if($misc[0] == null) {
-						$out .= 'Set to <span class="fks-text-success">' . $column['values'][$misc[1]] . '</span>.';
+						$out .= 'Set to <span class="fks-text-success">' . $_v1 . '</span>.';
 					} else {
 						if($misc[1] == null) {
-							$out .= 'Changed from <span class="fks-text-success">' . $column['values'][$misc[0]] . '</span> to none.';
+							$out .= 'Changed from <span class="fks-text-success">' . $_v0 . '</span> to none.';
 						} else {
-							$out .= 'Changed from <span class="fks-text-success">' . $column['values'][$misc[0]] . '</span> to <span class="fks-text-success">' . $column['values'][$misc[1]] . '</span>.';
+							$out .= 'Changed from <span class="fks-text-success">' . $_v0 . '</span> to <span class="fks-text-success">' . $_v1 . '</span>.';
 						}
 					}
-				} else { $out .= 'Set to <span class="fks-text-success">' . $column['values'][$misc] . '</span>.'; }
+				} else {
+					$_v = (key_exists($misc, $column['values']) ? $column['values'][$misc] : $unknown);
+					
+					$out .= 'Set to <span class="fks-text-success">' . $_v . '</span>.';
+				}
 				break;
 				
 			case 'csv':
 				if(is_array($misc)) {
 					if($misc[0] == null) {
 						$exploded = explode(',', $misc[1]);
-						foreach($exploded as $k => $v) { $exploded[$k] = $column['values'][$v]; }
+						
+						foreach($exploded as $k => $v) {
+							$exploded[$k] = (key_exists($v, $column['values']) ? $column['values'][$v] : $unknown);
+						}
+						
 						$out .= 'Set to <span class="fks-text-success">' . implode('</span>, <span class="fks-text-success">', $exploded) . '</span>.';
 					} else {
 						if(empty($misc[1])) { $misc[1] = 0; }
@@ -261,14 +274,24 @@ class MemberLog extends MemberLogX {
 							explode(',', $misc[0]),
 							explode(',', $misc[1])
 						);
-						foreach($exploded[0] as $k => $v) { $exploded[0][$k] = $column['values'][$v]; }
-						foreach($exploded[1] as $k => $v) { $exploded[1][$k] = $column['values'][$v]; }
+						
+						foreach($exploded[0] as $k => $v) {
+							$exploded[0][$k] = (key_exists($v, $column['values']) ? $column['values'][$v] : $unknown);
+						}
+						
+						foreach($exploded[1] as $k => $v) {
+							$exploded[1][$k] = (key_exists($v, $column['values']) ? $column['values'][$v] : $unknown);
+						}
 						$out .= 'Changed from <span class="fks-text-success">' . implode('</span>, <span class="fks-text-success">', $exploded[0]) . '</span> to <span class="fks-text-success">' . implode('</span>, <span class="fks-text-success">', $exploded[1]) . '</span>.';
 					}
 				} else {
 					if(empty($misc)) { $misc = 0; }
 					$exploded = explode(',', $misc);
-					foreach($exploded as $k => $v) { $exploded[$k] = $column['values'][$v]; }
+					
+					foreach($exploded as $k => $v) {
+						$exploded[$k] = (key_exists($v, $column['values']) ? $column['values'][$v] : $unknown);
+					}
+					
 					$out .= 'Set to <span class="fks-text-success">' . implode('</span>, <span class="fks-text-success">', $exploded) . '</span>.';
 				}
 				break;

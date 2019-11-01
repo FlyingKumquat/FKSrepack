@@ -1,8 +1,8 @@
 <?PHP
 /*##############################################
 	Utilities
-	Version: 1.5.20191024
-	Updated: 10/24/2019
+	Version: 1.5.20191031
+	Updated: 10/31/2019
 ##############################################*/
 
 /*----------------------------------------------
@@ -207,6 +207,33 @@ class Utilities {
 		}
 		
 		return $build['changelog'];
+	}
+	
+	/*----------------------------------------------
+		Get GitHub Releases
+	----------------------------------------------*/
+	public function getGitHubReleases($params) {
+		switch($params['type']) {
+			case 'all':
+				$params['repo'] .= 'releases';
+				break;
+				
+			case 'latest':
+				$params['repo'] .= 'releases/latest';
+				break;
+				
+			case 'tag':
+				$params['repo'] .= 'releases/tags/' . $params['tag'];
+				break;
+		}
+		
+		$Curl = new \Curl();
+		
+		if(!$Curl->get($params['repo'])) {
+			return array('result' => 'failure', 'message' => 'Failed to load releases from GitHub.');
+		}
+		
+		return $Curl->r['json'];
 	}
 	
 	/*----------------------------------------------
@@ -909,8 +936,16 @@ class Utilities {
 		
 		// Save error to disk if enabled or database failed and is set to fallback
 		if($site_settings['ERROR_TO_DISK'] == 'Yes' || (!$saved_error && $site_settings['ERROR_TO_DISK'] == 'Fallback')) {
-			$file = __DIR__ . '/../../../errors/' . gmdate('Y.m.d') . '/' . $error['code'];
+			$error_dir = __DIR__ . '/../../../errors/';
+			$file = $error_dir . gmdate('Y.m.d') . '/' . $error['code'];
+			
+			// Create error directory if it doesn't exist
+			if(!is_dir($error_dir)) { mkdir($error_dir, 0777, true); }
+			
+			// Create .htaccess file if missing
+			if(!is_file($error_dir . '.htaccess')) { file_put_contents($error_dir . '.htaccess', 'Deny from all'); }
 		
+			// Create file
 			if(!file_exists(dirname($file))) {
 				mkdir(dirname($file), 0777, true);
 			}

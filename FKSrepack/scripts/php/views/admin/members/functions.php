@@ -93,7 +93,13 @@ class PageFunctions extends CoreFunctions {
 			if(!empty($_l['data']['ACCESS_GROUPS']['value'])) {
 				$_a = explode(',', $_l['data']['ACCESS_GROUPS']['value']);
 				if($_a[0] != '-') {
-					foreach($_a as $ak => $av){
+					foreach($_a as $ak => $av) {
+						// Remove group from list and skip if it doesn't exist
+						if(!key_exists($av, $access_groups)) {
+							unset($_a[$ak]);
+							continue;
+						}
+						
 						$_a[$ak] = $access_groups[$av]['title'];
 						if($access_groups[$av]['hierarchy'] > $_h) { $_h = $access_groups[$av]['hierarchy']; }
 					}
@@ -173,7 +179,7 @@ class PageFunctions extends CoreFunctions {
 		
 		// Create an array of member data to grab
 		$data = array(
-			'remote' => array( 'columns' => false, 'data' => array('USERNAME', 'FULL_NAME', 'PASSWORD', 'FIRST_NAME', 'LAST_NAME', 'EMAIL_ADDRESS', 'TIMEZONE', 'DATE_FORMAT')),
+			'remote' => array('columns' => false, 'data' => array('FULL_NAME', 'PASSWORD', 'FIRST_NAME', 'LAST_NAME', 'EMAIL_ADDRESS', 'TIMEZONE', 'DATE_FORMAT')),
 			'local' => array('columns' => false, 'data' => array('SITE_LAYOUT', 'HOME_PAGE', 'ACCESS_GROUPS'))
 		);
 		
@@ -184,11 +190,11 @@ class PageFunctions extends CoreFunctions {
 		// Set up parameters for inputs
 		$input = array(
 			'username' => array(
-				'title' => $data['remote']['data']['USERNAME']['title'],
+				'title' => 'Username',
 				'type' => 'text',
 				'name' => 'USERNAME',
 				'value' => (isset($member['username']) ? $member['username'] : ''),
-				'help' => $data['remote']['data']['USERNAME']['help_text'],
+				'help' => 'This should never be changed.',
 				'required' => true,
 				'properties' => array()
 			),
@@ -637,7 +643,7 @@ class PageFunctions extends CoreFunctions {
 				}
 			}
 			
-			// Do the thing
+			// Update the member
 			$DSL = $DataHandler->DSL(array(
 				'type' => $connection,
 				'table' => 'members',
@@ -727,10 +733,7 @@ class PageFunctions extends CoreFunctions {
 				}
 			}
 			
-// ----------------------------------------------------------------
-//return array('result' => 'failure', 'message' => 'Testing - Creating', 'data' => $form);
-		
-			// Do the thing
+			// Update the member
 			$DSL = $DataHandler->DSL(array(
 				'type' => 'local',
 				'table' => 'members',
