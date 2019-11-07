@@ -1,16 +1,16 @@
 <?PHP
 /*##############################################
 	Database Simplistic PDO Wrapper
-	Version: 1.16.20191101
-	Updated: 11/01/2019
+	Version: 1.16.20191106
+	Updated: 11/06/2019
 ##############################################*/
 
 /*----------------------------------------------
 	Debug / Error reporting
 ----------------------------------------------*/
-ini_set('display_errors',1);
-ini_set('display_startup_errors',1);
-error_reporting(-1);
+ini_set('display_errors',0);
+ini_set('display_startup_errors',0);
+error_reporting(0);
 
 class Database {
 /*----------------------------------------------

@@ -191,6 +191,19 @@ class PageFunctions extends CoreFunctions {
 
 		// Return
 		if($DSL['result'] == 'success') {
+			// Update Site Version in DB if set to true
+			if($data['settings'] == 1) {
+				if(!$Database->Q(array(
+					'params' => array(
+						':version' => $form['version']
+					),
+					'query' => 'UPDATE fks_site_settings SET data = :version WHERE id = "SITE_VERSION"'
+				))) {
+					// Return error message with error code
+					return array('result' => 'failure', 'title' => 'Database Error', 'message' => $this->createError($Database->r));
+				}
+			}
+			
 			if($DSL['diff']['log_type'] == 'created') {
 				return array('result' => 'success', 'message' => 'Created changelog');
 			} else {

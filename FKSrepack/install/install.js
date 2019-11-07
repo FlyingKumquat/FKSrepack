@@ -417,7 +417,7 @@ function createAccountCallback(data) {
 }
 
 // Tab - Complete - Rename Install
-function deleteInstall() {
+function deleteInstall(data) {
 	$('#tabComplete .pre pre').html('Renaming Folder...<br/><br/>');
 	
 	switch(data.result) {

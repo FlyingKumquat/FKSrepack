@@ -1,10 +1,10 @@
 <?PHP
-/*----------------------------------------------------------------------------------------------------
+/*----------------------------------------------
 	Debug / Error reporting
-----------------------------------------------------------------------------------------------------*/
-//ini_set('display_errors',1);
-//ini_set('display_startup_errors',1);
-//error_reporting(-1);
+----------------------------------------------*/
+// ini_set('display_errors',1);
+// ini_set('display_startup_errors',1);
+// error_reporting(-1);
 
 // Load "log.php" if it exists
 if(is_file(__DIR__ . '/../config/log.php')) {

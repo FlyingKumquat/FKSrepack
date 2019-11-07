@@ -2,10 +2,10 @@
 /*----------------------------------------------
 	Debug / Error reporting
 ----------------------------------------------*/
-ini_set('display_errors',1);
-ini_set('display_startup_errors',1);
-error_reporting(-1);
-//error_reporting(E_ALL & ~E_WARNING);
+// ini_set('display_errors',1);
+// ini_set('display_startup_errors',1);
+// error_reporting(-1);
+// error_reporting(E_ALL & ~E_WARNING);
 
 require_once(__DIR__ . '/../includes/Enums.php');
 require_once(__DIR__ . '/../includes/Bitmask.php');
@@ -289,7 +289,7 @@ class CoreFunctions extends \Utilities {
 		$verify_code = $this->makeKey(6, '1234567890');
 		
 		// Json encode for storing in the DB
-		$json = json_encode(array('code' => $verify_code, 'date' => gmdate('Y-m-d h:i:s')));
+		$json = json_encode(array('code' => $verify_code, 'date' => gmdate('Y-m-d H:i:s')));
 		
 		// Save verify code (9)
 		if( !$DataHandler->setData('remote', 'members', $member_id, array('VERIFY_CODE' => $json), true) ) { return array('result' => 'failure', 'message' => 'Failed to set verify code'); }
@@ -769,7 +769,7 @@ class CoreFunctions extends \Utilities {
 			'ip' => $this->Session->getIP(),
 			'timeout' => 3720,
 			'last_action' => time(),
-			'started' => gmdate('Y-m-d h:i:s'),
+			'started' => gmdate('Y-m-d H:i:s'),
 			'guest' => false
 		);
 		

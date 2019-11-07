@@ -1,5 +1,5 @@
 /***********************************************
-	Updated: 10/30/2019
+	Updated: 11/06/2019
 ***********************************************/
 (function(fks, $, undefined) {
 /*----------------------------------------------
@@ -964,8 +964,12 @@
 		$.each($(form).serializeArray(), function() {
 			var val = this.value;
 			var ele = $('[name="' + this.name + '"]', form).filter(function() { return this.value == val; });
+			
+			if(ele.length == 0 && ele.prevObject.length == 1) { ele = ele.prevObject; }
+			
 			var find = (attr ? ele.attr(attr) : this.name);
 			var key = ele.attr('fks-key');
+			
 			if(find === undefined) { return; }
 			if(ele.hasClass('fks-urlencode')) {
 				val = encodeURI(val.replace(/\+/g, '&plus;'));

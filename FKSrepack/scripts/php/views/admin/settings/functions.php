@@ -481,6 +481,8 @@ class PageFunctions extends CoreFunctions {
 		// Check for write access
 		if($this->access < 2) { return array('result' => 'failure', 'message' => 'Access Denied!'); }
 		
+		//return array('result' => 'failure', 'message' => 'Access Denied!', 'data' => $data);
+		
 		// Set variables
 		$Database = new \Database();
 		$validation = array();

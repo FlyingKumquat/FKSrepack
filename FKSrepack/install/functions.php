@@ -2,9 +2,9 @@
 /*----------------------------------------------
 	Debug / Error reporting
 ----------------------------------------------*/
-ini_set('display_errors',1);
-ini_set('display_startup_errors',1);
-error_reporting(-1);
+//ini_set('display_errors',1);
+//ini_set('display_startup_errors',1);
+//error_reporting(-1);
 //error_reporting(E_ALL & ~E_WARNING);
 
 require_once(__DIR__ . '/../scripts/php/includes/Database.php');
@@ -18,7 +18,7 @@ class Functions {
 /*----------------------------------------------
 	Global Variables
 ----------------------------------------------*/
-	public $fks_version = '0.1.191101';
+	public $fks_version = '0.1.191107';
 	private $Database;
 	private $Tables;
 	
