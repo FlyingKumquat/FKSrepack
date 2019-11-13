@@ -499,17 +499,17 @@ class CoreFunctions extends \Utilities {
 				
 				// Loop through all title_data possibilities
 				foreach($title_data as $d) {
+					if(isset($member_data['data'][$d]['value']) && !empty($member_data['data'][$d]['value'])) { return $member_data['data'][$d]['value']; }
+					
 					switch($d) {
-						case 'USERNAME';
+						case 'USERNAME':
 							return $member_data['columns']['username'];
 							break;
 							
-						case 'SITE_TITLE';
+						case 'SITE_TITLE':
 							return $_SESSION['site_settings']['SITE_TITLE'];
 							break;
 					}
-					
-					if(isset($member_data[$d]['value']) && !empty($member_data[$d]['value'])) { return $member_data[$d]['value']; }
 				}
 			}
 			

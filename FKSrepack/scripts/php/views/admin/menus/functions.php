@@ -522,7 +522,7 @@ class PageFunctions extends CoreFunctions {
 				'type' => 'select',
 				'name' => 'active',
 				'value' => (isset($menu_item['active']) ? $menu_item['active'] : 1),
-				'help' => 'The status of this menu.',
+				'help' => 'The status of this menu item.',
 				'options' => array(
 					array('title' => 'Disabled', 'value' => 0),
 					array('title' => 'Active', 'value' => 1)

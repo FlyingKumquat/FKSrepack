@@ -30,7 +30,7 @@ class Tables {
 			$this->Database->db['default'] => array(
 				'fks_access_groups' => array(
 					'name' => 'fks_access_groups',
-					'version' => 1910300346,
+					'version' => 1911070711,
 					'restore' => array(
 						'include' => array('date_modified', 'modified_by', 'date_deleted', 'deleted_by', 'active', 'deleted')
 					),
@@ -56,8 +56,8 @@ class Tables {
 					),
 					'rows' => array(
 						array('id' => 1, 'title' => 'Guest', 'hierarchy' => 1, 'data' => '{"1":1}', 'date_created' => '2017-01-19 07:08:00'),
-						array('id' => 2, 'title' => 'User', 'hierarchy' => 11, 'data' => '{"2":1,"3":2,"4":1,"11":1,"13":2}', 'date_created' => '2017-01-20 08:48:00'),
-						array('id' => 3, 'title' => 'Admin', 'hierarchy' => 21, 'data' => '{"2":3,"3":3,"4":3,"5":3,"6":3,"7":3,"8":3,"9":3,"10":3,"11":3,"12":3,"13":3,"14":3}', 'date_created' => '2017-01-19 07:11:00')
+						array('id' => 2, 'title' => 'User', 'hierarchy' => 10, 'data' => '{"2":1,"3":2,"4":1,"11":1,"13":2}', 'date_created' => '2017-01-20 08:48:00'),
+						array('id' => 3, 'title' => 'Admin', 'hierarchy' => 100, 'data' => '{"2":3,"3":3,"4":3,"5":3,"6":3,"7":3,"8":3,"9":3,"10":3,"11":3,"12":3,"13":3,"14":3}', 'date_created' => '2017-01-19 07:11:00')
 					)
 				),
 				'fks_announcements' => array(
@@ -100,7 +100,7 @@ class Tables {
 				),
 				'fks_changelog' => array(
 					'name' => 'fks_changelog',
-					'version' => 1710260522,
+					'version' => 1911070709,
 					'columns' => array(
 						'id' => array('INT(10)', 'UNSIGNED', 'NOT NULL', 'AUTO_INCREMENT', 'PRIMARY KEY'),
 						'title' => array('VARCHAR(45)', 'DEFAULT NULL'),
@@ -112,7 +112,7 @@ class Tables {
 						'modified_by' => array('INT(10)', 'UNSIGNED', 'DEFAULT NULL'),
 						'date_deleted' => array('DATETIME', 'DEFAULT NULL'),
 						'deleted_by' => array('INT(10)', 'UNSIGNED', 'DEFAULT NULL'),
-						'active' => array('TINYINT(1)', 'UNSIGNED', 'NOT NULL', 'DEFAULT 1'),
+						'active' => array('TINYINT(1)', 'UNSIGNED', 'NOT NULL', 'DEFAULT 0'),
 						'deleted' => array('TINYINT(1)', 'UNSIGNED', 'NOT NULL', 'DEFAULT 0')
 					),
 					'options' => array(
